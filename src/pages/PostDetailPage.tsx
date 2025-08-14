@@ -9,6 +9,16 @@ import PostContentView from "@/features/posts/PostContentView";
 import PostActions from "@/features/posts/PostActions";
 import { categoryLabel } from "@/features/posts/categories";
 
+import type { JSONContent } from "@tiptap/core";
+
+// unknown을 안전한 타입으로 변환
+function normalizeContentJson(v: unknown): JSONContent | string | null {
+  if (v == null) return null;
+  if (typeof v === "string") return v;
+  if (typeof v === "object") return v as JSONContent;
+  return null;
+}
+
 type Post = {
   id: string;
   slug: string;
@@ -123,7 +133,7 @@ export default function PostDetailPage() {
 
       {/* 본문 */}
       <PostContentView
-        contentJson={post.content_json}
+        contentJson={normalizeContentJson(post.content_json)}
         contentMarkdown={post.content_markdown}
       />
     </article>
