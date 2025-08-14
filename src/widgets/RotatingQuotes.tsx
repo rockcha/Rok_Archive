@@ -5,15 +5,15 @@ import { useEffect, useMemo, useState } from "react";
 
 const QUOTES = [
   {
-    text: "프로그램은 사람이 읽도록 쓰여야 하며, 기계가 실행하는 건 부차적이다.",
+    text: '"프로그램은 사람이 읽도록 쓰여야 하며, 기계가 실행하는 건 부차적이다."',
     author: "Harold Abelson & Gerald J. Sussman",
   },
   {
-    text: "낙관은 프로그래밍의 직업병이다. 치료약은 피드백이다.",
-    author: "Kent Beck",
+    text: '"세상에는 딱 두 가지 언어가 있다. 사람들이 욕하는 언어, 아무도 사용하지 않는 언어."',
+    author: "Bjarne Stroustrup, C++의 창시자",
   },
   {
-    text: "좋은 코드는 그 자체로 최고의 문서다.",
+    text: '"좋은 코드는 그 자체로 최고의 문서다."',
     author: "Steve McConnell",
   },
 ];
@@ -26,9 +26,9 @@ export default function RotatingQuotes() {
   );
 
   // 속도/딜레이 설정
-  const typingSpeed = 220; // ms, 타이핑 속도
-  const deletingSpeed = 80; // ms, 지우는 속도
-  const pauseDuration = 3200; // ms, 한 문장 타이핑 완료 후 멈춤 시간
+  const typingSpeed = 100; // ms, 타이핑 속도
+  const deletingSpeed = 40; // ms, 지우는 속도
+  const pauseDuration = 5200; // ms, 한 문장 타이핑 완료 후 멈춤 시간
 
   const full = useMemo(() => Array.from(QUOTES[idx].text), [idx]);
 
@@ -81,7 +81,7 @@ export default function RotatingQuotes() {
         </p>
 
         {/* 저자(다음 줄) */}
-        <p className="mt-2 text-sm md:text-base text-zinc-500 dark:text-zinc-400">
+        <p className="mt-2 text-sm md:text-xs text-zinc-500 dark:text-zinc-400">
           — {QUOTES[idx].author}
         </p>
       </div>

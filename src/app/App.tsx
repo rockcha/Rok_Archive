@@ -8,6 +8,8 @@ import {
 
 // 페이지 목록
 import MainPage from "@/pages/MainPage";
+import PostCreatePage from "@/pages/PostCreatePage";
+import PostDetailPage from "@/pages/PostDetailPage";
 
 //위젯 목록
 import Header from "@/widgets/Header/Header";
@@ -30,6 +32,9 @@ export default function App() {
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<MainPage />} />
+          <Route path="/posts/new" element={<PostCreatePage />} />
+          <Route path="/posts/:slug" element={<PostDetailPage />} />
+          <Route path="/posts/id/:id" element={<PostDetailPage />} />
         </Route>
       </Routes>
     </Router>

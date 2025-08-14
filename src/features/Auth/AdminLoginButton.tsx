@@ -13,6 +13,7 @@ import {
 } from "@/shared/ui/dialog";
 import { Label } from "@radix-ui/react-label";
 import { Input } from "@/shared/ui/input";
+//import { Ghost } from "lucide-react";
 
 export default function AdminLoginButton() {
   const { isAdmin, setAdmin, logout } = useAdmin();
@@ -33,8 +34,9 @@ export default function AdminLoginButton() {
       setOpen(false);
       setEmail("");
       setPassword("");
-    } catch (e: any) {
-      alert(e.message ?? "로그인 실패");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "로그인 실패";
+      alert(msg);
     } finally {
       setLoading(false);
     }
@@ -65,12 +67,8 @@ export default function AdminLoginButton() {
       {/* 트리거: 하나만 사용, 라벨은 상태에 따라 변경 */}
       <DialogTrigger asChild>
         <Button
-          variant="default"
-          className={
-            isAdmin
-              ? "bg-emerald-600 hover:bg-emerald-500 hover:cursor-pointer"
-              : "bg-zinc-600 hover:bg-zinc-500"
-          }
+          variant="ghost"
+          className="hover:cursor-pointer hover:bg-green-200 font-semibold text-xm"
           title={isAdmin ? "현재: 관리자 모드" : "현재: 게스트 모드"}
         >
           {isAdmin ? "관리자 모드" : "게스트 모드"}
@@ -114,13 +112,10 @@ export default function AdminLoginButton() {
 
         <DialogFooter>
           <Button
+            variant="ghost"
             onClick={primaryAction}
             disabled={primaryDisabled}
-            className={
-              isAdmin
-                ? "bg-emerald-600 hover:bg-emerald-500 hover:cursor-pointer"
-                : "bg-emerald-600 hover:bg-emerald-500 hover:cursor-pointer"
-            }
+            className="hover:bg-green-200 hover:cursor-pointer"
           >
             {primaryLabel}
           </Button>
