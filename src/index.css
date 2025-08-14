@@ -123,4 +123,9 @@
   body {
     @apply bg-background text-foreground;
   }
+  html {
+    font-family: "Gowun Dodum", ui-sans-serif, system-ui, -apple-system,
+      "Segoe UI", Roboto, "Helvetica Neue", Arial, "Apple SD Gothic Neo",
+      "Noto Sans KR", "Malgun Gothic", sans-serif;
+  }
 }
