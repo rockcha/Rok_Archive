@@ -8,6 +8,8 @@ import IntroCard from "@/widgets/IntroCard";
 import CategoryBar from "@/features/Catgegory/CategoryBar";
 import PostsSearchBar from "@/features/Search/PostsSearchBar";
 import PostsBoard from "@/features/posts/PostsBoard";
+import { IconCloudCard } from "@/widgets/IconCloudCard";
+import RotatingQuotes from "@/widgets/RotatingQuotes";
 
 import { useCallback, useMemo, useState } from "react";
 
@@ -64,7 +66,7 @@ export default function MainPage() {
       </aside>
 
       {/* 오른쪽: 컨텐츠 */}
-      <main className="col-span-12 md:col-span-9">
+      <main className="col-span-12 md:col-span-9  min-w-0">
         <div className="mb-3 flex items-center justify-between gap-3">
           <PostsSearchBar
             onApply={handleApplySearch}
@@ -74,22 +76,38 @@ export default function MainPage() {
           />
         </div>
 
-        {/* 모드별 렌더링 (idle 제거) */}
-        {mode === "showall" && (
-          <PostsBoard headerLabel="전체 글" showAll showHeader />
-        )}
+        {/* 여기부터 교체 */}
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6">
+          {/* LEFT: Posts */}
+          <section className="min-w-0">
+            {/* 모드별 렌더링 */}
+            {mode === "showall" && (
+              <PostsBoard headerLabel="전체 글" showAll showHeader />
+            )}
 
-        {mode === "selected" && selectedCategoryId != null && (
-          <PostsBoard categoryId={selectedCategoryId} limit={12} showHeader />
-        )}
+            {mode === "selected" && selectedCategoryId != null && (
+              <PostsBoard
+                categoryId={selectedCategoryId}
+                limit={12}
+                showHeader
+              />
+            )}
 
-        {mode === "searched" && (
-          <PostsBoard
-            headerLabel="검색 결과"
-            postIds={searchedPostIds}
-            showHeader
-          />
-        )}
+            {mode === "searched" && (
+              <PostsBoard
+                headerLabel="검색 결과"
+                postIds={searchedPostIds}
+                showHeader
+              />
+            )}
+          </section>
+
+          {/* RIGHT: Sidebar */}
+          <aside className="lg:sticky lg:top-20 border">
+            <IconCloudCard />
+          </aside>
+        </div>
+        {/* 여기까지 교체 */}
       </main>
     </div>
   );

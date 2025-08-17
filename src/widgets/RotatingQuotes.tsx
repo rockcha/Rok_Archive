@@ -75,7 +75,7 @@ export default function RotatingQuotes() {
     <div className="w-full flex items-center justify-center px-4">
       <div className="max-w-3xl text-center">
         {/* 명언(타이핑) */}
-        <p className="text-lg md:text-xl leading-8 text-zinc-800 dark:text-zinc-100">
+        <p className="text-xs md:text-base leading-8 text-zinc-800 dark:text-zinc-100">
           {text}
           <span className="ml-1 inline-block h-[1.1em] w-[2px] align-[-0.15em] bg-current animate-pulse" />
         </p>

@@ -162,8 +162,8 @@ export default function PostsBoard({
   return (
     <section className={cn("w-full", className)}>
       {showHeader && (
-        <div className="mb-3 flex items-end justify-between">
-          <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100">
+        <div className="mb-3 flex items-end justify-start gap-3 ">
+          <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 ">
             {headerLabel ??
               (categoryId
                 ? `카테고리 #${categoryId}`
@@ -171,7 +171,7 @@ export default function PostsBoard({
                 ? "전체 글"
                 : "전체 글")}
           </h3>
-          <span className="text-xs text-zinc-500">{items.length} posts</span>
+          <span className="text-xs  text-zinc-500">{items.length} posts</span>
         </div>
       )}
 
