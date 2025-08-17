@@ -1,71 +1,98 @@
 // src/features/posts/PostBox.tsx
 "use client";
 
+import { useMemo } from "react";
 import { cn } from "@/shared/lib/utils";
-import { useNavigate } from "react-router-dom";
-import CategoryIcon from "./CategoryIcon";
-type PostBoxProps = {
-  id?: string;
-  slug?: string;
+
+type Props = {
+  id: string; // postId
   title: string;
-  category: string; // "react" 등
-  href?: string;
-  onClick?: (args: { id?: string; slug?: string; href?: string }) => void;
+  categoryName: string; // 조인해서 전달
+  tags: string[]; // 배열로 전달
+  onClick?: (postId: string) => void;
   className?: string;
 };
 
 export default function PostBox({
   id,
-  slug,
   title,
-  category,
-  href,
+  categoryName,
+  tags,
   onClick,
   className,
-}: PostBoxProps) {
-  const navigate = useNavigate();
+}: Props) {
+  // shared/assets/<name>.png
+  const iconSrc = useMemo(() => {
+    if (!categoryName) return undefined;
+    try {
+      return new URL(`../../shared/assets/${categoryName}.png`, import.meta.url)
+        .href;
+    } catch {
+      return undefined;
+    }
+  }, [categoryName]);
 
-  const handleClick = () => {
-    if (onClick) return onClick({ id, slug, href });
-    const to =
-      href ?? (slug ? `/posts/${slug}` : id ? `/posts/id/${id}` : null);
-    if (!to) return console.warn("PostBox: no navigation target");
-    if (/^https?:\/\//i.test(to)) window.location.href = to;
-    else navigate(to);
-  };
+  const handleClick = () => onClick?.(id);
 
   return (
     <button
       type="button"
       onClick={handleClick}
       className={cn(
-        "group relative aspect-square overflow-hidden rounded-xl border",
+        "group relative overflow-hidden rounded-xl border",
         "bg-white/90 dark:bg-zinc-900/80 shadow-sm hover:shadow transition-all",
         "focus:outline-none focus:ring-2 focus:ring-emerald-500/60 p-3 text-left",
+        "flex h-full flex-col gap-3", // ✅ 세로 레이아웃 + 꽉 채우기
         className
       )}
       title={title}
+      aria-label={`포스트: ${title}`}
     >
-      <div className="flex h-full flex-col">
-        {/* 제목 (2줄 고정) */}
-        <h4 className="line-clamp-2 text-sm font-semibold leading-snug text-zinc-900 dark:text-zinc-100">
-          {title}
-        </h4>
+      {/* 1) 제목: 상단/가운데/조금 크게 */}
+      <h4
+        className={cn(
+          "line-clamp-2 w-full text-center",
+          "text-base sm:text-lg font-semibold leading-snug",
+          "text-zinc-900 dark:text-zinc-100 tracking-tight"
+        )}
+      >
+        {title}
+      </h4>
 
-        <div className="mt-auto" />
+      {/* 2) 태그: 제목 아래, 가운데 정렬 */}
+      {tags.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-1">
+          {tags.slice(0, 6).map((t) => (
+            <span
+              key={t}
+              className="rounded-full border border-zinc-200 dark:border-zinc-700 px-2 py-[2px] text-[10px] text-zinc-700 dark:text-zinc-300"
+            >
+              #{t}
+            </span>
+          ))}
+        </div>
+      )}
 
-        {/* 카테고리 아이콘 칩 (중립 톤) */}
+      {/* 빈 공간 채우기 후, 맨 아래 배지 */}
+      <div className="mt-auto flex justify-center">
         <span
           className={cn(
-            "inline-flex w-max items-center gap-1 rounded-full",
+            "inline-flex items-center gap-1 rounded-full",
             "border border-zinc-200 dark:border-zinc-700",
-            "px-2 py-0.5 text-xs font-medium",
+            "px-2 py-1 text-xs font-medium",
             "text-zinc-700 dark:text-zinc-300",
             "transition-transform group-hover:-translate-y-0.5"
           )}
         >
-          <CategoryIcon value={category} size={14} className="-mt-px" />
-          <span className="uppercase">{category}</span>
+          {iconSrc ? (
+            <img
+              src={iconSrc}
+              alt={categoryName}
+              className="h-[14px] w-[14px] object-contain"
+              loading="lazy"
+            />
+          ) : null}
+          <span className="uppercase">{categoryName}</span>
         </span>
       </div>
     </button>

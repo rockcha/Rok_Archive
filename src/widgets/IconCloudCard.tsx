@@ -4,17 +4,17 @@ const slugs = [
   "typescript",
   "javascript",
   "dart",
-  "java",
+
   "react",
   "flutter",
   "android",
   "html5",
-  "css3",
+
   "nodedotjs",
   "express",
   "nextdotjs",
   "prisma",
-  "amazonaws",
+
   "postgresql",
   "firebase",
   "nginx",
@@ -27,16 +27,14 @@ const slugs = [
   "jira",
   "github",
   "gitlab",
-  "visualstudiocode",
+
   "androidstudio",
-  "sonarqube",
+
   "figma",
 ];
 
 export function IconCloudCard() {
-  const images = slugs.map(
-    (slug) => `https://cdn.simpleicons.org/${slug}/${slug}`
-  );
+  const images = slugs.map((slug) => `https://cdn.simpleicons.org/${slug}`);
 
   return (
     <div className="relative flex size-full items-center justify-center overflow-hidden">

@@ -1,7 +1,7 @@
 // src/features/posts/PostComposer.tsx
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/shared/lib/supabase";
 import { Input } from "@/shared/ui/input";
 import { Button } from "@/shared/ui/button";
@@ -13,21 +13,53 @@ import { useRichEditor } from "@/features/posts/editor/useRichEditor";
 import EditorToolbar from "@/features/posts/editor/EditorToolbar";
 import { slugify } from "@/shared/utils/slugify";
 import { parseTags } from "@/shared/utils/parseTags";
-import { CATEGORIES } from "@/features/posts/categories";
+
+type Category = {
+  id: string | number; // DB 타입에 맞게 uuid | bigint 등
+  name: string;
+};
 
 export default function PostComposer() {
   const [title, setTitle] = useState("");
-  const [category, setCategory] = useState<string>("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(""); // select value는 string으로 관리
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCats, setLoadingCats] = useState(true);
+
   const [tagsRaw, setTagsRaw] = useState("");
 
   const editor = useRichEditor();
 
+  // 카테고리 목록 로드
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      setLoadingCats(true);
+      const { data, error } = await supabase
+        .from("categories")
+        .select("id, name")
+        .order("name", { ascending: true });
+
+      if (!mounted) return;
+      if (error) {
+        console.error("카테고리 로드 실패:", error.message);
+        setCategories([]);
+      } else {
+        setCategories((data ?? []) as Category[]);
+      }
+      setLoadingCats(false);
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const isReadyToSubmit = useMemo(() => {
     const tags = parseTags(tagsRaw);
-    return title.trim().length > 0 && category && tags.length > 0;
-  }, [title, category, tagsRaw]);
+    return title.trim().length > 0 && !!selectedCategoryId && tags.length > 0;
+  }, [title, selectedCategoryId, tagsRaw]);
 
   const [saving, setSaving] = useState(false);
+
   const onSave = async () => {
     if (!editor) return;
     if (!isReadyToSubmit) {
@@ -41,10 +73,16 @@ export default function PostComposer() {
       const tags = parseTags(tagsRaw);
       const slug = slugify(title);
 
+      // select는 string이니 DB 타입에 맞추어 변환
+      // (uuid면 그대로 string, bigint면 Number 변환 등)
+      const category_id: string | number = /^\d+$/.test(selectedCategoryId)
+        ? Number(selectedCategoryId)
+        : selectedCategoryId;
+
       const { error } = await supabase.from("posts").insert({
         slug,
         title,
-        category_type: category,
+        category_id, // ✅ id로 저장
         tags,
         content_json: json,
         summary,
@@ -54,7 +92,7 @@ export default function PostComposer() {
 
       alert("작성 완료!");
       setTitle("");
-      setCategory("");
+      setSelectedCategoryId("");
       setTagsRaw("");
       editor.commands.clearContent(true);
     } catch (e: unknown) {
@@ -84,13 +122,16 @@ export default function PostComposer() {
           <select
             id="category"
             className="h-9 rounded-md border bg-transparent px-3"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
+            value={selectedCategoryId}
+            onChange={(e) => setSelectedCategoryId(e.target.value)}
+            disabled={loadingCats}
           >
-            <option value="">선택하세요</option>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
+            <option value="">
+              {loadingCats ? "불러오는 중…" : "선택하세요"}
+            </option>
+            {categories.map((c) => (
+              <option key={String(c.id)} value={String(c.id)}>
+                {c.name}
               </option>
             ))}
           </select>

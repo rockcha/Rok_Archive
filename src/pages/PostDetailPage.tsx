@@ -7,8 +7,6 @@ import { supabase } from "@/shared/lib/supabase";
 import { Separator } from "@/shared/ui/separator";
 import PostContentView from "@/features/posts/PostContentView";
 import PostActions from "@/features/posts/PostActions";
-import { categoryLabel } from "@/features/posts/categories";
-
 import type { JSONContent } from "@tiptap/core";
 
 // unknown을 안전한 타입으로 변환
@@ -23,7 +21,8 @@ type Post = {
   id: string;
   slug: string;
   title: string;
-  category_type: string | null;
+  category_id: string | number | null; // ✅ id로 보관
+  categories?: { name: string } | null; // ✅ FK 조인 결과
   tags: string[];
   content_json: unknown | null;
   content_markdown: string | null;
@@ -53,10 +52,11 @@ export default function PostDetailPage() {
         setLoading(true);
         setErr(null);
 
+        // ✅ category_id + categories(name) 조인으로 카테고리명까지 한 번에
         let q = supabase
           .from("posts")
           .select(
-            "id, slug, title, category_type, tags, content_json, content_markdown, summary, created_at, updated_at, published_at"
+            "id, slug, title, category_id, categories(name), tags, content_json, content_markdown, summary, created_at, updated_at, published_at"
           )
           .limit(1);
 
@@ -101,9 +101,7 @@ export default function PostDetailPage() {
     );
   }
 
-  const cat = post.category_type
-    ? categoryLabel(post.category_type)
-    : "Uncategorized";
+  const catName = post.categories?.name ?? "Uncategorized";
 
   return (
     <article className="mx-auto w-full max-w-4xl px-4 py-6">
@@ -113,7 +111,7 @@ export default function PostDetailPage() {
 
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
           <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-            {cat}
+            {catName}
           </span>
           {post.tags?.length > 0 && (
             <span>· {post.tags.map((t) => `#${t}`).join(" ")}</span>

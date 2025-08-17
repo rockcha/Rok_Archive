@@ -13,7 +13,8 @@ import {
 } from "@/shared/ui/dialog";
 import { Label } from "@radix-ui/react-label";
 import { Input } from "@/shared/ui/input";
-//import { Ghost } from "lucide-react";
+import AddCategoryButton from "../Catgegory/AddCategoryButton";
+import AddPostButton from "../posts/AddPostButton";
 
 export default function AdminLoginButton() {
   const { isAdmin, setAdmin, logout } = useAdmin();
@@ -63,64 +64,68 @@ export default function AdminLoginButton() {
     : "로그인";
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      {/* 트리거: 하나만 사용, 라벨은 상태에 따라 변경 */}
-      <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          className="hover:cursor-pointer hover:bg-green-200 font-semibold text-xm"
-          title={isAdmin ? "현재: 관리자 모드" : "현재: 게스트 모드"}
-        >
-          {isAdmin ? "관리자 모드" : "게스트 모드"}
-        </Button>
-      </DialogTrigger>
-
-      {/* 다이얼로그: 하나만 두고, 내용/버튼 동작·라벨만 분기 */}
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>
-            {isAdmin ? "로그아웃 하시겠습니까?" : "관리자 로그인"}
-          </DialogTitle>
-        </DialogHeader>
-
-        {!isAdmin && (
-          <div className="grid gap-4 py-2">
-            <div className="grid gap-2">
-              <Label htmlFor="email">이메일</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={loading}
-                autoFocus
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="pw">비밀번호</Label>
-              <Input
-                id="pw"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
-                onKeyDown={(e) => e.key === "Enter" && onLogin()}
-              />
-            </div>
-          </div>
-        )}
-
-        <DialogFooter>
+    <div>
+      <AddPostButton floating isAdmin={isAdmin} />
+      <AddCategoryButton floating isAdmin={isAdmin} />
+      <Dialog open={open} onOpenChange={setOpen}>
+        {/* 트리거: 하나만 사용, 라벨은 상태에 따라 변경 */}
+        <DialogTrigger asChild>
           <Button
             variant="ghost"
-            onClick={primaryAction}
-            disabled={primaryDisabled}
-            className="hover:bg-green-200 hover:cursor-pointer"
+            className="hover:cursor-pointer hover:bg-green-200 font-semibold text-xm"
+            title={isAdmin ? "현재: 관리자 모드" : "현재: 게스트 모드"}
           >
-            {primaryLabel}
+            {isAdmin ? "관리자 모드" : "게스트 모드"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </DialogTrigger>
+
+        {/* 다이얼로그: 하나만 두고, 내용/버튼 동작·라벨만 분기 */}
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {isAdmin ? "로그아웃 하시겠습니까?" : "관리자 로그인"}
+            </DialogTitle>
+          </DialogHeader>
+
+          {!isAdmin && (
+            <div className="grid gap-4 py-2">
+              <div className="grid gap-2">
+                <Label htmlFor="email">이메일</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={loading}
+                  autoFocus
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="pw">비밀번호</Label>
+                <Input
+                  id="pw"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={loading}
+                  onKeyDown={(e) => e.key === "Enter" && onLogin()}
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={primaryAction}
+              disabled={primaryDisabled}
+              className="hover:bg-green-200 hover:cursor-pointer"
+            >
+              {primaryLabel}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
