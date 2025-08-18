@@ -3,6 +3,9 @@
 
 import * as React from "react";
 import type { Editor } from "@tiptap/react";
+import type { ChainedCommands } from "@tiptap/core";
+import { type Selection } from "@tiptap/pm/state";
+
 import { Button } from "@/shared/ui/button";
 import { Separator } from "@/shared/ui/separator";
 import {
@@ -47,8 +50,6 @@ const FONT_SIZES = [
   "32px",
 ];
 const BULLETS = ["•", "▪", "➜", "✅", "☑️", "⭐", "👉", "🔹", "🔸", "🔷", "🔶"];
-
-// 고정 하이라이트 즐겨찾기(추가/삭제 없음)
 const FAVORITE_HL_COLORS = [
   "#fff3a3",
   "#ffe8a3",
@@ -57,44 +58,55 @@ const FAVORITE_HL_COLORS = [
   "#d0ebff",
 ];
 
-/** 노드 선택이면 텍스트 선택으로 바꿔서 마크가 확실히 먹게 하는 헬퍼 */
-function applyWithTextSelection(editor: Editor, apply: (chain: any) => any) {
-  const sel: any = editor.state.selection; // TextSelection | NodeSelection
-  let chain = editor.chain().focus();
+/** 확장 커맨드 보강 타입 */
+type ChainWithExtras = ChainedCommands & {
+  toggleUnderline?: () => ChainedCommands;
+  setHighlight?: (opts: { color: string }) => ChainedCommands;
+};
+
+/** 노드 선택이면 텍스트 선택으로 바꿔 마크가 확실히 적용되게 */
+function applyWithTextSelection(
+  editor: Editor,
+  apply: (chain: ChainWithExtras) => void
+) {
+  const sel = editor.state.selection as Selection;
+  const chain = editor.chain().focus() as ChainWithExtras;
 
   if (!sel.empty) {
-    const isNodeSel = !!sel.node; // NodeSelection이면 truthy
-    if (isNodeSel) {
-      const from = sel.from + 1; // 노드 안쪽으로 들어가서
-      const to = sel.to - 1; // 텍스트 전체 선택
-      if (to > from) {
-        chain = chain.setTextSelection({ from, to });
-      }
-    }
+    // NodeSelection이든 TextSelection이든 동일하게 from~to로 텍스트 셀렉션 지정
+    chain.setTextSelection({ from: sel.from, to: sel.to });
   }
-  apply(chain).run();
+  apply(chain);
+  chain.run();
 }
 
 export default function EditorToolbar({ editor }: Props) {
+  // 훅은 항상 호출되어야 함(조건문 밖)
   const [fontSize, setFontSize] = React.useState(DEFAULT_FONT_SIZE);
   const [fontFamily, setFontFamily] = React.useState(DEFAULT_FONT_FAMILY);
   const [bulletValue, setBulletValue] = React.useState("");
 
-  // 하이라이트 상태 (null = 없음)
-  const [hlColor, setHlColor] = React.useState("#fff3a3"); // 피커 현재값
+  // 하이라이트 상태
+  const [hlColor, setHlColor] = React.useState("#fff3a3"); // 피커 값
   const [currentHl, setCurrentHl] = React.useState<string | null>(null);
 
-  if (!editor) return null;
+  type Fmt = "bold" | "italic" | "underline" | null;
+  const [activeFmt, setActiveFmt] = React.useState<Fmt>(null);
 
-  // 처음 로드 시 기본 글꼴/크기 적용
+  // 에디터가 준비되면 기본 폰트/크기 적용
   React.useEffect(() => {
-    (editor.chain() as any).focus().setFontFamily?.(fontFamily).run();
-    editor.chain().focus().setMark("textStyle", { fontSize }).run();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [editor]);
+    if (!editor) return;
+    applyWithTextSelection(editor, (ch) =>
+      ch.setMark("textStyle", { fontFamily })
+    );
+    applyWithTextSelection(editor, (ch) =>
+      ch.setMark("textStyle", { fontSize })
+    );
+  }, [editor]); // 최초 1회
 
   // 선택/트랜잭션 변경 시 현재 하이라이트 반영
   React.useEffect(() => {
+    if (!editor) return;
     const update = () => {
       if (editor.isActive("highlight")) {
         const c =
@@ -106,13 +118,16 @@ export default function EditorToolbar({ editor }: Props) {
       }
     };
     update();
-    const off1 = (editor as any).on?.("selectionUpdate", update);
-    const off2 = (editor as any).on?.("transaction", update);
+    editor.on("selectionUpdate", update);
+    editor.on("transaction", update);
     return () => {
-      if (typeof off1 === "function") off1();
-      if (typeof off2 === "function") off2();
+      editor.off("selectionUpdate", update);
+      editor.off("transaction", update);
     };
   }, [editor]);
+
+  // editor가 아직 없으면 빈 툴바(훅은 이미 호출됨)
+  if (!editor) return null;
 
   // 글자 크기/글꼴
   const applyFontSize = (size: string) => {
@@ -123,20 +138,21 @@ export default function EditorToolbar({ editor }: Props) {
   };
   const applyFontFamily = (ff: string) => {
     setFontFamily(ff);
-    applyWithTextSelection(editor, (ch: any) =>
-      ch.setFontFamily ? ch.setFontFamily(ff) : ch
+    // setFontFamily 커맨드 대신 textStyle로 적용(타입 안전)
+    applyWithTextSelection(editor, (ch) =>
+      ch.setMark("textStyle", { fontFamily: ff })
     );
   };
 
-  // 하이라이트 색 지정/해제
+  // 하이라이트
   const setHighlightColor = (color: string | null) => {
     if (color == null) {
       editor.chain().focus().unsetHighlight().run();
       return;
     }
     setHlColor(color);
-    applyWithTextSelection(editor, (ch: any) =>
-      ch.setHighlight ? ch.setHighlight({ color }) : ch
+    applyWithTextSelection(editor, (ch) =>
+      (ch as ChainWithExtras).setHighlight?.({ color })
     );
   };
 
@@ -146,18 +162,16 @@ export default function EditorToolbar({ editor }: Props) {
     setBulletValue("");
   };
 
-  // B/I/U: 상호배타(Exclusive) 토글
-  type Fmt = "bold" | "italic" | "underline" | null;
-  const [activeFmt, setActiveFmt] = React.useState<Fmt>(null);
+  // B/I/U: 상호배타 토글
 
   const toggleExclusive = (fmt: Exclude<Fmt, null>) => {
-    const chain = editor.chain().focus();
+    const chain = editor.chain().focus() as ChainWithExtras;
 
     if (activeFmt === fmt) {
       if (fmt === "bold" && editor.isActive("bold")) chain.toggleBold();
       if (fmt === "italic" && editor.isActive("italic")) chain.toggleItalic();
-      if (fmt === "underline" && (editor as any).isActive?.("underline"))
-        (chain as any).toggleUnderline?.();
+      if (fmt === "underline" && editor.isActive("underline"))
+        chain.toggleUnderline?.();
       chain.run();
       setActiveFmt(null);
       return;
@@ -166,13 +180,13 @@ export default function EditorToolbar({ editor }: Props) {
     if (activeFmt === "bold" && editor.isActive("bold")) chain.toggleBold();
     if (activeFmt === "italic" && editor.isActive("italic"))
       chain.toggleItalic();
-    if (activeFmt === "underline" && (editor as any).isActive?.("underline"))
-      (chain as any).toggleUnderline?.();
+    if (activeFmt === "underline" && editor.isActive("underline"))
+      chain.toggleUnderline?.();
 
     if (fmt === "bold" && !editor.isActive("bold")) chain.toggleBold();
     if (fmt === "italic" && !editor.isActive("italic")) chain.toggleItalic();
-    if (fmt === "underline" && !(editor as any).isActive?.("underline"))
-      (chain as any).toggleUnderline?.();
+    if (fmt === "underline" && !editor.isActive("underline"))
+      chain.toggleUnderline?.();
 
     chain.run();
     setActiveFmt(fmt);
@@ -188,10 +202,10 @@ export default function EditorToolbar({ editor }: Props) {
   return (
     <div
       className="
-        flex flex-nowrap items-center gap-2 rounded-md bg-background/60 p-2
-        overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none]
-        [&::-webkit-scrollbar]:hidden
-      "
+      flex flex-nowrap items-center gap-2 rounded-md bg-background/60 p-2
+      overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none]
+      [&::-webkit-scrollbar]:hidden
+    "
     >
       {/* B / I / U (exclusive) */}
       <div className="flex items-center gap-2">
@@ -268,9 +282,8 @@ export default function EditorToolbar({ editor }: Props) {
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
-      {/* 하이라이트: 없음(왼쪽) + 즐겨찾기(고정 5개) + 피커 + 상태표시 */}
+      {/* 하이라이트: 없음 + 즐겨찾기 + 피커 + 상태표시 */}
       <div className="flex items-center gap-3">
-        {/* 없음(해제) */}
         <button
           onClick={() => setHighlightColor(null)}
           title="하이라이트 없음"
@@ -279,8 +292,6 @@ export default function EditorToolbar({ editor }: Props) {
           }`}
           style={{ background: "#ffffff" }}
         />
-
-        {/* 고정 즐겨찾기 스와치 */}
         <div className="flex items-center gap-1">
           {FAVORITE_HL_COLORS.map((c) => (
             <button
@@ -294,8 +305,6 @@ export default function EditorToolbar({ editor }: Props) {
             />
           ))}
         </div>
-
-        {/* 컬러 피커 + 상태 표시 */}
         <label className="ml-1 flex items-center gap-2 text-sm">
           하이라이트
           <input

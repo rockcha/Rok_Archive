@@ -104,7 +104,6 @@ export default function PostsBoard({
             let offset = 0;
             const acc: PostRow[] = [];
 
-            // eslint-disable-next-line no-constant-condition
             while (true) {
               const { data, error } = await base.range(
                 offset,

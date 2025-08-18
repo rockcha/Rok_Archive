@@ -1,7 +1,7 @@
 // src/components/admin/AdminDock.tsx
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dock, DockIcon } from "@/shared/magicui/dock";
 import { cn } from "@/shared/lib/utils";
@@ -108,7 +108,7 @@ export default function AdminDock({ className }: Props) {
             className="shadow-lg"
           >
             {/* 글작성 */}
-            <DockIcon axis="x" className="group">
+            <DockIcon className="group">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
@@ -124,7 +124,7 @@ export default function AdminDock({ className }: Props) {
             </DockIcon>
 
             {/* 카테고리 추가 */}
-            <DockIcon axis="x" className="group">
+            <DockIcon className="group">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
@@ -142,7 +142,7 @@ export default function AdminDock({ className }: Props) {
             <Separator orientation="vertical" className="h-full" />
 
             {/* GitHub */}
-            <DockIcon axis="x" className="group">
+            <DockIcon className="group">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
@@ -158,7 +158,7 @@ export default function AdminDock({ className }: Props) {
             </DockIcon>
 
             {/* Supabase */}
-            <DockIcon axis="x" className="group">
+            <DockIcon className="group">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
@@ -174,7 +174,7 @@ export default function AdminDock({ className }: Props) {
             </DockIcon>
 
             {/* ChatGPT */}
-            <DockIcon axis="x" className="group">
+            <DockIcon className="group">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button

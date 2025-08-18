@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { Content } from "@tiptap/core";
 import { supabase } from "@/shared/lib/supabase";
 
 import { Label } from "@radix-ui/react-label";
@@ -90,8 +91,15 @@ export default function PostComposer({
   // 초기 콘텐츠 주입 (edit 모드)
   useEffect(() => {
     if (!editor) return;
-    if (initial?.content != null) {
-      editor.commands.setContent(initial.content as any, false); // JSON/HTML 모두 허용
+
+    const content = initial?.content as Content | null | undefined;
+
+    if (content != null) {
+      // ✅ v2 시그니처: options 객체로 전달
+      editor.commands.setContent(content, {
+        emitUpdate: false, // setContent 시 onUpdate 발생 막기
+        errorOnInvalidContent: false, // JSON/HTML 섞여도 안전하게
+      });
     } else {
       editor.commands.clearContent(true);
     }

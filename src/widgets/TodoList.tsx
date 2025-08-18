@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Checkbox } from "@/shared/ui/checkbox";
-import { Trash2, Minus, Plus } from "lucide-react";
+import { Minus } from "lucide-react";
 
 type TodoRow = {
   id: string;

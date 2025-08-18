@@ -101,7 +101,7 @@ export default function PostDetailPage() {
     );
   }
 
-  const catName = post.categories?.name ?? "Uncategorized";
+  // const catName = post.categories?.name ?? "Uncategorized";
 
   return (
     <article className="mx-auto w-full max-w-screen-2xl px-6 py-6">

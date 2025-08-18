@@ -19,7 +19,6 @@ export default function PostBox({
   categoryName,
   tags,
   onClick,
-  className,
 }: Props) {
   // shared/assets/<name>.png
   const iconSrc = useMemo(() => {

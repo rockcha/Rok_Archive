@@ -27,6 +27,21 @@ export type PostsSearchBarProps = {
   onError?: (message: string) => void;
 };
 
+// ---- 작은 타입/가드들 -------------------------------------------------------
+type IdRow = { id: string };
+const isIdRow = (x: unknown): x is IdRow =>
+  typeof x === "object" &&
+  x !== null &&
+  typeof (x as Record<string, unknown>).id === "string";
+
+type TagsRow = { id: string; tags: unknown };
+const matchTag = (tags: unknown, lower: string): boolean => {
+  if (Array.isArray(tags))
+    return tags.some((t) => String(t).toLowerCase().includes(lower));
+  if (typeof tags === "string") return tags.toLowerCase().includes(lower);
+  return false;
+};
+
 export default function PostsSearchBar({
   onApply,
   placeholder = "제목이나 태그를 입력하세요",
@@ -54,21 +69,27 @@ export default function PostsSearchBar({
 
     setLoading(true);
     try {
-      // 1) 신규 권장 RPC: search_posts_by_id(q, p_limit, p_category_id)
+      // 공통 파라미터(명시적 타입으로 any 제거)
+      const pCategoryId: string | number | null =
+        categoryIdFilter == null
+          ? null
+          : typeof categoryIdFilter === "string" ||
+            typeof categoryIdFilter === "number"
+          ? categoryIdFilter
+          : null;
+
+      // 1) 신규 권장 RPC
       try {
         const { data: rpc1, error: rpc1Err } = await supabase.rpc(
           "search_posts_by_id",
           {
             q: keyword,
             p_limit: limit,
-            p_category_id:
-              categoryIdFilter === null || categoryIdFilter === undefined
-                ? null
-                : (categoryIdFilter as any),
+            p_category_id: pCategoryId,
           }
         );
-        if (!rpc1Err && Array.isArray(rpc1)) {
-          onApply(rpc1.map((r: any) => r.id));
+        if (!rpc1Err && Array.isArray(rpc1) && rpc1.every(isIdRow)) {
+          onApply(rpc1.map((r) => r.id));
           setLoading(false);
           return;
         }
@@ -76,22 +97,18 @@ export default function PostsSearchBar({
         // 미존재/권한불가 → 조용히 폴백
       }
 
-      // 2) 레거시 RPC(이전 함수명/시그니처 유지 중인 프로젝트 대비): search_posts(q, p_limit, p_category_id)
+      // 2) 레거시 RPC
       try {
         const { data: rpc2, error: rpc2Err } = await supabase.rpc(
           "search_posts",
           {
             q: keyword,
             p_limit: limit,
-            // 함수가 p_category(텍스트)만 받도록 만들어져 있으면 null만 전달됨
-            p_category_id:
-              categoryIdFilter === null || categoryIdFilter === undefined
-                ? null
-                : (categoryIdFilter as any),
+            p_category_id: pCategoryId,
           }
         );
-        if (!rpc2Err && Array.isArray(rpc2)) {
-          onApply(rpc2.map((r: any) => r.id));
+        if (!rpc2Err && Array.isArray(rpc2) && rpc2.every(isIdRow)) {
+          onApply(rpc2.map((r) => r.id));
           setLoading(false);
           return;
         }
@@ -99,7 +116,7 @@ export default function PostsSearchBar({
         // 계속 폴백
       }
 
-      // 3) 폴백: 제목 부분일치 (DB)
+      // 3) 제목 부분일치
       const titleQuery = supabase
         .from("posts")
         .select("id, title, tags, published_at, category_id")
@@ -119,7 +136,7 @@ export default function PostsSearchBar({
       // 4) 태그 검색 폴백
       let tagIds: string[] = [];
 
-      // 4-a) tags가 text 컬럼인 경우 빠른 부분일치
+      // 4-a) tags가 text 컬럼인 경우 (서버에서 ilike로 필터됐으므로 id만 추출)
       try {
         const tagsTextQuery = supabase
           .from("posts")
@@ -134,13 +151,13 @@ export default function PostsSearchBar({
 
         const { data: tagsTextRows, error: tagsTextErr } = await tagsTextQuery;
         if (!tagsTextErr && Array.isArray(tagsTextRows)) {
-          tagIds = tagsTextRows.map((r) => r.id as string);
+          tagIds = tagsTextRows.filter(isIdRow).map((r) => r.id);
         }
       } catch {
         // 무시 후 4-b로 폴백
       }
 
-      // 4-b) tags가 배열(jsonb/text[])일 수도 있으므로 상위 N개에서 클라 필터
+      // 4-b) tags가 배열(jsonb/text[])일 수도 → 상위 N개 가져와 클라에서 검사
       if (tagIds.length === 0) {
         const cap = Math.max(limit * 4, 200);
         const tagsArrayQuery = supabase
@@ -156,23 +173,16 @@ export default function PostsSearchBar({
         const { data: tagsRows, error: tagsErr } = await tagsArrayQuery;
         if (!tagsErr && Array.isArray(tagsRows)) {
           const lower = keyword.toLowerCase();
-          const matched = tagsRows.filter((r) => {
-            const t = (r as any).tags;
-            if (!t) return false;
-            if (Array.isArray(t))
-              return t.some((x) => String(x).toLowerCase().includes(lower));
-            if (typeof t === "string") return t.toLowerCase().includes(lower);
-            return false;
-          });
-          tagIds = matched.map((r) => r.id as string);
+          const rows = tagsRows as ReadonlyArray<TagsRow>;
+          tagIds = rows.filter((r) => matchTag(r.tags, lower)).map((r) => r.id);
         }
       }
 
-      // 5) 규칙 적용: 제목 매치 → 태그 매치, 중복 제거, limit
+      // 5) 제목 우선 → 태그, 중복 제거 후 limit
       const orderedUnique = dedupe([...titleIds, ...tagIds]).slice(0, limit);
       onApply(orderedUnique);
-    } catch (e: any) {
-      const msg = e?.message ?? "검색에 실패했어요.";
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "검색에 실패했어요.";
       onError?.(msg);
       onApply([]);
     } finally {
@@ -188,11 +198,11 @@ export default function PostsSearchBar({
       )}
       onSubmit={(e) => {
         e.preventDefault();
-        if (!loading) runSearch();
+        if (!loading) void runSearch();
       }}
     >
       <div className="relative flex-1">
-        <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-60" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60" />
         <Input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -217,7 +227,7 @@ export default function PostsSearchBar({
       <Button
         type="submit"
         disabled={loading}
-        className="bg-emerald-600  hover:bg-emerald-500 hover:cursor-pointer"
+        className="bg-emerald-600 hover:cursor-pointer hover:bg-emerald-500"
       >
         {loading ? (
           <>
