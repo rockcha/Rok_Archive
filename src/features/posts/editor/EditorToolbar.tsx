@@ -102,7 +102,7 @@ export default function EditorToolbar({ editor }: Props) {
     applyWithTextSelection(editor, (ch) =>
       ch.setMark("textStyle", { fontSize })
     );
-  }, [editor]); // 최초 1회
+  }, [editor, fontFamily, fontSize]); // 최초 1회
 
   // 선택/트랜잭션 변경 시 현재 하이라이트 반영
   React.useEffect(() => {

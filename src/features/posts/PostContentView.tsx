@@ -22,7 +22,7 @@ export default function PostContentView({
       : contentJson ?? null;
 
   const editor = useEditor({
-    extensions: createExtensions(""),
+    extensions: createExtensions(),
     content: parsedJson ?? "", // 초기 컨텐츠
     editable: false,
     editorProps: {

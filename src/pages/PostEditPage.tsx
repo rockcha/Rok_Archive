@@ -45,8 +45,14 @@ export default function PostEditPage() {
           .single<PostRow>();
         if (error) throw error;
         if (alive) setPost(data);
-      } catch (e: any) {
-        if (alive) setErr(e?.message ?? "글을 불러오지 못했습니다.");
+      } catch (e: unknown) {
+        const msg =
+          e instanceof Error
+            ? e.message
+            : typeof e === "string"
+            ? e
+            : "글을 불러오지 못했습니다.";
+        if (alive) setErr(msg);
       } finally {
         if (alive) setLoading(false);
       }
