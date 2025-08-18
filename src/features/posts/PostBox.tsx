@@ -40,10 +40,10 @@ export default function PostBox({
       onClick={handleClick}
       className={cn(
         "group relative overflow-hidden rounded-xl border",
-        "bg-white/90 dark:bg-zinc-900/80 shadow-sm hover:shadow transition-all",
+        "bg-background dark:bg-zinc-900/80 shadow-sm hover:shadow transition-all",
         "focus:outline-none focus:ring-2 focus:ring-emerald-500/60 p-3 text-left",
         "flex h-full flex-col gap-3", // ✅ 세로 레이아웃 + 꽉 채우기
-        className
+        "hover:cursor-pointer hover:bg-emerald-50"
       )}
       title={title}
       aria-label={`포스트: ${title}`}
@@ -65,7 +65,7 @@ export default function PostBox({
           {tags.slice(0, 6).map((t) => (
             <span
               key={t}
-              className="rounded-full border border-zinc-200 dark:border-zinc-700 px-2 py-[2px] text-[10px] text-zinc-700 dark:text-zinc-300"
+              className=" px-2 py-[2px] text-[12px] text-zinc-700 dark:text-zinc-300"
             >
               #{t}
             </span>
@@ -78,7 +78,7 @@ export default function PostBox({
         <span
           className={cn(
             "inline-flex items-center gap-1 rounded-full",
-            "border border-zinc-200 dark:border-zinc-700",
+            "bg-amber-50 border border-zinc-200 dark:border-zinc-700",
             "px-2 py-1 text-xs font-medium",
             "text-zinc-700 dark:text-zinc-300",
             "transition-transform group-hover:-translate-y-0.5"

@@ -18,14 +18,14 @@ export default function LogoTitle() {
       <div className="flex flex-col gap-1">
         <Button
           variant="ghost"
-          className="text-3xl font-bold text-green-900 "
+          className="text-3xl font-bold text-green-900 hover:cursor-pointer "
           onClick={handleOnClick}
         >
           록차 아카이브
         </Button>
 
-        <p className="text-sl ml-10">
-          정록이의 소소한&emsp;
+        <p>
+          &emsp;정록이의 소소한&emsp;
           <CyclingHighlighter holdMs={5000}>개발 기록</CyclingHighlighter>
         </p>
       </div>

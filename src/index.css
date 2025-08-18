@@ -134,3 +134,12 @@ img[data-loading="true"] {
   opacity: 0.6;
   filter: grayscale(0.2);
 }
+
+@font-face {
+  font-family: "Dasi Sijakhae";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2307-2@1.0/DasiSijakhae.woff2")
+    format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

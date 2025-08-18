@@ -104,15 +104,12 @@ export default function PostDetailPage() {
   const catName = post.categories?.name ?? "Uncategorized";
 
   return (
-    <article className="mx-auto w-full max-w-4xl px-4 py-6">
+    <article className="mx-auto w-full max-w-screen-2xl px-6 py-6">
       {/* 헤더 */}
-      <header className="mb-3">
-        <h1 className="text-2xl font-bold">{post.title}</h1>
+      <header>
+        <h1 className="text-3xl font-bold">{post.title}</h1>
 
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-          <span className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 font-medium text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300">
-            {catName}
-          </span>
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-xm text-zinc-500">
           {post.tags?.length > 0 && (
             <span>· {post.tags.map((t) => `#${t}`).join(" ")}</span>
           )}

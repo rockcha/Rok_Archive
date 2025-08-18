@@ -4,7 +4,7 @@
 import { useState } from "react";
 import { supabase } from "@/shared/lib/supabase";
 import { useNavigate } from "react-router-dom";
-import { useAdmin } from "../Auth/useAdmin"; // ✅
+import { useAdmin } from "../Auth/useAdmin";
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,
@@ -14,13 +14,20 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/shared/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/shared/ui/tooltip";
+import { Pencil, Trash2 } from "lucide-react";
 
 type Props = {
   postId: string;
   slug?: string | null;
 };
 
-export default function PostActions({ postId, slug }: Props) {
+export default function PostActions({ postId }: Props) {
   const { isAdmin } = useAdmin();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -29,9 +36,7 @@ export default function PostActions({ postId, slug }: Props) {
   if (!isAdmin) return null;
 
   const onEdit = () => {
-    // TODO: 수정 페이지 연결
-    // 예: navigate(`/posts/${slug ?? `id/${postId}`}/edit`);
-    console.log("TODO → edit post:", slug ?? postId);
+    navigate(`/posts/edit/${postId}`);
   };
 
   const onDelete = async () => {
@@ -39,10 +44,8 @@ export default function PostActions({ postId, slug }: Props) {
       setDeleting(true);
       const { error } = await supabase.from("posts").delete().eq("id", postId);
       if (error) throw error;
-
-      // post_assets가 FK CASCADE면 함께 삭제됨
       setOpen(false);
-      navigate("/"); // 삭제 후 목록/홈으로 이동
+      navigate("/");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "삭제 실패";
       alert(msg);
@@ -52,38 +55,89 @@ export default function PostActions({ postId, slug }: Props) {
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <Button size="sm" onClick={onEdit}>
-        수정
-      </Button>
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger asChild>
-          <Button size="sm" variant="destructive">
-            삭제
-          </Button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>정말 삭제하시겠습니까?</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-zinc-600 dark:text-zinc-300">
-            이 작업은 되돌릴 수 없습니다.
-          </p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              취소
-            </Button>
+    <TooltipProvider>
+      <div className="flex items-center justify-end gap-2">
+        {/* 수정 (아이콘 버튼) */}
+        <Tooltip>
+          <TooltipTrigger asChild>
             <Button
-              variant="destructive"
-              onClick={onDelete}
-              disabled={deleting}
+              size="icon"
+              variant="ghost"
+              aria-label="수정"
+              onClick={onEdit}
+              className="
+                size-9 rounded-full hover:cursor-pointer
+                transition-transform duration-150 hover:scale-110 active:scale-95
+                hover:bg-emerald-50 dark:hover:bg-emerald-900/30
+                hover:text-emerald-700 dark:hover:text-emerald-300
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400
+                hover:shadow-md
+              "
             >
-              {deleting ? "삭제 중..." : "삭제"}
+              <Pencil className="h-4 w-4" />
+              <span className="sr-only">수정</span>
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </div>
+          </TooltipTrigger>
+          <TooltipContent>수정</TooltipContent>
+        </Tooltip>
+
+        {/* 삭제 (아이콘 버튼 + 다이얼로그 트리거) */}
+        <Dialog open={open} onOpenChange={setOpen}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <DialogTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  aria-label="삭제"
+                  className="
+                    size-9 rounded-full hover:cursor-pointer
+                    transition-transform duration-150 hover:scale-110 active:scale-95
+                    hover:bg-rose-50 dark:hover:bg-rose-900/30
+                    hover:text-rose-700 dark:hover:text-rose-300
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400
+                    hover:shadow-md
+                  "
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="sr-only">삭제</span>
+                </Button>
+              </DialogTrigger>
+            </TooltipTrigger>
+            <TooltipContent>삭제</TooltipContent>
+          </Tooltip>
+
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>정말 삭제하시겠습니까?</DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-zinc-600 dark:text-zinc-300">
+              이 작업은 되돌릴 수 없습니다.
+            </p>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setOpen(false)}
+                className="hover:cursor-pointer"
+              >
+                취소
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={onDelete}
+                disabled={deleting}
+                className="
+                  hover:cursor-pointer
+                  transition-transform duration-150 hover:scale-[1.02] active:scale-95
+                  hover:shadow-md
+                "
+              >
+                {deleting ? "삭제 중..." : "삭제"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </TooltipProvider>
   );
 }

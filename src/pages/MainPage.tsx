@@ -1,17 +1,15 @@
 // src/pages/MainPage.tsx
 
-import IntroCard from "@/widgets/IntroCard";
-// idle 모드 제거로 아래 두 개는 더 이상 사용하지 않음 → import 삭제
-// import RotatingQuotes from "@/widgets/RotatingQuotes";
-// import { IconCloudCard } from "@/widgets/IconCloudCard";
+//import IntroCard from "@/widgets/IntroCard";
 
 import CategoryBar from "@/features/Catgegory/CategoryBar";
 import PostsSearchBar from "@/features/Search/PostsSearchBar";
 import PostsBoard from "@/features/posts/PostsBoard";
 import { IconCloudCard } from "@/widgets/IconCloudCard";
-import RotatingQuotes from "@/widgets/RotatingQuotes";
+import AdminDock from "@/widgets/AdminDock";
 
 import { useCallback, useMemo, useState } from "react";
+import TodoList from "@/widgets/TodoList";
 
 // ✅ idle 타입 제거
 type Mode = "selected" | "searched" | "showall";
@@ -45,70 +43,75 @@ export default function MainPage() {
   );
 
   return (
-    <div className="grid grid-cols-12 gap-6">
-      <IntroCard />
-
-      {/* 왼쪽: 카테고리 */}
-      <aside className="col-span-12 md:col-span-2">
-        <CategoryBar
-          selected={selectedCategoryId}
-          onSelect={handleSelectCategory}
-          // ✅ CategoryBar의 '전체보기' 버튼과 연동
-          showAllActive={mode === "showall"}
-          onToggleShowAll={(v) => {
-            if (v) {
-              setSelectedCategoryId(null);
-              setSearchedPostIds([]);
-              setMode("showall");
-            }
-          }}
+    <div className="w-full flex-col">
+      <div className="border-b-2 pb-3 flex flex-col items-center gap-2 mb-5">
+        {" "}
+        <PostsSearchBar
+          onApply={handleApplySearch}
+          limit={50}
+          categoryIdFilter={categoryIdFilter ?? null}
+          onError={(m) => console.error(m)}
+          className="w-1/2 max-w-3xl"
         />
-      </aside>
+        <AdminDock />
+        {/* <IntroCard /> */}
+        <TodoList />
+      </div>
 
-      {/* 오른쪽: 컨텐츠 */}
-      <main className="col-span-12 md:col-span-9  min-w-0">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <PostsSearchBar
-            onApply={handleApplySearch}
-            limit={50}
-            categoryIdFilter={categoryIdFilter ?? null}
-            onError={(m) => console.error(m)}
+      <div className="mx-auto w-full  px-6 py-6 grid grid-cols-12  gap-5">
+        {/* 왼쪽: 카테고리 */}
+        <aside className="col-span-12 md:col-span-2 ">
+          <CategoryBar
+            selected={selectedCategoryId}
+            onSelect={handleSelectCategory}
+            // ✅ CategoryBar의 '전체보기' 버튼과 연동
+            showAllActive={mode === "showall"}
+            onToggleShowAll={(v) => {
+              if (v) {
+                setSelectedCategoryId(null);
+                setSearchedPostIds([]);
+                setMode("showall");
+              }
+            }}
           />
-        </div>
+        </aside>
 
-        {/* 여기부터 교체 */}
-        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6">
-          {/* LEFT: Posts */}
-          <section className="min-w-0">
-            {/* 모드별 렌더링 */}
-            {mode === "showall" && (
-              <PostsBoard headerLabel="전체 글" showAll showHeader />
-            )}
+        {/* 오른쪽: 컨텐츠 */}
+        <main className="col-span-12 md:col-span-9  min-w-0">
+          {/* 여기부터 교체 */}
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-6">
+            {/* LEFT: Posts */}
+            <section className="min-w-0 ">
+              {/* 모드별 렌더링 */}
+              {mode === "showall" && (
+                <PostsBoard headerLabel="전체 글" showAll showHeader />
+              )}
 
-            {mode === "selected" && selectedCategoryId != null && (
-              <PostsBoard
-                categoryId={selectedCategoryId}
-                limit={12}
-                showHeader
-              />
-            )}
+              {mode === "selected" && selectedCategoryId != null && (
+                <PostsBoard
+                  categoryId={selectedCategoryId}
+                  limit={12}
+                  showHeader
+                />
+              )}
 
-            {mode === "searched" && (
-              <PostsBoard
-                headerLabel="검색 결과"
-                postIds={searchedPostIds}
-                showHeader
-              />
-            )}
-          </section>
+              {mode === "searched" && (
+                <PostsBoard
+                  headerLabel="검색 결과"
+                  postIds={searchedPostIds}
+                  showHeader
+                />
+              )}
+            </section>
 
-          {/* RIGHT: Sidebar */}
-          <aside className="lg:sticky lg:top-20 border">
-            <IconCloudCard />
-          </aside>
-        </div>
-        {/* 여기까지 교체 */}
-      </main>
+            {/* RIGHT: Sidebar */}
+            <aside className="ml-20">
+              <IconCloudCard />
+            </aside>
+          </div>
+          {/* 여기까지 교체 */}
+        </main>
+      </div>
     </div>
   );
 }

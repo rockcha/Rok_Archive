@@ -27,7 +27,13 @@ export default function CategoryBar({
   const { data: categories, loading } = useCategories();
 
   return (
-    <nav className={cn("flex flex-col gap-2", className)} aria-label="카테고리">
+    <nav
+      className={cn(
+        "flex flex-col gap-2 border rounded-lg bg-background p-2 mt-10",
+        className
+      )}
+      aria-label="카테고리"
+    >
       {/* ✅ 항상 맨 위: 전체보기 버튼 */}
       <CategoryButton
         id={null}

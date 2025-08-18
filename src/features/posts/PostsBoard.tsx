@@ -163,10 +163,10 @@ export default function PostsBoard({
     <section className={cn("w-full", className)}>
       {showHeader && (
         <div className="mb-3 flex items-end justify-start gap-3 ">
-          <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 ">
+          <h3 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 ">
             {headerLabel ??
               (categoryId
-                ? `카테고리 #${categoryId}`
+                ? pickCategoryName(items[0]?.categories)
                 : showAll
                 ? "전체 글"
                 : "전체 글")}
@@ -184,7 +184,7 @@ export default function PostsBoard({
       )}
 
       {!loading && !errMsg && items.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
           {items.map((p) => (
             <PostBox
               key={p.id}
@@ -203,7 +203,7 @@ export default function PostsBoard({
 
 function GridSkeleton({ count = 6 }: { count?: number }) {
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}

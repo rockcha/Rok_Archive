@@ -1,39 +1,6 @@
 // src/features/posts/PostsSearchBar.tsx
 "use client";
 
-/**
- * 🔎 PostsSearchBar (category_id 스키마 대응)
- * - Enter로 검색 실행
- * - title 또는 tag에 검색어가 "포함"되면 결과를 모아 id 배열로 콜백(onApply)
- * - 기본: 발행글(published_at not null)만, 최신순
- * - 우선순위: ①제목매치 → ②태그매치 (중복제거, 최신순 유지)
- *
- * ✅ 권장 RPC (배열 태그 부분일치 포함, category_id 사용):
- *
- * create or replace function public.search_posts_by_id(
- *   q text,
- *   p_limit int default 50,
- *   p_category_id uuid default null  -- bigint 쓰면 타입 변경
- * ) returns table(id uuid)
- * language sql as $$
- *   select p.id
- *   from posts p
- *   where p.published_at is not null
- *     and (p_category_id is null or p.category_id = p_category_id)
- *     and (
- *       p.title ilike ('%' || q || '%')
- *       or exists (
- *         select 1
- *         from unnest(coalesce(p.tags, array[]::text[])) as t(tag)
- *         where tag ilike ('%' || q || '%')
- *       )
- *     )
- *   order by p.published_at desc nulls last
- *   limit coalesce(p_limit, 50);
- * $$;
- * grant execute on function public.search_posts_by_id(text, int, uuid) to anon, authenticated;
- */
-
 import { useState } from "react";
 import { supabase } from "@/shared/lib/supabase";
 import { cn } from "@/shared/lib/utils";
@@ -62,7 +29,7 @@ export type PostsSearchBarProps = {
 
 export default function PostsSearchBar({
   onApply,
-  placeholder = "검색어를 입력하고 Enter ⏎",
+  placeholder = "제목이나 태그를 입력하세요",
   limit = 50,
   className,
   autoFocus,
@@ -247,7 +214,11 @@ export default function PostsSearchBar({
         )}
       </div>
 
-      <Button type="submit" disabled={loading}>
+      <Button
+        type="submit"
+        disabled={loading}
+        className="bg-emerald-600  hover:bg-emerald-500 hover:cursor-pointer"
+      >
         {loading ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 검색 중

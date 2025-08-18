@@ -13,8 +13,6 @@ import {
 } from "@/shared/ui/dialog";
 import { Label } from "@radix-ui/react-label";
 import { Input } from "@/shared/ui/input";
-import AddCategoryButton from "../Catgegory/AddCategoryButton";
-import AddPostButton from "../posts/AddPostButton";
 
 export default function AdminLoginButton() {
   const { isAdmin, setAdmin, logout } = useAdmin();
@@ -65,14 +63,12 @@ export default function AdminLoginButton() {
 
   return (
     <div>
-      <AddPostButton floating isAdmin={isAdmin} />
-      <AddCategoryButton floating isAdmin={isAdmin} />
       <Dialog open={open} onOpenChange={setOpen}>
         {/* 트리거: 하나만 사용, 라벨은 상태에 따라 변경 */}
         <DialogTrigger asChild>
           <Button
             variant="ghost"
-            className="hover:cursor-pointer hover:bg-green-200 font-semibold text-xm"
+            className="hover:cursor-pointer hover:bg-gray-100 font-semibold text-xm"
             title={isAdmin ? "현재: 관리자 모드" : "현재: 게스트 모드"}
           >
             {isAdmin ? "관리자 모드" : "게스트 모드"}

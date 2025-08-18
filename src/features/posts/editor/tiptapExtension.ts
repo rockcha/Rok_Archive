@@ -1,18 +1,21 @@
-// src/features/posts/editor/tiptapExtensions.ts
+// src/features/posts/editor/tiptapExtension.ts
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
-import { TextStyle } from "@tiptap/extension-text-style";
-import Color from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
-import Placeholder from "@tiptap/extension-placeholder";
+import Color from "@tiptap/extension-color";
+import { TextStyle } from "@tiptap/extension-text-style";
+import { FontFamily } from "@tiptap/extension-text-style";
+import ListItem from "@tiptap/extension-list-item";
+import Link from "@tiptap/extension-link";
 
-export function createExtensions(placeholder = "여기에 글을 작성하세요…") {
+export function createExtensions() {
   return [
-    StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
-    Underline,
-    TextStyle,
-    Color,
+    StarterKit.configure({}),
+    TextStyle, // fontSize 등 인라인 스타일의 기반
+    FontFamily, // editor.chain().setFontFamily("...") 커맨드 제공
+    Color.configure({ types: [TextStyle.name, ListItem.name] }), // or ['textStyle','listItem']
     Highlight.configure({ multicolor: true }),
-    Placeholder.configure({ placeholder }),
+    Underline,
+    Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true }),
   ];
 }
