@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dock, DockIcon } from "@/shared/magicui/dock";
 import { cn } from "@/shared/lib/utils";
-import { PencilLine, Tag, Github, Bot } from "lucide-react";
+import { PencilLine, Tag, Github, Bot, CalendarDays } from "lucide-react"; // ⬅️ CalendarDays 추가
 import { SiSupabase } from "react-icons/si";
 import { useAdmin } from "@/features/Auth/useAdmin";
 import { supabase } from "@/shared/lib/supabase";
@@ -55,6 +55,7 @@ export default function AdminDock({ className }: Props) {
   // 핸들러
   const handleNewPost = () => navigate("/posts/new");
   const handleAddCategory = () => setCatOpen(true); // ✅ 모달 오픈
+  const handleCalendar = () => navigate("/schedular"); // ⬅️ 캘린더 라우트
   const handleGitHub = () =>
     window.open(
       "https://github.com/rockcha/Rok_Archive",
@@ -139,6 +140,22 @@ export default function AdminDock({ className }: Props) {
               </Tooltip>
             </DockIcon>
 
+            {/* ⬅️ 새로 추가: 캘린더 (다음) */}
+            <DockIcon className="group">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    aria-label="캘린더 (다음)"
+                    className={iconBtn}
+                    onClick={() => withAuth(handleCalendar)}
+                  >
+                    <CalendarDays className="size-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>캘린더 (다음)</TooltipContent>
+              </Tooltip>
+            </DockIcon>
+
             <Separator orientation="vertical" className="h-full" />
 
             {/* GitHub */}
@@ -207,7 +224,7 @@ export default function AdminDock({ className }: Props) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* ✅ 카테고리 추가 다이얼로그 */}
+      {/* 카테고리 추가 다이얼로그 */}
       <AlertDialog
         open={catOpen}
         onOpenChange={(v) => {

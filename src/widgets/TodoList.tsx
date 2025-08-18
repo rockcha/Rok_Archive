@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Checkbox } from "@/shared/ui/checkbox";
-import { Minus } from "lucide-react";
 
 type TodoRow = {
   id: string;
@@ -16,7 +15,7 @@ type TodoRow = {
 };
 
 export default function TodoList() {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const [items, setItems] = useState<TodoRow[]>([]);
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
@@ -50,7 +49,7 @@ export default function TodoList() {
     try {
       const { data, error } = await supabase
         .from("todo")
-        .insert({ content: text }) // 날짜 미사용
+        .insert({ content: text })
         .select("id, content")
         .single();
       if (error) throw error;
@@ -74,39 +73,59 @@ export default function TodoList() {
     }
   };
 
-  // ── 최소화 UI (우상단 작은 버튼)
+  /* -------------------- 최소화 UI (우상단 작은 버튼) -------------------- */
   if (collapsed) {
     return (
-      <div className="fixed top-65 right-3 z-50 ">
-        <Button
-          size="default"
-          variant="default"
-          onClick={() => setCollapsed(false)}
-          className=" bg-emerald-600  hover:cursor-pointer hover:bg-emerald-500"
-        >
-          TODO ({items.length}) +
-        </Button>
-      </div>
+      <Card className="fixed top-30 right-3 z-50 w-[82vw] max-w-md">
+        <CardHeader className="flex flex-row items-center justify-between ">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <span>📝</span> 오늘의 할일 목록
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              현재 할 일 <span className="font-medium">{items.length}</span>
+              개가 있어요
+            </p>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCollapsed(false)}
+            title="펼치기"
+          >
+            펼치기
+          </Button>
+        </CardHeader>
+
+        {/* 접힘 상태에선 본문은 비움 (원하면 간단 가이드 한 줄 넣어도 됨) */}
+      </Card>
     );
   }
 
-  // ── 펼친 UI (카드 우상단에 최소화 버튼)
+  /* -------------------- 펼친 UI (SchedulePreview 구조로) -------------------- */
   return (
-    <div className="fixed top-65 right-3 z-50 w-[92vw] max-w-md">
+    <div className="fixed top-30 right-3 z-50 w-[92vw] max-w-md">
       <Card className="relative border shadow-md">
-        {/* 카드 우상단 최소화 버튼 */}
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => setCollapsed(true)}
-          title="최소화"
-          className="absolute right-2 top-2 h-8 w-8 hover:cursor-pointer hover:bg-emerald-50"
-        >
-          <Minus className="h-4 w-4" />
-        </Button>
+        {/* 카드 헤더: 제목 + '접기' (ghost) — SchedulePreview와 동일한 톤 */}
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <span>📝</span> 오늘의 할일 목록
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              해야 할 일을 빠르게 추가/완료하세요
+            </p>
+          </div>
 
-        <CardHeader>
-          <CardTitle className="text-lg">Todo List</CardTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCollapsed(true)}
+            title="최소화"
+          >
+            접기
+          </Button>
         </CardHeader>
 
         <CardContent className="space-y-3">
@@ -121,13 +140,13 @@ export default function TodoList() {
             <Button
               onClick={handleAdd}
               disabled={!content.trim() || adding}
-              className="bg-emerald-600  hover:bg-emerald-500 hover:cursor-pointer"
+              className="bg-emerald-600 hover:bg-emerald-500"
             >
               추가
             </Button>
           </div>
 
-          {/* 목록 */}
+          {/* 목록: SchedulePreview의 아이템 카드 스타일로 통일 */}
           {loading ? (
             <div className="py-6 text-center text-sm text-zinc-500">
               불러오는 중…
@@ -137,13 +156,16 @@ export default function TodoList() {
               할 일이 없습니다.
             </div>
           ) : (
-            <ul className="list-disc list-outside pl-8 space-y-2 marker:text-zinc-800 dark:marker:text-zinc-500">
+            <ul className="space-y-2">
               {items.map((t) => (
-                // ✅ li에는 flex 주지 않기
-                <li key={t.id} className="list-item">
-                  {/* ✅ 내부에서만 flex로 정렬 */}
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm">{t.content}</span>
+                <li key={t.id}>
+                  <div
+                    className="w-full rounded-xl border bg-background/60
+                               hover:bg-accent hover:text-accent-foreground
+                               transition p-3 flex items-center gap-3"
+                  >
+                    <div className="flex-1 truncate text-sm">{t.content}</div>
+                    {/* 완료 → 삭제 (체크박스 위치만 우측 고정) */}
                     <Checkbox
                       onCheckedChange={(checked) => {
                         if (checked === true) handleDelete(t.id);

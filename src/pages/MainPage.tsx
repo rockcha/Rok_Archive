@@ -10,6 +10,7 @@ import AdminDock from "@/widgets/AdminDock";
 
 import { useCallback, useMemo, useState } from "react";
 import TodoList from "@/widgets/TodoList";
+import SchedulePreviewAuto from "@/features/Schedule/SchedulePreviewAuto";
 
 // ✅ idle 타입 제거
 type Mode = "selected" | "searched" | "showall";
@@ -51,11 +52,12 @@ export default function MainPage() {
           limit={50}
           categoryIdFilter={categoryIdFilter ?? null}
           onError={(m) => console.error(m)}
-          className="w-1/2 max-w-3xl"
+          className="w-1/4 max-w-3xl"
         />
         <AdminDock />
         {/* <IntroCard /> */}
         <TodoList />
+        <SchedulePreviewAuto />
       </div>
 
       <div className="mx-auto w-full  px-6 py-6 grid grid-cols-12  gap-5">

@@ -162,7 +162,7 @@ export default function PostsBoard({
     <section className={cn("w-full", className)}>
       {showHeader && (
         <div className="mb-3 flex items-end justify-start gap-3 ">
-          <h3 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100 ">
+          <h3 className="text-2xl font-semibold pl-4 text-zinc-900 dark:text-zinc-100 ">
             {headerLabel ??
               (categoryId
                 ? pickCategoryName(items[0]?.categories)

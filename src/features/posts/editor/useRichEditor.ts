@@ -10,7 +10,7 @@ export function useRichEditor(options?: Partial<EditorOptions>) {
     editorProps: {
       attributes: {
         class:
-          "min-h-[320px] p-4 rounded-xl border bg-white dark:bg-zinc-900 focus:outline-none",
+          "min-h-[520px] p-4 rounded-xl border bg-[#FAFAF7] dark:bg-zinc-900 focus:outline-none",
       },
     },
     ...options,

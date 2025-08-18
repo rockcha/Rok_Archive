@@ -20,35 +20,9 @@ import {
 
 type Props = { editor: Editor | null };
 
-// 기본값
-const DEFAULT_FONT_SIZE = "14px";
+// ✅ 고정 폰트 (Gowun Dodum + 안전한 fallback)
 const DEFAULT_FONT_FAMILY = `"Gowun Dodum", Pretendard, Inter, system-ui, -apple-system, sans-serif`;
 
-// 특이/귀여운 폰트만
-const CUTE_FONTS = [
-  { label: "Gowun Dodum (기본)", value: DEFAULT_FONT_FAMILY },
-  { label: "Jua", value: `"Jua", ${DEFAULT_FONT_FAMILY}` },
-  {
-    label: "Nanum Pen Script",
-    value: `"Nanum Pen Script", ${DEFAULT_FONT_FAMILY}`,
-  },
-  {
-    label: "Black Han Sans",
-    value: `"Black Han Sans", ${DEFAULT_FONT_FAMILY}`,
-  },
-  { label: "다시시작해", value: `"Dasi Sijakhae", ${DEFAULT_FONT_FAMILY}` },
-];
-
-const FONT_SIZES = [
-  "12px",
-  "14px",
-  "16px",
-  "18px",
-  "20px",
-  "24px",
-  "28px",
-  "32px",
-];
 const BULLETS = ["•", "▪", "➜", "✅", "☑️", "⭐", "👉", "🔹", "🔸", "🔷", "🔶"];
 const FAVORITE_HL_COLORS = [
   "#fff3a3",
@@ -73,7 +47,6 @@ function applyWithTextSelection(
   const chain = editor.chain().focus() as ChainWithExtras;
 
   if (!sel.empty) {
-    // NodeSelection이든 TextSelection이든 동일하게 from~to로 텍스트 셀렉션 지정
     chain.setTextSelection({ from: sel.from, to: sel.to });
   }
   apply(chain);
@@ -81,11 +54,6 @@ function applyWithTextSelection(
 }
 
 export default function EditorToolbar({ editor }: Props) {
-  // 훅은 항상 호출되어야 함(조건문 밖)
-  const [fontSize, setFontSize] = React.useState(DEFAULT_FONT_SIZE);
-  const [fontFamily, setFontFamily] = React.useState(DEFAULT_FONT_FAMILY);
-  const [bulletValue, setBulletValue] = React.useState("");
-
   // 하이라이트 상태
   const [hlColor, setHlColor] = React.useState("#fff3a3"); // 피커 값
   const [currentHl, setCurrentHl] = React.useState<string | null>(null);
@@ -93,16 +61,21 @@ export default function EditorToolbar({ editor }: Props) {
   type Fmt = "bold" | "italic" | "underline" | null;
   const [activeFmt, setActiveFmt] = React.useState<Fmt>(null);
 
-  // 에디터가 준비되면 기본 폰트/크기 적용
+  const [bulletValue, setBulletValue] = React.useState("");
+
+  // ✅ 에디터가 준비되면 문서 전체에 기본 폰트 강제 적용
   React.useEffect(() => {
     if (!editor) return;
-    applyWithTextSelection(editor, (ch) =>
-      ch.setMark("textStyle", { fontFamily })
-    );
-    applyWithTextSelection(editor, (ch) =>
-      ch.setMark("textStyle", { fontSize })
-    );
-  }, [editor, fontFamily, fontSize]); // 최초 1회
+
+    const { from, to } = editor.state.selection;
+    editor
+      .chain()
+      .focus()
+      .selectAll()
+      .setMark("textStyle", { fontFamily: DEFAULT_FONT_FAMILY })
+      .setTextSelection({ from, to }) // 기존 선택 복원
+      .run();
+  }, [editor]);
 
   // 선택/트랜잭션 변경 시 현재 하이라이트 반영
   React.useEffect(() => {
@@ -126,23 +99,7 @@ export default function EditorToolbar({ editor }: Props) {
     };
   }, [editor]);
 
-  // editor가 아직 없으면 빈 툴바(훅은 이미 호출됨)
   if (!editor) return null;
-
-  // 글자 크기/글꼴
-  const applyFontSize = (size: string) => {
-    setFontSize(size);
-    applyWithTextSelection(editor, (ch) =>
-      ch.setMark("textStyle", { fontSize: size })
-    );
-  };
-  const applyFontFamily = (ff: string) => {
-    setFontFamily(ff);
-    // setFontFamily 커맨드 대신 textStyle로 적용(타입 안전)
-    applyWithTextSelection(editor, (ch) =>
-      ch.setMark("textStyle", { fontFamily: ff })
-    );
-  };
 
   // 하이라이트
   const setHighlightColor = (color: string | null) => {
@@ -162,8 +119,7 @@ export default function EditorToolbar({ editor }: Props) {
     setBulletValue("");
   };
 
-  // B/I/U: 상호배타 토글
-
+  // B/I/U: 상호배타 토글 (요건 유지)
   const toggleExclusive = (fmt: Exclude<Fmt, null>) => {
     const chain = editor.chain().focus() as ChainWithExtras;
 
@@ -246,42 +202,6 @@ export default function EditorToolbar({ editor }: Props) {
 
       <Separator orientation="vertical" className="mx-1 h-6" />
 
-      {/* 글자 크기 */}
-      <Select value={fontSize} onValueChange={applyFontSize}>
-        <SelectTrigger size="sm" className="min-w-28">
-          <SelectValue placeholder="글자 크기" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectLabel>글자 크기</SelectLabel>
-            {FONT_SIZES.map((sz) => (
-              <SelectItem key={sz} value={sz}>
-                {sz}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-
-      {/* 글꼴 */}
-      <Select value={fontFamily} onValueChange={applyFontFamily}>
-        <SelectTrigger size="sm" className="min-w-44">
-          <SelectValue placeholder="글꼴" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            <SelectLabel>글꼴</SelectLabel>
-            {CUTE_FONTS.map((f) => (
-              <SelectItem key={f.label} value={f.value}>
-                {f.label}
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
-
-      <Separator orientation="vertical" className="mx-1 h-6" />
-
       {/* 하이라이트: 없음 + 즐겨찾기 + 피커 + 상태표시 */}
       <div className="flex items-center gap-3">
         <button
@@ -311,15 +231,10 @@ export default function EditorToolbar({ editor }: Props) {
             type="color"
             value={hlColor}
             onChange={(e) => setHighlightColor(e.target.value)}
-            className={`h-8 w-8 cursor-pointer rounded border ${
-              currentHl ? "ring-2 ring-emerald-200" : ""
-            }`}
+            className={"h-8 w-8 cursor-pointer rounded border "}
             title="색을 고르면 즉시 적용"
           />
         </label>
-        <span className="text-xs text-zinc-500">
-          {currentHl ? `적용중: ${currentHl}` : "적용: 없음"}
-        </span>
       </div>
 
       <Separator orientation="vertical" className="mx-1 h-6" />

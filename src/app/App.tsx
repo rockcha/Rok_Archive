@@ -11,6 +11,7 @@ import MainPage from "@/pages/MainPage";
 import PostCreatePage from "@/pages/PostCreatePage";
 import PostDetailPage from "@/pages/PostDetailPage";
 import PostEditPage from "@/pages/PostEditPage";
+import SchedularPage from "@/pages/SchedularPage";
 
 //위젯 목록
 import Header from "@/widgets/Header/Header";
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="/posts/:slug" element={<PostDetailPage />} />
           <Route path="/posts/id/:id" element={<PostDetailPage />} />
           <Route path="/posts/edit/:id" element={<PostEditPage />} />
+          <Route path="/schedular" element={<SchedularPage />} />
         </Route>
       </Routes>
     </Router>

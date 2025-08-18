@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Content } from "@tiptap/core";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/shared/lib/supabase";
 
 import { Label } from "@radix-ui/react-label";
@@ -28,11 +29,10 @@ import type { JSONContent } from "@tiptap/core";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
 type Category = { id: string | number; name: string };
-
 type ComposerMode = "create" | "edit";
 
 type InitialData = {
-  id?: string; // edit 시 필수
+  id?: string;
   title?: string;
   categoryId?: string | number | null;
   tags?: string[];
@@ -52,6 +52,8 @@ export default function PostComposer({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(
     initial?.categoryId != null ? String(initial.categoryId) : ""
   );
+  const navigate = useNavigate();
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCats, setLoadingCats] = useState(true);
   const [tagsRaw, setTagsRaw] = useState(
@@ -59,12 +61,11 @@ export default function PostComposer({
   );
   const [saving, setSaving] = useState(false);
 
-  // ✅ 접기/펼치기 상태 (메타 카드)
-  const [metaOpen, setMetaOpen] = useState(true);
+  // ✅ 기본값을 "접힘"으로 변경
+  const [metaOpen, setMetaOpen] = useState(false);
 
   const editor = useRichEditor();
 
-  // 카테고리 로드
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -88,17 +89,13 @@ export default function PostComposer({
     };
   }, []);
 
-  // 초기 콘텐츠 주입 (edit 모드)
   useEffect(() => {
     if (!editor) return;
-
     const content = initial?.content as Content | null | undefined;
-
     if (content != null) {
-      // ✅ v2 시그니처: options 객체로 전달
       editor.commands.setContent(content, {
-        emitUpdate: false, // setContent 시 onUpdate 발생 막기
-        errorOnInvalidContent: false, // JSON/HTML 섞여도 안전하게
+        emitUpdate: false,
+        errorOnInvalidContent: false,
       });
     } else {
       editor.commands.clearContent(true);
@@ -164,6 +161,7 @@ export default function PostComposer({
         setSelectedCategoryId("");
         setTagsRaw("");
         editor.commands.clearContent(true);
+        navigate("/");
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "저장 실패";
@@ -173,7 +171,6 @@ export default function PostComposer({
     }
   };
 
-  // 나가기 경고(작성/수정 중)
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       if (saving) return;
@@ -196,31 +193,32 @@ export default function PostComposer({
       {/* ─────────────────────
           메타 카드 (접기/펼치기)
          ───────────────────── */}
-      <Card className="w-full md:w-1/2 border shadow-sm">
+      <Card className="fixed top-50 right-0 z-50  border shadow-sm">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            {metaOpen ? (
-              <ChevronDown className="h-4 w-4 opacity-70" />
-            ) : (
-              <ChevronRight className="h-4 w-4 opacity-70" />
-            )}
+            {/* ▶ 아이콘 클릭으로만 토글 */}
+            <button
+              type="button"
+              onClick={() => setMetaOpen((v) => !v)}
+              aria-expanded={metaOpen}
+              aria-controls="composer-meta"
+              className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:cursor-pointer "
+              title={metaOpen ? "접기" : "펼치기"}
+            >
+              {metaOpen ? (
+                <ChevronDown className="h-4 w-4 opacity-70" />
+              ) : (
+                <ChevronRight className="h-4 w-4 opacity-70" />
+              )}
+            </button>
+
             <h3 className="text-sm font-semibold">카테고리 · 제목 · 태그</h3>
           </div>
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => setMetaOpen((v) => !v)}
-            aria-expanded={metaOpen}
-            className="hover:bg-zinc-100 dark:hover:bg-zinc-800"
-          >
-            {metaOpen ? "접기" : "펼치기"}
-          </Button>
+          {/* 우측 토글 버튼 제거 */}
         </div>
 
         {metaOpen && (
-          <CardContent className="space-y-4 px-4 pb-4">
+          <CardContent id="composer-meta" className="space-y-4 px-4 pb-4">
             {/* 카테고리 */}
             <div className="space-y-1.5">
               <Label className="text-sm font-semibold">카테고리 *</Label>
@@ -274,6 +272,23 @@ export default function PostComposer({
                 className="h-10 text-base"
               />
             </div>
+
+            {/* 작성 완료 */}
+            <div className="flex justify-end pt-2">
+              <Button
+                onClick={onSave}
+                disabled={!isReadyToSubmit || saving}
+                className="bg-emerald-600 hover:bg-emerald-700 hover:cursor-pointer"
+              >
+                {saving
+                  ? mode === "edit"
+                    ? "수정 중..."
+                    : "저장 중..."
+                  : mode === "edit"
+                  ? "수정 완료"
+                  : "작성 완료"}
+              </Button>
+            </div>
           </CardContent>
         )}
       </Card>
@@ -292,29 +307,9 @@ export default function PostComposer({
         <EditorToolbar editor={editor} />
       </div>
 
-      {/* 에디터 */}
-      <div className="rounded-b-md rounded-t-none border bg-background">
-        <EditorContent
-          editor={editor}
-          className="tiptap min-h-[60vh] rounded-b-md p-4"
-        />
-      </div>
-
-      {/* 제출 */}
-      <div className="flex justify-end">
-        <Button
-          onClick={onSave}
-          disabled={!isReadyToSubmit || saving}
-          className="bg-emerald-600 hover:bg-emerald-700 hover:cursor-pointer"
-        >
-          {saving
-            ? mode === "edit"
-              ? "수정 중..."
-              : "저장 중..."
-            : mode === "edit"
-            ? "수정 완료"
-            : "작성 완료"}
-        </Button>
+      {/* 에디터: 흰 배경을 가득 채우도록 부모 px-4 상쇄 */}
+      <div className="bg-background -mx-4">
+        <EditorContent editor={editor} className="tiptap min-h-[60vh] p-4" />
       </div>
 
       <Separator className="opacity-0" />
