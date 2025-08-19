@@ -210,7 +210,7 @@ export default function PostComposer({
       {/* ────────────────
           (1) 메타 카드
           ──────────────── */}
-      <Card className="fixed top-25 right-10 z-50 border shadow-sm">
+      <Card className="fixed top-50 right-10 z-50 border shadow-sm">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             {/* ▶ 접기/펼치기 토글 */}
