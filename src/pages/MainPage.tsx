@@ -45,24 +45,34 @@ export default function MainPage() {
 
   return (
     <div className="w-full flex-col">
-      <div className="border-b-2 pb-3 flex flex-col items-center gap-2 mb-5">
-        {" "}
-        <PostsSearchBar
-          onApply={handleApplySearch}
-          limit={50}
-          categoryIdFilter={categoryIdFilter ?? null}
-          onError={(m) => console.error(m)}
-          className="w-1/4 max-w-3xl"
-        />
-        <AdminDock />
-        {/* <IntroCard /> */}
-        <TodoList />
-        <SchedulePreviewAuto />
+      <TodoList />
+      <SchedulePreviewAuto />
+      <div className="w-full h-[10rem] px-2 ">
+        {/* 고정 툴바 (풀폭, 투명) */}
+        <div className="fixed top-25 inset-x-0 z-50">
+          <div className="mx-auto w-full max-w-screen-lg ">
+            <section className="  p-4 flex   items-center justify-center gap-2 bg-background border">
+              {/* ✅ SearchBar: 항상 가운데, 절반 크기 */}
+
+              <div className="flex flex-col items-center  gap-2  ">
+                <PostsSearchBar
+                  onApply={handleApplySearch}
+                  limit={50}
+                  categoryIdFilter={categoryIdFilter ?? null}
+                  onError={(m) => console.error(m)}
+                  className="w-[25rem] min-w-[12rem]"
+                />
+                {/* ✅ AdminDock: SearchBar와 독립 */}
+                <AdminDock />
+              </div>
+            </section>
+          </div>
+        </div>
       </div>
 
-      <div className="mx-auto w-full  px-6 py-6 grid grid-cols-12  gap-5">
+      <div className="mx-auto w-full  grid grid-cols-12 gap-2 ">
         {/* 왼쪽: 카테고리 */}
-        <aside className="col-span-12 md:col-span-2 ">
+        <aside className="col-span-12 md:col-span-2 pl-2">
           <CategoryBar
             selected={selectedCategoryId}
             onSelect={handleSelectCategory}
@@ -79,11 +89,11 @@ export default function MainPage() {
         </aside>
 
         {/* 오른쪽: 컨텐츠 */}
-        <main className="col-span-12 md:col-span-9  min-w-0">
+        <main className="col-span-12 md:col-span-10  min-w-0">
           {/* 여기부터 교체 */}
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_100px]  border-2 rounded-lg ">
             {/* LEFT: Posts */}
-            <section className="min-w-0 ">
+            <section className="  min-w-0 ">
               {/* 모드별 렌더링 */}
               {mode === "showall" && (
                 <PostsBoard headerLabel="전체 글" showAll showHeader />
@@ -107,7 +117,7 @@ export default function MainPage() {
             </section>
 
             {/* RIGHT: Sidebar */}
-            <aside className="ml-20">
+            <aside className="border-l-2">
               <IconCloudCard />
             </aside>
           </div>

@@ -31,12 +31,11 @@ const FIELDS =
   "id, slug, title, tags, category_id, categories(name), published_at";
 
 export default function PostsBoard({
-  headerLabel,
   postIds,
   categoryId = null,
   limit = 12,
   className,
-  showHeader = true,
+
   showAll = false, // ✅ 기본은 꺼짐
 }: Props) {
   const [items, setItems] = useState<PostRow[]>([]);
@@ -159,8 +158,8 @@ export default function PostsBoard({
     Array.isArray(c) ? c[0]?.name : c?.name;
 
   return (
-    <section className={cn("w-full", className)}>
-      {showHeader && (
+    <section className={cn("w-full p-2 ", className)}>
+      {/* {showHeader && (
         <div className="mb-3 flex items-end justify-start gap-3 ">
           <h3 className="text-2xl font-semibold pl-4 text-zinc-900 dark:text-zinc-100 ">
             {headerLabel ??
@@ -172,7 +171,7 @@ export default function PostsBoard({
           </h3>
           <span className="text-xs  text-zinc-500">{items.length} posts</span>
         </div>
-      )}
+      )} */}
 
       {loading && <GridSkeleton count={skeletonCount} />}
 
@@ -183,7 +182,7 @@ export default function PostsBoard({
       )}
 
       {!loading && !errMsg && items.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
           {items.map((p) => (
             <PostBox
               key={p.id}

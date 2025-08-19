@@ -140,19 +140,19 @@ export default function AdminDock({ className }: Props) {
               </Tooltip>
             </DockIcon>
 
-            {/* ⬅️ 새로 추가: 캘린더 (다음) */}
+            {/* ⬅️ 새로 추가: 캘린더 */}
             <DockIcon className="group">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
-                    aria-label="캘린더 (다음)"
+                    aria-label="캘린더"
                     className={iconBtn}
                     onClick={() => withAuth(handleCalendar)}
                   >
                     <CalendarDays className="size-4" />
                   </button>
                 </TooltipTrigger>
-                <TooltipContent>캘린더 (다음)</TooltipContent>
+                <TooltipContent>캘린더</TooltipContent>
               </Tooltip>
             </DockIcon>
 

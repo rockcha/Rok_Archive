@@ -193,7 +193,7 @@ export default function PostsSearchBar({
   return (
     <form
       className={cn(
-        "flex items-center gap-2 rounded-xl border bg-background p-2",
+        "  flex items-center gap-2 rounded-xl border bg-background p-2",
         className
       )}
       onSubmit={(e) => {
@@ -208,7 +208,7 @@ export default function PostsSearchBar({
           onChange={(e) => setQ(e.target.value)}
           placeholder={placeholder}
           autoFocus={autoFocus}
-          className="pl-9 pr-9"
+          className="pl-9 pr-9 bg-sky-100"
         />
         {q && (
           <Button

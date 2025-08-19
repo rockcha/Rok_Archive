@@ -29,7 +29,7 @@ export default function CategoryBar({
   return (
     <nav
       className={cn(
-        "flex flex-col gap-2 border rounded-lg bg-background p-2 mt-10",
+        "flex flex-col gap-2 border rounded-lg bg-background p-2 ",
         className
       )}
       aria-label="카테고리"

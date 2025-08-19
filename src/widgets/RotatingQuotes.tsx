@@ -19,18 +19,25 @@ const QUOTES = [
 ];
 
 export default function RotatingQuotes() {
-  const [idx, setIdx] = useState(0); // 현재 명언 인덱스
-  const [text, setText] = useState(""); // 화면에 표시되는 타이핑 중 텍스트
+  const [idx, setIdx] = useState(0);
+  const [text, setText] = useState("");
   const [phase, setPhase] = useState<"typing" | "pausing" | "deleting">(
     "typing"
   );
 
   // 속도/딜레이 설정
-  const typingSpeed = 100; // ms, 타이핑 속도
-  const deletingSpeed = 40; // ms, 지우는 속도
-  const pauseDuration = 5200; // ms, 한 문장 타이핑 완료 후 멈춤 시간
+  const typingSpeed = 100; // ms
+  const deletingSpeed = 40; // ms
+  const pauseDuration = 5200; // ms
 
   const full = useMemo(() => Array.from(QUOTES[idx].text), [idx]);
+
+  // 현재 배열에서 가장 긴 문장 (폭 고정용)
+  const LONGEST_QUOTE = useMemo(
+    () =>
+      QUOTES.reduce((a, b) => (a.text.length >= b.text.length ? a : b)).text,
+    []
+  );
 
   useEffect(() => {
     let t: number | null = null;
@@ -51,7 +58,6 @@ export default function RotatingQuotes() {
           setText((prev) => prev.slice(0, -1));
         }, deletingSpeed);
       } else {
-        // 다음 문장으로
         setIdx((i) => (i + 1) % QUOTES.length);
         setPhase("typing");
       }
@@ -66,7 +72,6 @@ export default function RotatingQuotes() {
     };
   }, [phase, text, full, typingSpeed, deletingSpeed, pauseDuration]);
 
-  // 초기/변경 시 타이핑 시작
   useEffect(() => {
     if (text.length === 0 && phase !== "typing") setPhase("typing");
   }, [idx, phase, text.length]);
@@ -74,10 +79,17 @@ export default function RotatingQuotes() {
   return (
     <div className="w-full flex items-center justify-center px-4">
       <div className="max-w-3xl text-center">
-        {/* 명언(타이핑) */}
-        <p className="text-xs md:text-base leading-8 text-zinc-800 dark:text-zinc-100">
-          {text}
-          <span className="ml-1 inline-block h-[1.1em] w-[2px] align-[-0.15em] bg-current animate-pulse" />
+        {/* 명언(타이핑) - 폭 고정 */}
+        <p className="relative inline-block whitespace-nowrap text-xs md:text-base leading-8 text-zinc-800 dark:text-zinc-100">
+          {/* 폭만 잡는 더 긴 문장 */}
+          <span className="invisible block" aria-hidden="true">
+            {LONGEST_QUOTE}
+          </span>
+          {/* 실제 타이핑 텍스트를 겹쳐서 표시 */}
+          <span className="absolute inset-0">
+            {text}
+            <span className="ml-1 inline-block h-[1.1em] w-[2px] align-[-0.15em] bg-current animate-pulse" />
+          </span>
         </p>
 
         {/* 저자(다음 줄) */}

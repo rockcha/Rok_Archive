@@ -76,7 +76,7 @@ export default function AdminLoginButton() {
         </DialogTrigger>
 
         {/* 다이얼로그: 하나만 두고, 내용/버튼 동작·라벨만 분기 */}
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md ">
           <DialogHeader>
             <DialogTitle>
               {isAdmin ? "로그아웃 하시겠습니까?" : "관리자 로그인"}
