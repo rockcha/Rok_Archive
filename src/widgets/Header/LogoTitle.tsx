@@ -24,9 +24,9 @@ export default function LogoTitle() {
           록차 아카이브
         </Button>
 
-        <p className="text-xs">
-          &emsp;&emsp; &emsp;&emsp;정록이의 소소한&emsp;
-          <CyclingHighlighter holdMs={5000}>개발 기록</CyclingHighlighter>
+        <p className="text-sm">
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 정록이의 소소한&nbsp;
+          <CyclingHighlighter holdMs={5000}> 개발 기록</CyclingHighlighter>
         </p>
       </div>
     </div>

@@ -215,11 +215,11 @@ export default function PostsSearchBar({
             type="button"
             variant="ghost"
             size="icon"
-            className="absolute right-1 top-1/2 -translate-y-1/2"
+            className="absolute right-1 top-1/2 -translate-y-1/2 "
             onClick={clear}
             aria-label="Clear"
           >
-            <X className="h-4 w-4" />
+            <X className="h-2 w-2" />
           </Button>
         )}
       </div>
