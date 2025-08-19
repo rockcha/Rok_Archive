@@ -7,10 +7,16 @@ import { TextStyle } from "@tiptap/extension-text-style";
 
 export function createExtensions() {
   return [
-    StarterKit.configure({}),
-    // ✅ 기본 폰트(Gowun Dodum) 강제 적용용 마크만 유지
+    StarterKit.configure({
+      // ✅ StarterKit이 내부적으로 제공하는 동명 확장 비활성화
+      link: false,
+      underline: false,
+    }),
+    // 기본 폰트 강제용
     TextStyle,
+    // 멀티컬러 하이라이트
     Highlight.configure({ multicolor: true }),
+    // 우리가 직접 쓰는 확장만 활성화
     Underline,
     Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true }),
   ];

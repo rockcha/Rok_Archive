@@ -82,7 +82,7 @@ export default function PostDetailPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto w-full max-w-4xl px-4 py-6">
+      <div className="mx-auto w-full max-w-screen-lg px-4 py-6">
         <div className="h-8 w-2/3 animate-pulse rounded bg-background dark:bg-zinc-800" />
         <div className="mt-2 h-4 w-40 animate-pulse rounded bg-background dark:bg-zinc-800" />
         <Separator className="my-4" />
@@ -93,7 +93,7 @@ export default function PostDetailPage() {
 
   if (err || !post) {
     return (
-      <div className="mx-auto w-full max-w-4xl px-4 py-6">
+      <div className="mx-auto w-full max-w-screen-lg px-4 py-6">
         <p className="text-sm text-red-600">
           {err ?? "존재하지 않는 글입니다."}
         </p>

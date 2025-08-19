@@ -90,18 +90,17 @@ export default function TodoList() {
   if (!hydrated) return null;
 
   return (
-    <div className="fixed top-28 right-10 z-50 w-[18rem] max-w-none hidden md:block">
+    <div className="fixed top-28 right-3 z-50 w-[22rem] max-w-none hidden md:block">
       <Card className="relative border shadow-md">
         {/* ✅ 헤더/멘트/위치 통일 (접힘/펼침 동일) */}
         <CardHeader className="flex flex-row items-center justify-between">
           <div>
             <CardTitle className="flex items-center gap-2 text-lg">
-              <span>📌</span> 오늘의 할일 목록
+              <span>📌</span> 오늘의 할일{" "}
+              <span className="text-sm text-muted-foreground ">
+                ({items.length})
+              </span>
             </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              현재 할 일 <span className="font-medium">{items.length}</span>개가
-              있어요
-            </p>
           </div>
 
           <Button
