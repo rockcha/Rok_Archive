@@ -90,7 +90,7 @@ export default function TodoList() {
   if (!hydrated) return null;
 
   return (
-    <div className="fixed top-28 right-45 z-52 w-[18rem] max-w-none hidden md:block">
+    <div className="fixed top-28 right-10 z-50 w-[18rem] max-w-none hidden md:block">
       <Card className="relative border shadow-md">
         {/* ✅ 헤더/멘트/위치 통일 (접힘/펼침 동일) */}
         <CardHeader className="flex flex-row items-center justify-between">
@@ -109,6 +109,7 @@ export default function TodoList() {
             size="sm"
             onClick={() => setCollapsed((v) => !v)}
             title={collapsed ? "펼치기" : "접기"}
+            className="hover:cursor-pointer"
           >
             {collapsed ? "펼치기" : "접기"}
           </Button>
@@ -137,7 +138,7 @@ export default function TodoList() {
                 <Button
                   onClick={handleAdd}
                   disabled={!content.trim() || adding}
-                  className="bg-emerald-600 hover:bg-emerald-500"
+                  className="bg-emerald-600 hover:bg-emerald-500 hover:cursor-pointer"
                 >
                   추가
                 </Button>

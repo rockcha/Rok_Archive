@@ -83,10 +83,10 @@ export default function PostDetailPage() {
   if (loading) {
     return (
       <div className="mx-auto w-full max-w-4xl px-4 py-6">
-        <div className="h-8 w-2/3 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
-        <div className="mt-2 h-4 w-40 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+        <div className="h-8 w-2/3 animate-pulse rounded bg-background dark:bg-zinc-800" />
+        <div className="mt-2 h-4 w-40 animate-pulse rounded bg-background dark:bg-zinc-800" />
         <Separator className="my-4" />
-        <div className="h-64 animate-pulse rounded-xl border bg-zinc-100 dark:bg-zinc-800" />
+        <div className="h-64 animate-pulse rounded-xl border bg-background dark:bg-zinc-800" />
       </div>
     );
   }
@@ -104,12 +104,12 @@ export default function PostDetailPage() {
   // const catName = post.categories?.name ?? "Uncategorized";
 
   return (
-    <article className="mx-auto w-full max-w-screen-2xl px-6 py-6">
+    <article className=" mx-auto w-full max-w-screen-lg border-l border-r px-6 py-6">
       {/* 헤더 */}
-      <header>
+      <header className="text-center">
         <h1 className="text-3xl font-bold">{post.title}</h1>
 
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-xm text-zinc-500">
+        <div className="mt-2 flex flex-wrap items-center justify-end gap-2 text-xm text-zinc-500">
           {post.tags?.length > 0 && (
             <span>· {post.tags.map((t) => `#${t}`).join(" ")}</span>
           )}

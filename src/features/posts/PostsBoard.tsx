@@ -159,20 +159,6 @@ export default function PostsBoard({
 
   return (
     <section className={cn("w-full p-2 ", className)}>
-      {/* {showHeader && (
-        <div className="mb-3 flex items-end justify-start gap-3 ">
-          <h3 className="text-2xl font-semibold pl-4 text-zinc-900 dark:text-zinc-100 ">
-            {headerLabel ??
-              (categoryId
-                ? pickCategoryName(items[0]?.categories)
-                : showAll
-                ? "전체 글"
-                : "전체 글")}
-          </h3>
-          <span className="text-xs  text-zinc-500">{items.length} posts</span>
-        </div>
-      )} */}
-
       {loading && <GridSkeleton count={skeletonCount} />}
 
       {!loading && errMsg && <p className="text-sm text-red-600">{errMsg}</p>}

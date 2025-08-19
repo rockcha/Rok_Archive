@@ -44,17 +44,17 @@ export default function MainPage() {
   );
 
   return (
-    <div className="w-full flex-col">
+    <div className="w-full flex-col border-b-2">
       <TodoList />
       <SchedulePreviewAuto />
-      <div className="w-full h-[10rem] px-2 ">
+      <div className="w-full h-[10rem]  ">
         {/* 고정 툴바 (풀폭, 투명) */}
-        <div className="fixed top-25 inset-x-0 z-50">
-          <div className="mx-auto w-full max-w-screen-lg ">
-            <section className="  p-4 flex   items-center justify-center gap-2 bg-background border">
+        <div className="fixed top-25 inset-x-0 z-40">
+          <div className="mx-auto w-full ">
+            <section className=" p-4 flex   items-center justify-center gap-2 bg-background border-b">
               {/* ✅ SearchBar: 항상 가운데, 절반 크기 */}
 
-              <div className="flex flex-col items-center  gap-2  ">
+              <div className="flex flex-col items-center  gap-2 ">
                 <PostsSearchBar
                   onApply={handleApplySearch}
                   limit={50}
@@ -89,9 +89,9 @@ export default function MainPage() {
         </aside>
 
         {/* 오른쪽: 컨텐츠 */}
-        <main className="col-span-12 md:col-span-10  min-w-0">
+        <main className="col-span-12 md:col-span-8  min-w-0 ">
           {/* 여기부터 교체 */}
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_100px]  border-2 rounded-lg ">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_120px]   ">
             {/* LEFT: Posts */}
             <section className="  min-w-0 ">
               {/* 모드별 렌더링 */}
@@ -117,7 +117,7 @@ export default function MainPage() {
             </section>
 
             {/* RIGHT: Sidebar */}
-            <aside className="border-l-2">
+            <aside className="border-l-2 border-r-2">
               <IconCloudCard />
             </aside>
           </div>

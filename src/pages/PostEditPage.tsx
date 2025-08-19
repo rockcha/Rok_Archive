@@ -64,7 +64,7 @@ export default function PostEditPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto w-full max-w-screen-2xl px-6 py-6">
+      <div className="mx-auto w-full max-w-screen-lg px-6 py-6">
         <div className="h-7 w-40 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
         <Separator className="my-4" />
         <div className="h-64 animate-pulse rounded-xl border bg-zinc-100 dark:bg-zinc-800" />
@@ -74,7 +74,7 @@ export default function PostEditPage() {
 
   if (err || !post) {
     return (
-      <div className="mx-auto w-full max-w-screen-2xl px-6 py-6">
+      <div className="mx-auto w-full max-w-screen-lg px-6 py-6">
         <p className="text-sm text-red-600">
           {err ?? "존재하지 않는 글입니다."}
         </p>
@@ -83,7 +83,7 @@ export default function PostEditPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-screen-2xl px-6 py-6">
+    <div className="mx-auto w-full max-w-screen-lg px-6 py-6">
       <h1 className="text-2xl font-bold">글 수정</h1>
       <p className="mt-1 text-sm text-zinc-500">
         제목 · 카테고리 · 태그는 필수입니다.

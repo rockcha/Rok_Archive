@@ -76,7 +76,7 @@ export default function SchedulePreview({
   return (
     <Card
       className={[
-        "fixed top-28 left-47 z-52 w-[18rem] max-w-none hidden md:block",
+        "fixed top-28 left-10 z-50 w-[18rem] max-w-none hidden md:block",
         className || "",
       ].join(" ")}
     >
@@ -93,6 +93,7 @@ export default function SchedulePreview({
           variant="ghost"
           size="sm"
           onClick={() => setCollapsed((v) => !v)}
+          className="hover:cursor-pointer"
         >
           {collapsed ? "펼치기" : "접기"}
         </Button>

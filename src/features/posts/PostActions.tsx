@@ -5,6 +5,7 @@ import { useState } from "react";
 import { supabase } from "@/shared/lib/supabase";
 import { useNavigate } from "react-router-dom";
 import { useAdmin } from "../Auth/useAdmin";
+
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,
@@ -20,6 +21,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/ui/tooltip";
+
 import { Pencil, Trash2 } from "lucide-react";
 
 type Props = {
@@ -30,15 +32,18 @@ type Props = {
 export default function PostActions({ postId }: Props) {
   const { isAdmin } = useAdmin();
   const navigate = useNavigate();
+
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   if (!isAdmin) return null;
 
+  // ✏️ 수정 버튼 클릭 시 이동
   const onEdit = () => {
     navigate(`/posts/edit/${postId}`);
   };
 
+  // 🗑️ 삭제 버튼 클릭 시 실행
   const onDelete = async () => {
     try {
       setDeleting(true);
@@ -56,8 +61,9 @@ export default function PostActions({ postId }: Props) {
 
   return (
     <TooltipProvider>
-      <div className="flex items-center justify-end gap-2">
-        {/* 수정 (아이콘 버튼) */}
+      {/* ✅ 화면 우측 하단 고정된 액션 버튼 영역 */}
+      <div className="fixed bottom-6 right-6 z-50 flex jutify-center gap-2">
+        {/* ✏️ 수정 버튼 */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -65,23 +71,16 @@ export default function PostActions({ postId }: Props) {
               variant="ghost"
               aria-label="수정"
               onClick={onEdit}
-              className="
-                size-9 rounded-full hover:cursor-pointer
-                transition-transform duration-150 hover:scale-110 active:scale-95
-                hover:bg-emerald-50 dark:hover:bg-emerald-900/30
-                hover:text-emerald-700 dark:hover:text-emerald-300
-                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400
-                hover:shadow-md
-              "
+              className="w-14 h-14 rounded-full bg-emerald-500 text-white shadow-lg transition-transform hover:scale-105 hover:cursor-pointer"
             >
-              <Pencil className="h-4 w-4" />
+              <Pencil className="h-6 w-6" />
               <span className="sr-only">수정</span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>수정</TooltipContent>
         </Tooltip>
 
-        {/* 삭제 (아이콘 버튼 + 다이얼로그 트리거) */}
+        {/* 🗑️ 삭제 버튼 (다이얼로그 포함) */}
         <Dialog open={open} onOpenChange={setOpen}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -90,16 +89,9 @@ export default function PostActions({ postId }: Props) {
                   size="icon"
                   variant="ghost"
                   aria-label="삭제"
-                  className="
-                    size-9 rounded-full hover:cursor-pointer
-                    transition-transform duration-150 hover:scale-110 active:scale-95
-                    hover:bg-rose-50 dark:hover:bg-rose-900/30
-                    hover:text-rose-700 dark:hover:text-rose-300
-                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400
-                    hover:shadow-md
-                  "
+                  className="w-14 h-14 rounded-full bg-rose-500 text-white shadow-lg transition-transform hover:scale-105 hover:cursor-pointer"
                 >
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="h-6 w-6" />
                   <span className="sr-only">삭제</span>
                 </Button>
               </DialogTrigger>
@@ -107,6 +99,7 @@ export default function PostActions({ postId }: Props) {
             <TooltipContent>삭제</TooltipContent>
           </Tooltip>
 
+          {/* 🗨️ 삭제 확인 다이얼로그 */}
           <DialogContent>
             <DialogHeader>
               <DialogTitle>정말 삭제하시겠습니까?</DialogTitle>
@@ -126,11 +119,7 @@ export default function PostActions({ postId }: Props) {
                 variant="destructive"
                 onClick={onDelete}
                 disabled={deleting}
-                className="
-                  hover:cursor-pointer
-                  transition-transform duration-150 hover:scale-[1.02] active:scale-95
-                  hover:shadow-md
-                "
+                className="hover:cursor-pointer transition-transform hover:scale-[1.02] active:scale-95"
               >
                 {deleting ? "삭제 중..." : "삭제"}
               </Button>

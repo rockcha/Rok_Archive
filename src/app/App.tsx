@@ -19,8 +19,8 @@ import Header from "@/widgets/Header/Header";
 // 레이아웃 (Header + Footer 고정)
 function Layout() {
   return (
-    <div className="min-h-screen bg-green-100 ">
-      <div className="w-full max-w-screen-lg mx-auto flex flex-col border-2  bg-gray-100">
+    <div className="min-h-screen ">
+      <div className="w-full max-w-screen-2xl mx-auto flex flex-col   bg-gray-50">
         <Header />
         <div className="w-full ">
           <Outlet />

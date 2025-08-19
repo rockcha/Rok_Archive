@@ -74,7 +74,7 @@ export default function CategoryButton({
         "w-full justify-between",
         selected
           ? "bg-emerald-600 text-white hover:bg-emerald-700 hover:cursor-pointer"
-          : "bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:cursor-pointer",
+          : "bg-green-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:cursor-pointer",
         className
       )}
       title={label}

@@ -170,9 +170,6 @@ export default function SchedulerPage() {
         aria-label="새 일정 추가"
       >
         <CalendarPlus className="w-6 h-6" />
-        {/* 만약 직접 이미지 쓰고 싶으면 위 아이콘 대신:
-    <img src="/images/calendar-add.png" alt="새 일정" className="w-7 h-7" />
-  */}
       </button>
     </div>
   );

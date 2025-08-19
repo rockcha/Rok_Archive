@@ -6,12 +6,12 @@ import type { Content } from "@tiptap/core";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/shared/lib/supabase";
 
+// ── UI 컴포넌트 ──
 import { Label } from "@radix-ui/react-label";
 import { Input } from "@/shared/ui/input";
 import { Button } from "@/shared/ui/button";
 import { Card, CardContent } from "@/shared/ui/card";
 import { Separator } from "@/shared/ui/separator";
-
 import {
   Select,
   SelectTrigger,
@@ -20,14 +20,18 @@ import {
   SelectItem,
 } from "@/shared/ui/select";
 
+// ── 에디터 ──
 import { EditorContent } from "@tiptap/react";
 import { useRichEditor } from "@/features/posts/editor/useRichEditor";
 import EditorToolbar from "@/features/posts/editor/EditorToolbar";
+
+// ── 유틸 ──
 import { slugify } from "@/shared/utils/slugify";
 import { parseTags } from "@/shared/utils/parseTags";
 import type { JSONContent } from "@tiptap/core";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
+// ── 타입 정의 ──
 type Category = { id: string | number; name: string };
 type ComposerMode = "create" | "edit";
 
@@ -39,33 +43,41 @@ type InitialData = {
   content?: JSONContent | string | null;
 };
 
+/**
+ * 📌 PostComposer
+ * - 게시물 작성/수정 폼
+ * - 제목, 카테고리, 태그 입력 + Tiptap 에디터
+ * - 작성 완료/수정 완료 시 DB 반영
+ */
 export default function PostComposer({
-  mode = "create",
-  initial,
-  onSaved,
+  mode = "create", // 기본 모드는 작성(create)
+  initial, // 수정 모드일 경우 초기값
+  onSaved, // 저장/수정 완료 후 콜백
 }: {
   mode?: ComposerMode;
   initial?: InitialData;
   onSaved?: (postId: string) => void;
 }) {
+  // ── 상태 관리 ──
   const [title, setTitle] = useState(initial?.title ?? "");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(
     initial?.categoryId != null ? String(initial.categoryId) : ""
   );
-  const navigate = useNavigate();
-
   const [categories, setCategories] = useState<Category[]>([]);
   const [loadingCats, setLoadingCats] = useState(true);
+
   const [tagsRaw, setTagsRaw] = useState(
     Array.isArray(initial?.tags) ? initial!.tags!.join(", ") : ""
   );
   const [saving, setSaving] = useState(false);
 
-  // ✅ 기본값을 "접힘"으로 변경
+  // "카테고리·제목·태그" 카드 접힘 여부
   const [metaOpen, setMetaOpen] = useState(false);
 
+  const navigate = useNavigate();
   const editor = useRichEditor();
 
+  // ── 카테고리 목록 로드 ──
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -89,6 +101,7 @@ export default function PostComposer({
     };
   }, []);
 
+  // ── 에디터 초기 컨텐츠 설정 (수정 모드일 경우) ──
   useEffect(() => {
     if (!editor) return;
     const content = initial?.content as Content | null | undefined;
@@ -102,11 +115,13 @@ export default function PostComposer({
     }
   }, [editor, initial?.content]);
 
+  // ── 저장 가능 여부 판별 ──
   const isReadyToSubmit = useMemo(() => {
     const tags = parseTags(tagsRaw);
     return title.trim().length > 0 && !!selectedCategoryId && tags.length > 0;
   }, [title, selectedCategoryId, tagsRaw]);
 
+  // ── 저장/수정 처리 ──
   const onSave = async () => {
     if (!editor) return;
     if (!isReadyToSubmit) {
@@ -114,7 +129,9 @@ export default function PostComposer({
       return;
     }
     setSaving(true);
+
     try {
+      // 에디터 본문
       const json = editor.getJSON();
       const summary = editor.getText().trim().slice(0, 200);
       const tags = parseTags(tagsRaw);
@@ -124,21 +141,17 @@ export default function PostComposer({
         : selectedCategoryId;
 
       if (mode === "edit" && initial?.id) {
+        // ✏️ 수정 모드
         const { error } = await supabase
           .from("posts")
-          .update({
-            title,
-            category_id,
-            tags,
-            content_json: json,
-            summary,
-          })
+          .update({ title, category_id, tags, content_json: json, summary })
           .eq("id", initial.id);
         if (error) throw error;
 
         alert("수정 완료!");
         onSaved?.(initial.id);
       } else {
+        // 📝 새 글 작성
         const slug = slugify(title);
         const { data, error } = await supabase
           .from("posts")
@@ -157,6 +170,8 @@ export default function PostComposer({
 
         alert("작성 완료!");
         onSaved?.(data!.id);
+
+        // 폼 초기화
         setTitle("");
         setSelectedCategoryId("");
         setTagsRaw("");
@@ -171,6 +186,7 @@ export default function PostComposer({
     }
   };
 
+  // ── 새로고침/탭 닫기 방지 ──
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       if (saving) return;
@@ -188,21 +204,22 @@ export default function PostComposer({
     return () => window.removeEventListener("beforeunload", handler);
   }, [saving, title, tagsRaw, selectedCategoryId, editor]);
 
+  // ── UI ──
   return (
     <div className="space-y-6">
-      {/* ─────────────────────
-          메타 카드 (접기/펼치기)
-         ───────────────────── */}
-      <Card className="fixed top-50 right-0 z-50  border shadow-sm">
+      {/* ────────────────
+          (1) 메타 카드
+          ──────────────── */}
+      <Card className="fixed top-25 right-10 z-50 border shadow-sm">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
-            {/* ▶ 아이콘 클릭으로만 토글 */}
+            {/* ▶ 접기/펼치기 토글 */}
             <button
               type="button"
               onClick={() => setMetaOpen((v) => !v)}
               aria-expanded={metaOpen}
               aria-controls="composer-meta"
-              className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:cursor-pointer "
+              className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800"
               title={metaOpen ? "접기" : "펼치기"}
             >
               {metaOpen ? (
@@ -214,12 +231,11 @@ export default function PostComposer({
 
             <h3 className="text-sm font-semibold">카테고리 · 제목 · 태그</h3>
           </div>
-          {/* 우측 토글 버튼 제거 */}
         </div>
 
         {metaOpen && (
           <CardContent id="composer-meta" className="space-y-4 px-4 pb-4">
-            {/* 카테고리 */}
+            {/* 카테고리 선택 */}
             <div className="space-y-1.5">
               <Label className="text-sm font-semibold">카테고리 *</Label>
               <Select
@@ -244,7 +260,7 @@ export default function PostComposer({
               </Select>
             </div>
 
-            {/* 제목 */}
+            {/* 제목 입력 */}
             <div className="space-y-1.5">
               <Label htmlFor="title" className="text-sm font-semibold">
                 제목 *
@@ -258,7 +274,7 @@ export default function PostComposer({
               />
             </div>
 
-            {/* 태그 */}
+            {/* 태그 입력 */}
             <div className="space-y-1.5">
               <Label htmlFor="tags" className="text-sm font-semibold">
                 태그 *{" "}
@@ -273,12 +289,12 @@ export default function PostComposer({
               />
             </div>
 
-            {/* 작성 완료 */}
+            {/* 저장/수정 버튼 */}
             <div className="flex justify-end pt-2">
               <Button
                 onClick={onSave}
                 disabled={!isReadyToSubmit || saving}
-                className="bg-emerald-600 hover:bg-emerald-700 hover:cursor-pointer"
+                className="bg-emerald-600 hover:bg-emerald-700"
               >
                 {saving
                   ? mode === "edit"
@@ -293,25 +309,19 @@ export default function PostComposer({
         )}
       </Card>
 
-      {/* ─────────────────────
-          에디터 툴바 (상단 고정)
-         ───────────────────── */}
-      <div
-        className="
-          sticky top-[100px] z-40
-          border rounded-md rounded-b-none
-          bg-white/90
-          p-2
-        "
-      >
+      {/* ────────────────
+          (2) 에디터 툴바
+          ──────────────── */}
+      <div className="sticky top-[100px] z-40 border rounded-lg bg-white/90 p-2">
         <EditorToolbar editor={editor} />
       </div>
 
-      {/* 에디터: 흰 배경을 가득 채우도록 부모 px-4 상쇄 */}
-      <div className="bg-background -mx-4">
-        <EditorContent editor={editor} className="tiptap min-h-[60vh] p-4" />
-      </div>
+      {/* ────────────────
+          (3) 본문 에디터
+          ──────────────── */}
+      <EditorContent editor={editor} className="tiptap min-h-[60vh]" />
 
+      {/* 구분선 (투명) */}
       <Separator className="opacity-0" />
     </div>
   );
