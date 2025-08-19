@@ -44,29 +44,30 @@ export default function MainPage() {
   );
 
   return (
-    <div className="w-full flex-col border-b-2">
-      <TodoList />
-      <SchedulePreviewAuto />
+    <div className="w-full flex-col border-2">
       <div className="w-full h-[10rem]  ">
         {/* 고정 툴바 (풀폭, 투명) */}
-        <div className="fixed top-25 inset-x-0 z-40">
-          <div className="mx-auto w-full ">
-            <section className=" p-4 flex   items-center justify-center gap-2 bg-background border-b">
-              {/* ✅ SearchBar: 항상 가운데, 절반 크기 */}
+        <div className="w-full sticky top-25 z-40">
+          <section
+            className=" w-full p-4 flex   items-center justify-center gap-2 bg-background  border-b-2
+"
+          >
+            {/* ✅ SearchBar: 항상 가운데, 절반 크기 */}
 
-              <div className="flex flex-col items-center  gap-2 ">
-                <PostsSearchBar
-                  onApply={handleApplySearch}
-                  limit={50}
-                  categoryIdFilter={categoryIdFilter ?? null}
-                  onError={(m) => console.error(m)}
-                  className="w-[25rem] min-w-[12rem]"
-                />
-                {/* ✅ AdminDock: SearchBar와 독립 */}
-                <AdminDock />
-              </div>
-            </section>
-          </div>
+            <div className="flex flex-col items-center  gap-2 ">
+              <PostsSearchBar
+                onApply={handleApplySearch}
+                limit={50}
+                categoryIdFilter={categoryIdFilter ?? null}
+                onError={(m) => console.error(m)}
+                className="w-[25rem] min-w-[12rem]"
+              />
+              <TodoList />
+              <SchedulePreviewAuto />
+              {/* ✅ AdminDock: SearchBar와 독립 */}
+              <AdminDock />
+            </div>
+          </section>
         </div>
       </div>
 

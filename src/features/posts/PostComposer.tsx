@@ -77,6 +77,15 @@ export default function PostComposer({
   const navigate = useNavigate();
   const editor = useRichEditor();
 
+  //디버깅
+  useEffect(() => {
+    if (!editor) return;
+    console.log(
+      "[extensions]",
+      editor.extensionManager.extensions.map((e) => e.name)
+    );
+  }, [editor]);
+
   // ── 카테고리 목록 로드 ──
   useEffect(() => {
     let mounted = true;

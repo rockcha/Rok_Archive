@@ -4,6 +4,7 @@ import Underline from "@tiptap/extension-underline";
 import Highlight from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";
 import { TextStyle } from "@tiptap/extension-text-style";
+import { ImageWithDataAttrs } from "./ImageWithDataAttrs";
 
 export function createExtensions() {
   return [
@@ -19,5 +20,10 @@ export function createExtensions() {
     // 우리가 직접 쓰는 확장만 활성화
     Underline,
     Link.configure({ openOnClick: false, autolink: true, linkOnPaste: true }),
+    ImageWithDataAttrs.configure({
+      inline: false,
+      allowBase64: false,
+      HTMLAttributes: { class: "my-3 rounded-lg" },
+    }),
   ];
 }

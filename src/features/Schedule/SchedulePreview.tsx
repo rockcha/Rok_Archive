@@ -76,7 +76,7 @@ export default function SchedulePreview({
   return (
     <Card
       className={[
-        "fixed top-28 left-10 z-50 w-[18rem] max-w-none hidden md:block",
+        "fixed top-28 left-50 z-50 w-[18rem] max-w-none hidden md:block",
         className || "",
       ].join(" ")}
     >
