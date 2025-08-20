@@ -79,7 +79,6 @@ export default function TodoList() {
 
   useEffect(() => {
     if (hydrated && isAdmin) loadAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hydrated, isAdmin]);
 
   const handleAdd = async () => {
