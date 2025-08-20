@@ -26,14 +26,14 @@ export default function BulletSelect({ editor }: Props) {
   return (
     <div role="group" aria-label="글머리 기호">
       <Select value={value} onValueChange={insertBullet}>
-        <SelectTrigger size="sm" className="min-w-32">
+        <SelectTrigger size="sm" className="min-w-32 hover:cursor-pointer">
           <SelectValue placeholder="글머리 기호" />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
             <SelectLabel>기호</SelectLabel>
             {BULLETS.map((b) => (
-              <SelectItem key={b} value={b}>
+              <SelectItem key={b} value={b} className=" hover:cursor-pointer">
                 <span className="font-medium">{b}</span>
               </SelectItem>
             ))}

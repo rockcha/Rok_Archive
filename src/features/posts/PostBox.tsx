@@ -3,12 +3,14 @@
 
 import { useMemo } from "react";
 import { cn } from "@/shared/lib/utils";
+import { ShineBorder } from "@/shared/magicui/shine-border";
+import { useTheme } from "next-themes";
 
 type Props = {
-  id: string; // postId
+  id: string;
   title: string;
-  categoryName: string; // 조인해서 전달
-  tags: string[]; // 배열로 전달
+  categoryName: string;
+  tags: string[];
   onClick?: (postId: string) => void;
   className?: string;
 };
@@ -17,10 +19,12 @@ export default function PostBox({
   id,
   title,
   categoryName,
-  tags,
   onClick,
+  className,
 }: Props) {
-  // shared/assets/<name>.png
+  const { theme } = useTheme();
+
+  // 아이콘 경로
   const iconSrc = useMemo(() => {
     if (!categoryName) return undefined;
     try {
@@ -33,21 +37,38 @@ export default function PostBox({
 
   const handleClick = () => onClick?.(id);
 
+  // ✨ 모노톤(라이트=검정계열, 다크=흰계열) — 살짝만
+  const mono =
+    theme === "dark"
+      ? ["#ffffff", "#e5e7eb", "#9ca3af"]
+      : ["#000000", "#4b5563", "#9ca3af"];
+
   return (
     <button
       type="button"
       onClick={handleClick}
-      className={cn(
-        "group relative overflow-hidden rounded-xl border",
-        "bg-background dark:bg-zinc-900/80 shadow-sm hover:shadow transition-all",
-        "focus:outline-none focus:ring-2 focus:ring-emerald-500/60 p-3 text-left",
-        "flex h-full flex-col gap-3", // ✅ 세로 레이아웃 + 꽉 채우기
-        "hover:cursor-pointer hover:bg-emerald-50"
-      )}
       title={title}
       aria-label={`포스트: ${title}`}
+      className={cn(
+        // 카드 베이스
+        "group relative overflow-hidden rounded-xl border",
+        "bg-background dark:bg-zinc-900/80 shadow-sm hover:shadow transition-all",
+        "focus:outline-none focus:ring-2 focus:ring-emerald-500/60",
+        // 레이아웃
+        "flex h-full flex-col p-3 gap-3",
+        "hover:cursor-pointer hover:bg-emerald-50",
+        className
+      )}
     >
-      {/* 1) 제목: 상단/가운데/조금 크게 */}
+      {/* ✨ (바깥) 카드 자체에 아주 은은한 모노톤 ShineBorder */}
+      <ShineBorder
+        className="z-10"
+        shineColor={mono}
+        borderWidth={1} // 살짝만
+        duration={16} // 느긋하게
+      />
+
+      {/* 1) 제목 */}
       <h4
         className={cn(
           "line-clamp-2 w-full text-center",
@@ -58,42 +79,35 @@ export default function PostBox({
         {title}
       </h4>
 
-      {/* 2) 태그: 제목 아래, 가운데 정렬 */}
-      {tags.length > 0 && (
-        <div className="flex flex-wrap justify-center gap-1">
-          {tags.slice(0, 6).map((t) => (
-            <span
-              key={t}
-              className=" px-2 py-[2px] text-[12px] text-zinc-700 dark:text-zinc-300"
-            >
-              #{t}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* 빈 공간 채우기 후, 맨 아래 배지 */}
-      <div className="mt-auto flex justify-center">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 rounded-full",
-            "bg-amber-50 border border-zinc-200 dark:border-zinc-700",
-            "px-2 py-1 text-xs font-medium",
-            "text-zinc-700 dark:text-zinc-300",
-            "transition-transform group-hover:-translate-y-0.5"
-          )}
-        >
-          {iconSrc ? (
+      {/* 2) 아이콘 네모칸 + (안쪽) ShineBorder */}
+      <div className="flex-1 grid place-items-center py-2">
+        {iconSrc ? (
+          <div
+            className={cn(
+              // 네모칸 컨테이너
+              "relative isolate overflow-hidden rounded-2xl",
+              // 기본 보더(효과가 안 먹었을 때 대비)
+              "border-2 border-gray-300 bg-white dark:bg-zinc-900",
+              "shadow-[0_1px_0_rgba(0,0,0,0.02)]",
+              "p-2 sm:p-3"
+            )}
+          >
+            {/* ✨ 네모칸 내부 테두리만 살짝 */}
+            <ShineBorder shineColor={mono} borderWidth={1} duration={12} />
             <img
               src={iconSrc}
               alt={categoryName}
-              className="h-[14px] w-[14px] object-contain"
               loading="lazy"
+              className={cn(
+                "relative z-10 h-4 w-4 sm:h-9 sm:w-9 object-contain",
+                "transition-transform duration-200 group-hover:scale-[1.1]"
+              )}
             />
-          ) : null}
-          <span className="uppercase">{categoryName}</span>
-        </span>
+          </div>
+        ) : null}
       </div>
+
+      {/* 3) 하단 배지/텍스트 없음 */}
     </button>
   );
 }

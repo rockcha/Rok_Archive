@@ -51,15 +51,21 @@ export default function DividerSelect({ editor }: Props) {
         value={value}
         onValueChange={(v) => insertDivider(v as DividerKind)}
       >
-        <SelectTrigger size="sm" className="min-w-40">
+        <SelectTrigger size="sm" className="min-w-40 hover:cursor-pointer">
           <SelectValue placeholder="구분선 선택" />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
             <SelectLabel>구분선</SelectLabel>
-            <SelectItem value="solid">기본 실선</SelectItem>
-            <SelectItem value="dotted">점선</SelectItem>
-            <SelectItem value="emoji">귀여운</SelectItem>
+            <SelectItem value="solid" className="hover:cursor-pointer">
+              기본 실선
+            </SelectItem>
+            <SelectItem value="dotted" className="hover:cursor-pointer">
+              점선
+            </SelectItem>
+            <SelectItem value="emoji" className="hover:cursor-pointer">
+              귀여운
+            </SelectItem>
           </SelectGroup>
         </SelectContent>
       </Select>

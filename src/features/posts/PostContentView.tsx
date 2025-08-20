@@ -27,7 +27,8 @@ export default function PostContentView({
     editable: false,
     editorProps: {
       attributes: {
-        class: "prose prose-zinc dark:prose-invert max-w-none min-h-[200px]",
+        class:
+          "prose prose-zinc dark:prose-invert max-w-none min-h-[70vh] bg-white/90 dark:bg-zinc-900 border rounded-xl p-6",
         spellcheck: "false", // 코드 붙여넣기 빨간 줄 방지
       },
     },
@@ -44,7 +45,7 @@ export default function PostContentView({
   // JSON이 없고 Markdown만 있을 때 간단 폴백
   if (!parsedJson && contentMarkdown) {
     return (
-      <pre className="whitespace-pre-wrap rounded-xl border bg-white dark:bg-zinc-900 p-4 text-sm">
+      <pre className="whitespace-pre-wrap rounded-xl border bg-white dark:bg-zinc-900 p-4 text-sm min-h-[60vh] md:min-h-[80vh]">
         {contentMarkdown}
       </pre>
     );

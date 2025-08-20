@@ -5,8 +5,11 @@ import { useState } from "react";
 import { supabase } from "@/shared/lib/supabase";
 import { cn } from "@/shared/lib/utils";
 import { Input } from "@/shared/ui/input";
-import { Button } from "@/shared/ui/button";
-import { Loader2, Search, X } from "lucide-react";
+import { Search, X } from "lucide-react";
+
+// ✨ shine-border
+import { ShineBorder } from "@/shared/magicui/shine-border";
+import { useTheme } from "next-themes";
 
 export type PostsSearchBarProps = {
   /** 검색이 끝나면 id 배열을 넘겨줍니다 (외부에서 state로 관리). */
@@ -54,6 +57,13 @@ export default function PostsSearchBar({
 }: PostsSearchBarProps) {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // ✨ theme 기반 색상 정의
+  const { theme } = useTheme();
+  const shineColors =
+    theme === "dark"
+      ? ["#ffffff", "rgba(16,185,129,0.4)", "#9ca3af"]
+      : ["#000000", "rgba(16,185,129,0.5)", "#4b5563"];
 
   const clear = () => {
     setQ("");
@@ -136,7 +146,7 @@ export default function PostsSearchBar({
       // 4) 태그 검색 폴백
       let tagIds: string[] = [];
 
-      // 4-a) tags가 text 컬럼인 경우 (서버에서 ilike로 필터됐으므로 id만 추출)
+      // 4-a) tags가 text 컬럼인 경우
       try {
         const tagsTextQuery = supabase
           .from("posts")
@@ -157,7 +167,7 @@ export default function PostsSearchBar({
         // 무시 후 4-b로 폴백
       }
 
-      // 4-b) tags가 배열(jsonb/text[])일 수도 → 상위 N개 가져와 클라에서 검사
+      // 4-b) tags가 배열(jsonb/text[])일 수도
       if (tagIds.length === 0) {
         const cap = Math.max(limit * 4, 200);
         const tagsArrayQuery = supabase
@@ -192,53 +202,40 @@ export default function PostsSearchBar({
 
   return (
     <form
-      className={cn(
-        "  flex items-center gap-2 rounded-xl border bg-background p-2",
-        className
-      )}
+      className={cn("relative overflow-hidden rounded-xl", className)}
       onSubmit={(e) => {
         e.preventDefault();
-        if (!loading) void runSearch();
+        if (!loading) void runSearch(); // Enter로 검색
       }}
     >
-      <div className="relative flex-1">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60" />
-        <Input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder={placeholder}
-          autoFocus={autoFocus}
-          className="pl-9 pr-9 bg-sky-100"
-        />
-        {q && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="absolute right-1 top-1/2 -translate-y-1/2 "
-            onClick={clear}
-            aria-label="Clear"
-          >
-            <X className="h-2 w-2" />
-          </Button>
-        )}
-      </div>
+      {/* ✨ 초록빛 ShineBorder */}
+      <ShineBorder shineColor={shineColors} borderWidth={2} duration={14} />
 
-      <Button
-        type="submit"
-        disabled={loading}
-        className="bg-emerald-600 hover:cursor-pointer hover:bg-emerald-500"
-      >
-        {loading ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 검색 중
-          </>
-        ) : (
-          <>
-            <Search className="mr-2 h-4 w-4" /> 검색
-          </>
-        )}
-      </Button>
+      <div className="relative z-10 rounded-xl p-2">
+        <div className="relative">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 opacity-60" />
+          <Input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={placeholder}
+            autoFocus={autoFocus}
+            className="pl-9 pr-9 bg-sky-100 focus-visible:ring-0 focus-visible:border-none focus:outline-none"
+          />
+
+          {/* 지우기 버튼 */}
+          {q && (
+            <button
+              type="button"
+              className="absolute right-1 top-1/2 -translate-y-1/2 rounded p-1 hover:bg-zinc-200/60 dark:hover:bg-zinc-700/60"
+              onClick={clear}
+              aria-label="Clear"
+              disabled={loading}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+      </div>
     </form>
   );
 }

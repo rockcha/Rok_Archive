@@ -9,6 +9,10 @@ import { ScheduleDialog } from "@/features/Schedule/ScheduleDialog";
 import { CalendarPlus } from "lucide-react";
 import { supabase } from "@/shared/lib/supabase";
 
+// ✨ 추가
+import { ShineBorder } from "@/shared/magicui/shine-border";
+import { useTheme } from "next-themes";
+
 export type Schedule = {
   id: string;
   date: string; // "YYYY-MM-DD"
@@ -17,14 +21,12 @@ export type Schedule = {
 };
 
 function ymd(d: Date) {
-  // local->sv-SE로 안전하게 YYYY-MM-DD
   return new Date(
     d.getFullYear(),
     d.getMonth(),
     d.getDate()
   ).toLocaleDateString("sv-SE");
 }
-
 function firstOfMonth(d: Date) {
   return new Date(d.getFullYear(), d.getMonth(), 1);
 }
@@ -38,7 +40,14 @@ export default function SchedulerPage() {
   const [loading, setLoading] = useState(false);
 
   const [openNew, setOpenNew] = useState(false);
-  const [active, setActive] = useState<Schedule | null>(null); // 상세보기 대상
+  const [active, setActive] = useState<Schedule | null>(null);
+
+  const { theme } = useTheme();
+  // 모노톤 컬러(라이트=블랙계열, 다크=화이트계열)
+  const monoColors =
+    theme === "dark"
+      ? ["#ffffff", "#d1d5db", "#9ca3af"]
+      : ["#000000", "#4b5563", "#9ca3af"];
 
   const range = useMemo(() => {
     const start = firstOfMonth(cursor);
@@ -46,7 +55,6 @@ export default function SchedulerPage() {
     return { start, end, startStr: ymd(start), endStr: ymd(end) };
   }, [cursor]);
 
-  // 월 범위 데이터 로드
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -68,7 +76,6 @@ export default function SchedulerPage() {
       .select("id,date,title,content")
       .single();
     if (error) throw error;
-    // 같은 달 범위일 경우에만 즉시 반영
     const d = new Date(payload.date);
     if (d >= range.start && d <= range.end) {
       setItems((prev) => [...prev, data as Schedule]);
@@ -105,9 +112,16 @@ export default function SchedulerPage() {
 
   return (
     <div className="w-full flex justify-center py-6">
-      <Card className="w-[80%] max-w-[1200px]">
-        <CardHeader className="grid grid-cols-3 items-center">
-          {/* 왼쪽: 이전 달 */}
+      <Card className="relative overflow-hidden rounded-2xl w-[80%] max-w-[1200px]">
+        {/* ✨ 모노톤 ShineBorder */}
+        <ShineBorder
+          className="z-20"
+          shineColor={monoColors}
+          borderWidth={2}
+          duration={14}
+        />
+
+        <CardHeader className="grid grid-cols-3 items-center relative z-30">
           <div className="justify-self-start">
             <Button
               variant="outline"
@@ -118,12 +132,10 @@ export default function SchedulerPage() {
             </Button>
           </div>
 
-          {/* 가운데: 월 표기 */}
           <CardTitle className="justify-self-center text-xl">
             {cursor.getFullYear()}년 {cursor.getMonth() + 1}월
           </CardTitle>
 
-          {/* 오른쪽: 다음 달 + 새 일정 */}
           <div className="justify-self-end flex gap-2">
             <Button
               variant="outline"
@@ -134,8 +146,8 @@ export default function SchedulerPage() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          {/* 높이는 고정하지 않고, 칸을 정사각형(aspect-square)로 맞춰 전체 높이가 자연히 결정되게 */}
+
+        <CardContent className="relative z-30">
           <CalendarGrid
             monthDate={cursor}
             schedules={items}
@@ -145,7 +157,6 @@ export default function SchedulerPage() {
         </CardContent>
       </Card>
 
-      {/* 새 일정 */}
       <NewScheduleDialog
         open={openNew}
         onOpenChange={setOpenNew}
@@ -153,13 +164,13 @@ export default function SchedulerPage() {
         onCreate={handleCreate}
       />
 
-      {/* 상세보기 / 수정 / 삭제 */}
       <ScheduleDialog
         schedule={active}
         onClose={() => setActive(null)}
         onUpdate={handleUpdate}
         onDelete={handleDelete}
       />
+
       <button
         onClick={() => setOpenNew(true)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full

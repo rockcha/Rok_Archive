@@ -30,12 +30,16 @@ import { Separator } from "@/shared/ui/separator";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 
+import { ShineBorder } from "@/shared/magicui/shine-border";
+import { useTheme } from "next-themes"; // ✨ 추가
+
 type Props = { className?: string };
 
 export default function AdminDock({ className }: Props) {
   const navigate = useNavigate();
   const { isAdmin } = useAdmin();
   const [alertOpen, setAlertOpen] = useState(false);
+  const { theme } = useTheme(); // ✨ 추가
 
   // ▒▒ 카테고리 추가 모달 상태 ▒▒
   const [catOpen, setCatOpen] = useState(false);
@@ -97,16 +101,29 @@ export default function AdminDock({ className }: Props) {
     "hover:cursor-pointer"
   );
 
+  // ✨ 모노톤 컬러 (라이트=검정계열, 다크=흰계열)
+  const monoColors =
+    theme === "dark"
+      ? ["#ffffff", "#d1d5db", "#9ca3af"]
+      : ["#000000", "#4b5563", "#9ca3af"];
+
   return (
     <>
-      <div className={cn("inline-block text-center", className)}>
+      <div
+        className={cn(
+          "relative inline-block text-center overflow-hidden rounded-2xl",
+          className
+        )}
+      >
+        {/* ✨ 모노톤 ShineBorder 추가 */}
+        <ShineBorder shineColor={monoColors} borderWidth={2} duration={14} />
         <TooltipProvider>
           <Dock
             direction="middle"
             iconSize={44}
             iconMagnification={64}
             iconDistance={130}
-            className="shadow-lg"
+            className="shadow-lg relative z-10" // ✨ ShineBorder 위로 올리기
           >
             {/* 글작성 */}
             <DockIcon className="group">
@@ -140,7 +157,7 @@ export default function AdminDock({ className }: Props) {
               </Tooltip>
             </DockIcon>
 
-            {/* ⬅️ 새로 추가: 캘린더 */}
+            {/* 캘린더 */}
             <DockIcon className="group">
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -219,7 +236,9 @@ export default function AdminDock({ className }: Props) {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>닫기</AlertDialogCancel>
+            <AlertDialogCancel className="hover:cursor-pointer">
+              닫기
+            </AlertDialogCancel>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -262,8 +281,17 @@ export default function AdminDock({ className }: Props) {
             </div>
 
             <AlertDialogFooter>
-              <AlertDialogCancel disabled={catSaving}>취소</AlertDialogCancel>
-              <Button type="submit" disabled={catSaving}>
+              <AlertDialogCancel
+                disabled={catSaving}
+                className="hover:cursor-pointer"
+              >
+                취소
+              </AlertDialogCancel>
+              <Button
+                type="submit"
+                disabled={catSaving}
+                className="hover:cursor-pointer"
+              >
                 {catSaving ? "추가 중..." : "추가"}
               </Button>
             </AlertDialogFooter>

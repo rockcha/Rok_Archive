@@ -31,6 +31,10 @@ import { parseTags } from "@/shared/utils/parseTags";
 import type { JSONContent } from "@tiptap/core";
 import { ChevronDown, ChevronRight } from "lucide-react";
 
+// ✨ 추가: ShineBorder + 테마
+import { ShineBorder } from "@/shared/magicui/shine-border";
+import { useTheme } from "next-themes";
+
 // ── 타입 정의 ──
 type Category = { id: string | number; name: string };
 type ComposerMode = "create" | "edit";
@@ -50,9 +54,9 @@ type InitialData = {
  * - 작성 완료/수정 완료 시 DB 반영
  */
 export default function PostComposer({
-  mode = "create", // 기본 모드는 작성(create)
-  initial, // 수정 모드일 경우 초기값
-  onSaved, // 저장/수정 완료 후 콜백
+  mode = "create",
+  initial,
+  onSaved,
 }: {
   mode?: ComposerMode;
   initial?: InitialData;
@@ -76,6 +80,7 @@ export default function PostComposer({
 
   const navigate = useNavigate();
   const editor = useRichEditor();
+  const { theme } = useTheme(); // ✨
 
   //디버깅
   useEffect(() => {
@@ -213,117 +218,133 @@ export default function PostComposer({
     return () => window.removeEventListener("beforeunload", handler);
   }, [saving, title, tagsRaw, selectedCategoryId, editor]);
 
+  // ✨ 모노톤 컬러(라이트=블랙 계열, 다크=화이트 계열)
+  const monoColors =
+    theme === "dark"
+      ? ["#ffffff", "#d1d5db", "#9ca3af"]
+      : ["#000000", "#4b5563", "#9ca3af"];
+
   // ── UI ──
   return (
     <div className="space-y-6">
       {/* ────────────────
-          (1) 메타 카드
+          (1) 메타 카드 (모노톤 ShineBorder 적용)
           ──────────────── */}
-      <Card className="fixed top-50 right-10 z-50 border shadow-sm">
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-2">
-            {/* ▶ 접기/펼치기 토글 */}
-            <button
-              type="button"
-              onClick={() => setMetaOpen((v) => !v)}
-              aria-expanded={metaOpen}
-              aria-controls="composer-meta"
-              className="p-1 rounded hover:bg-zinc-100 dark:hover:bg-zinc-800"
-              title={metaOpen ? "접기" : "펼치기"}
-            >
-              {metaOpen ? (
-                <ChevronDown className="h-4 w-4 opacity-70" />
-              ) : (
-                <ChevronRight className="h-4 w-4 opacity-70" />
-              )}
-            </button>
+      <div className="fixed top-25 sm:right-3  2xl:right-50 z-50 w-[22rem] max-w-none">
+        <div className="relative overflow-hidden rounded-2xl">
+          <ShineBorder
+            className="z-20"
+            shineColor={monoColors}
+            borderWidth={2}
+            duration={14}
+          />
+          <Card className="relative z-10 shadow-sm rounded-2xl">
+            <div className="flex items-center justify-between px-3 py-1">
+              <div className="flex items-center gap-2">
+                {/* ▶ 접기/펼치기 토글 */}
+                <button
+                  type="button"
+                  onClick={() => setMetaOpen((v) => !v)}
+                  aria-expanded={metaOpen}
+                  aria-controls="composer-meta"
+                  className="p-1 rounded hover:bg-zinc-100 hover:cursor-pointer dark:hover:bg-zinc-800"
+                  title={metaOpen ? "접기" : "펼치기"}
+                >
+                  {metaOpen ? (
+                    <ChevronDown className="h-4 w-4 opacity-70" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 opacity-70" />
+                  )}
+                </button>
 
-            <h3 className="text-sm font-semibold">카테고리 · 제목 · 태그</h3>
-          </div>
-        </div>
+                <h3 className="text-sm font-semibold">
+                  카테고리 · 제목 · 태그
+                </h3>
+              </div>
+            </div>
 
-        {metaOpen && (
-          <CardContent id="composer-meta" className="space-y-4 px-4 pb-4">
-            {/* 카테고리 선택 */}
-            <div className="space-y-1.5">
-              <Label className="text-sm font-semibold">카테고리 *</Label>
-              <Select
-                value={selectedCategoryId}
-                onValueChange={setSelectedCategoryId}
-                disabled={loadingCats}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue
-                    placeholder={
-                      loadingCats ? "불러오는 중…" : "카테고리를 선택하세요"
-                    }
+            {metaOpen && (
+              <CardContent id="composer-meta" className="space-y-4 px-4 pb-4">
+                {/* 카테고리 선택 */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold">카테고리 *</Label>
+                  <Select
+                    value={selectedCategoryId}
+                    onValueChange={setSelectedCategoryId}
+                    disabled={loadingCats}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue
+                        placeholder={
+                          loadingCats ? "불러오는 중…" : "카테고리를 선택하세요"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map((c) => (
+                        <SelectItem key={String(c.id)} value={String(c.id)}>
+                          {c.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* 제목 입력 */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="title" className="text-sm font-semibold">
+                    제목 *
+                  </Label>
+                  <Input
+                    id="title"
+                    placeholder="제목을 입력하세요"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    className="h-10 text-base"
                   />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((c) => (
-                    <SelectItem key={String(c.id)} value={String(c.id)}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                </div>
 
-            {/* 제목 입력 */}
-            <div className="space-y-1.5">
-              <Label htmlFor="title" className="text-sm font-semibold">
-                제목 *
-              </Label>
-              <Input
-                id="title"
-                placeholder="제목을 입력하세요"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="h-10 text-base"
-              />
-            </div>
+                {/* 태그 입력 */}
+                <div className="space-y-1.5">
+                  <Label htmlFor="tags" className="text-sm font-semibold">
+                    태그 *{" "}
+                    <span className="text-xs text-zinc-500">(쉼표로 구분)</span>
+                  </Label>
+                  <Input
+                    id="tags"
+                    placeholder="react, ts, ui"
+                    value={tagsRaw}
+                    onChange={(e) => setTagsRaw(e.target.value)}
+                    className="h-10 text-base"
+                  />
+                </div>
 
-            {/* 태그 입력 */}
-            <div className="space-y-1.5">
-              <Label htmlFor="tags" className="text-sm font-semibold">
-                태그 *{" "}
-                <span className="text-xs text-zinc-500">(쉼표로 구분)</span>
-              </Label>
-              <Input
-                id="tags"
-                placeholder="react, ts, ui"
-                value={tagsRaw}
-                onChange={(e) => setTagsRaw(e.target.value)}
-                className="h-10 text-base"
-              />
-            </div>
-
-            {/* 저장/수정 버튼 */}
-            <div className="flex justify-end pt-2">
-              <Button
-                onClick={onSave}
-                disabled={!isReadyToSubmit || saving}
-                className="bg-emerald-600 hover:bg-emerald-700"
-              >
-                {saving
-                  ? mode === "edit"
-                    ? "수정 중..."
-                    : "저장 중..."
-                  : mode === "edit"
-                  ? "수정 완료"
-                  : "작성 완료"}
-              </Button>
-            </div>
-          </CardContent>
-        )}
-      </Card>
+                {/* 저장/수정 버튼 */}
+                <div className="flex justify-end pt-2">
+                  <Button
+                    onClick={onSave}
+                    disabled={!isReadyToSubmit || saving}
+                    className="bg-emerald-600 hover:bg-emerald-700 hover:cursor-pointer"
+                  >
+                    {saving
+                      ? mode === "edit"
+                        ? "수정 중..."
+                        : "저장 중..."
+                      : mode === "edit"
+                      ? "수정 완료"
+                      : "작성 완료"}
+                  </Button>
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        </div>
+      </div>
 
       {/* ────────────────
           (2) 에디터 툴바
           ──────────────── */}
-      <div className="sticky top-[100px] z-40 border rounded-lg bg-white/90 p-2">
-        <EditorToolbar editor={editor} />
-      </div>
+      <EditorToolbar editor={editor} />
 
       {/* ────────────────
           (3) 본문 에디터

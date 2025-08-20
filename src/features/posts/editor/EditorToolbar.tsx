@@ -28,21 +28,24 @@ export default function EditorToolbar({ editor }: Props) {
   if (!editor) return null;
 
   return (
-    <div
-      className="
+    <div className="sticky top-[100px] z-40 border-3 rounded-lg bg-white/90 p-2">
+      {" "}
+      <div
+        className="
         flex flex-nowrap items-center gap-2 rounded-md bg-background/60 p-2
         overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none]
         [&::-webkit-scrollbar]:hidden
       "
-      aria-label="편집 도구 막대"
-    >
-      <DividerSelect editor={editor} />
-      <ToolbarDivider />
-      <BulletSelect editor={editor} />
-      <ToolbarDivider subtle />
-      <FormatGroup editor={editor} />
-      <ToolbarDivider tall />
-      <HighlightPalette editor={editor} />
+        aria-label="편집 도구 막대"
+      >
+        <DividerSelect editor={editor} />
+        <ToolbarDivider />
+        <BulletSelect editor={editor} />
+        <ToolbarDivider subtle />
+        <FormatGroup editor={editor} />
+        <ToolbarDivider tall />
+        <HighlightPalette editor={editor} />
+      </div>
     </div>
   );
 }

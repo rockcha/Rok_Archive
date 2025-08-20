@@ -53,7 +53,9 @@ export default function FormatGroup({ editor }: Props) {
       <Button
         size="sm"
         variant="secondary"
-        className={`${base} font-bold ${active === "bold" ? act : idle}`}
+        className={`${base} font-bold ${
+          active === "bold" ? act : idle
+        } hover:cursor-pointer`}
         aria-pressed={active === "bold"}
         onClick={() => toggleExclusive("bold")}
       >
@@ -62,7 +64,9 @@ export default function FormatGroup({ editor }: Props) {
       <Button
         size="sm"
         variant="secondary"
-        className={`${base} italic ${active === "italic" ? act : idle}`}
+        className={`${base} italic ${
+          active === "italic" ? act : idle
+        } hover:cursor-pointer`}
         aria-pressed={active === "italic"}
         onClick={() => toggleExclusive("italic")}
       >
@@ -73,7 +77,7 @@ export default function FormatGroup({ editor }: Props) {
         variant="secondary"
         className={`${base} underline underline-offset-[3px] decoration-2 ${
           active === "underline" ? act : idle
-        }`}
+        } hover:cursor-pointer`}
         aria-pressed={active === "underline"}
         onClick={() => toggleExclusive("underline")}
       >
