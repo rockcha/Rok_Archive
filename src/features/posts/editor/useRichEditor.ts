@@ -2,13 +2,14 @@ import { useEditor } from "@tiptap/react";
 import type { EditorOptions } from "@tiptap/react";
 import { createExtensions } from "./tiptapExtension";
 import { uploadImageSupabase } from "./uploadImageSupabase";
+import type { EditorView } from "@tiptap/pm/view";
 
 function insertImageWithView(
-  view: any,
+  view: EditorView,
   attrs: { src: string; alt?: string; width?: number; height?: number }
 ) {
   const { state, dispatch } = view;
-  const { schema, tr, selection } = state;
+  const { schema, tr } = state;
   const imgNode = schema.nodes.image.create(attrs);
   // 선택 위치에 이미지 삽입
   const transaction = tr.replaceSelectionWith(imgNode).scrollIntoView();

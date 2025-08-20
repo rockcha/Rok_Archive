@@ -10,3 +10,4 @@ export const ImageWithDataAttrs = Image.extend({
     };
   },
 });
+export default ImageWithDataAttrs;
