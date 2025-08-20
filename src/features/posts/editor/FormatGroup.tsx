@@ -40,9 +40,9 @@ export default function FormatGroup({ editor }: Props) {
 
   const base =
     "h-8 w-8 transition-all hover:scale-[1.04] active:scale-95 hover:ring-2 hover:ring-zinc-300 dark:hover:ring-zinc-700";
-  const act = "bg-gray-600 text-white hover:bg-gray-600 hover:text-white";
+  const act = "bg-neutral-500 text-white hover:bg-neutral-600 hover:text-white";
   const idle =
-    "hover:bg-zinc-900 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-900";
+    "hover:bg-neutral-500 hover:text-white dark:hover:bg-zinc-100 dark:hover:text-zinc-900";
 
   return (
     <div

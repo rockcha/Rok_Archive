@@ -1,6 +1,6 @@
 // src/widgets/LogoTitle.tsx
 import { Button } from "@/shared/ui/button";
-import { CyclingHighlighter } from "./Cycling-highlighter";
+
 import { useNavigate, useLocation } from "react-router-dom";
 
 export default function LogoTitle() {
@@ -14,21 +14,12 @@ export default function LogoTitle() {
   };
 
   return (
-    <div className="flex ">
-      <div className="flex flex-col gap-3">
-        <Button
-          variant="link"
-          className="text-3xl font-bold text-green-900 hover:cursor-pointer "
-          onClick={handleOnClick}
-        >
-          록차 아카이브
-        </Button>
-
-        <p className="text-sm">
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 정록이의 소소한&nbsp;
-          <CyclingHighlighter holdMs={5000}> 개발 기록</CyclingHighlighter>
-        </p>
-      </div>
-    </div>
+    <Button
+      variant="ghost"
+      className=" text-3xl font-bold text-green-900 hover:cursor-pointer "
+      onClick={handleOnClick}
+    >
+      록차 아카이브🌿
+    </Button>
   );
 }

@@ -1,7 +1,9 @@
 // src/components/admin/AdminLoginButton.tsx
-import { useState } from "react";
+"use client";
+
+import { useState, useMemo } from "react";
 import { supabase } from "@/shared/lib/supabase";
-import { useAdmin } from "./useAdmin"; // 너가 쓰는 경로 유지
+import { useAdmin } from "./useAdmin";
 import { Button } from "@/shared/ui/button";
 import {
   Dialog,
@@ -20,6 +22,16 @@ export default function AdminLoginButton() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // 상태별 아이콘 PNG 경로 (shared/assets/Admin.png | Guest.png)
+  const iconSrc = useMemo(() => {
+    const name = isAdmin ? "Admin" : "Guest";
+    try {
+      return new URL(`../../shared/assets/${name}.png`, import.meta.url).href;
+    } catch {
+      return undefined;
+    }
+  }, [isAdmin]);
 
   const onLogin = async () => {
     try {
@@ -64,22 +76,40 @@ export default function AdminLoginButton() {
   return (
     <div>
       <Dialog open={open} onOpenChange={setOpen}>
-        {/* 트리거: 하나만 사용, 라벨은 상태에 따라 변경 */}
+        {/* ▶ 트리거 버튼: 아이콘 + 라벨(게스트/관리자) */}
         <DialogTrigger asChild>
           <Button
-            variant="link"
-            className="hover:cursor-pointer  font-semibold text-xm"
-            title={isAdmin ? "현재: 관리자 모드" : "현재: 게스트 모드"}
+            variant="ghost"
+            title={isAdmin ? "현재: 관리자 계정" : "현재: 게스트 계정"}
+            className="
+              w-20 h-20 p-2 
+                 hover:cursor-pointer
+              flex flex-col items-center justify-center gap-1
+            "
           >
-            {isAdmin ? "관리자 모드" : "게스트 모드"}
+            {iconSrc ? (
+              <img
+                src={iconSrc}
+                alt={isAdmin ? "관리자 계정" : "게스트 계정"}
+                className="w-8 h-8 object-contain"
+                loading="lazy"
+              />
+            ) : (
+              <div className="w-8 h-8  " />
+            )}
+            <span className="text-xs font-bold tracking-tight">
+              {isAdmin ? "관리자 계정" : "게스트 계정"}
+            </span>
           </Button>
         </DialogTrigger>
 
-        {/* 다이얼로그: 하나만 두고, 내용/버튼 동작·라벨만 분기 */}
-        <DialogContent className="sm:max-w-md ">
+        {/* ▶ 다이얼로그 */}
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>
-              {isAdmin ? "로그아웃 하시겠습니까?" : "관리자 로그인"}
+              {isAdmin
+                ? "게스트 계정으로 전환하시겠습니까?"
+                : "관리자 계정으로 전환"}
             </DialogTitle>
           </DialogHeader>
 
@@ -115,7 +145,7 @@ export default function AdminLoginButton() {
               variant="ghost"
               onClick={primaryAction}
               disabled={primaryDisabled}
-              className="hover:bg-green-200 hover:cursor-pointer"
+              className=" hover:cursor-pointer"
             >
               {primaryLabel}
             </Button>

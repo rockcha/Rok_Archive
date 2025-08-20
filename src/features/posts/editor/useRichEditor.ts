@@ -24,8 +24,15 @@ export function useRichEditor(options?: Partial<EditorOptions>) {
     content: "",
     editorProps: {
       attributes: {
-        class:
-          "tiptap min-h-[520px] p-4 rounded-xl border bg-background dark:bg-zinc-900 focus:outline-none",
+        class: [
+          "tiptap",
+          "min-h-[520px]", // 최소 높이
+          "max-h-[70vh]", // 최대 높이 (예: 화면 70%)
+          "overflow-y-auto", // 세로 스크롤 허용
+          "p-4 rounded-xl border",
+          "bg-background dark:bg-zinc-900",
+          "focus:outline-none",
+        ].join(" "),
         autocorrect: "off",
         autocapitalize: "off",
         spellcheck: "false",

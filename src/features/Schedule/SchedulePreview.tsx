@@ -7,10 +7,6 @@ import { Button } from "@/shared/ui/button";
 import { Badge } from "@/shared/ui/badge";
 import { useAdmin } from "../Auth/useAdmin";
 
-// ✨ 추가: ShineBorder + 테마
-import { ShineBorder } from "@/shared/magicui/shine-border";
-import { useTheme } from "next-themes";
-
 export type PreviewItem = {
   id: string;
   date: string; // "YYYY-MM-DD"
@@ -76,86 +72,71 @@ export default function SchedulePreview({
       .slice(0, maxCount);
   }, [items, maxCount]);
 
-  // ✨ 모노톤(라이트=블랙계열, 다크=화이트계열)
-  const { theme } = useTheme();
-  const monoColors =
-    theme === "dark"
-      ? ["#ffffff", "#d1d5db", "#9ca3af"]
-      : ["#000000", "#4b5563", "#9ca3af"];
-
   return (
     <div
       className={[
-        "fixed top-28 sm:left-3 2xl:left-30 z-50 w-[18rem] max-w-none hidden md:block",
+        "fixed  top-28 lg:left-0 xl:left-50 z-50 w-[18rem] max-w-none hidden md:block",
         className || "",
       ].join(" ")}
     >
-      {/* ✨ ShineBorder 래퍼: z-order 세팅 */}
-      <div className="relative overflow-hidden rounded-2xl">
-        <ShineBorder
-          className="z-20"
-          shineColor={monoColors}
-          borderWidth={2}
-          duration={14}
-        />
+      {/* ✨ border 제거 + shadow-md만 유지 */}
+      <Card className="shadow-md rounded-2xl">
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-lg mb-1">
+              <span>🗓️</span> 일정 미리보기
+            </CardTitle>
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setCollapsed((v) => !v)}
+            className="hover:cursor-pointer"
+          >
+            {collapsed ? "펼치기" : "접기"}
+          </Button>
+        </CardHeader>
 
-        <Card className="relative z-10 shadow-md rounded-2xl">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-lg mb-1">
-                <span>🗓️</span> 일정 미리보기
-              </CardTitle>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setCollapsed((v) => !v)}
-              className="hover:cursor-pointer"
-            >
-              {collapsed ? "펼치기" : "접기"}
-            </Button>
-          </CardHeader>
-
-          {!collapsed && (
-            <CardContent className="space-y-2">
-              {!hydrated ? (
-                <div className="text-sm text-muted-foreground text-center py-6">
-                  불러오는 중…
-                </div>
-              ) : !isAdmin ? (
-                <div className="text-sm text-muted-foreground text-center py-6">
-                  관리자에게만 공개되는 내용입니다.
-                </div>
-              ) : loading ? (
-                <div className="text-sm text-muted-foreground">
-                  불러오는 중…
-                </div>
-              ) : upcoming.length === 0 ? (
-                <div className="text-sm text-muted-foreground">
-                  예정된 일정이 없어요.
-                </div>
-              ) : (
-                <ul className="space-y-2">
-                  {upcoming.map((it) => (
-                    <li key={it.id}>
-                      <button
-                        type="button"
-                        onClick={() => onItemClick?.(it)}
-                        className="w-full text-left rounded-xl border-2 bg-background transition p-3 flex items-center gap-3"
+        {!collapsed && (
+          <CardContent className="space-y-2">
+            {!hydrated ? (
+              <div className="text-sm text-muted-foreground text-center py-6">
+                불러오는 중…
+              </div>
+            ) : !isAdmin ? (
+              <div className="text-sm text-muted-foreground text-center py-6">
+                관리자에게만 공개되는 내용입니다.
+              </div>
+            ) : loading ? (
+              <div className="text-sm text-muted-foreground">불러오는 중…</div>
+            ) : upcoming.length === 0 ? (
+              <div className="text-sm text-muted-foreground">
+                예정된 일정이 없어요.
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {upcoming.map((it) => (
+                  <li key={it.id}>
+                    <button
+                      type="button"
+                      onClick={() => onItemClick?.(it)}
+                      className="w-full text-left rounded-xl bg-background transition p-3 flex items-center gap-3 shadow-sm border border-gray-400"
+                    >
+                      <Badge
+                        variant="secondary"
+                        className="shrink-0 bg-green-50"
                       >
-                        <Badge variant="secondary" className="shrink-0">
-                          {dLabel(todayRef.current, it.date)}
-                        </Badge>
-                        <div className="flex-1 truncate">{it.title}</div>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          )}
-        </Card>
-      </div>
+                        {dLabel(todayRef.current, it.date)}
+                      </Badge>
+                      <div className="flex-1 truncate">{it.title}</div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        )}
+      </Card>
     </div>
   );
 }

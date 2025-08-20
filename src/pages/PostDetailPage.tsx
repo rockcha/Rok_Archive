@@ -21,8 +21,8 @@ type Post = {
   id: string;
   slug: string;
   title: string;
-  category_id: string | number | null; // ✅ id로 보관
-  categories?: { name: string } | null; // ✅ FK 조인 결과
+  category_id: string | number | null;
+  categories?: { name: string } | null;
   tags: string[];
   content_json: unknown | null;
   content_markdown: string | null;
@@ -101,20 +101,18 @@ export default function PostDetailPage() {
     );
   }
 
-  // const catName = post.categories?.name ?? "Uncategorized";
-
   return (
-    <article className="mx-auto w-full max-w-screen-lg   px-6 py-6 min-h-[80vh]">
-      {/* 헤더 */}
+    <article className="mx-auto w-full max-w-screen-lg px-6 py-6 min-h-[80vh]">
+      {/* ── 헤더 ───────────────────────────────────────────── */}
       <header className="text-center">
         <h1 className="text-3xl font-bold">{post.title}</h1>
 
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xm text-zinc-500">
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm text-zinc-500">
           {post.tags?.length > 0 && (
             <span>· {post.tags.map((t) => `#${t}`).join(" ")}</span>
           )}
           {post.published_at && (
-            <span> {new Date(post.published_at).toLocaleDateString()}</span>
+            <span>{new Date(post.published_at).toLocaleDateString()}</span>
           )}
         </div>
 
@@ -126,11 +124,26 @@ export default function PostDetailPage() {
 
       <Separator className="my-4" />
 
-      {/* 본문 */}
-      <PostContentView
-        contentJson={normalizeContentJson(post.content_json)}
-        contentMarkdown={post.content_markdown}
-      />
+      {/* ── 본문(내부 스크롤) ──────────────────────────────── */}
+      <div
+        className={[
+          // 높이 상한 + 내부 스크롤
+          "max-h-[75vh] overflow-y-auto",
+          // 스크롤바 살짝 얇게 (선택)
+          "pr-1 [scrollbar-width:thin] [-ms-overflow-style:auto]",
+          "[&::-webkit-scrollbar]:w-2",
+          "[&::-webkit-scrollbar-thumb]:rounded-full",
+          "[&::-webkit-scrollbar-thumb]:bg-zinc-300/70",
+          "dark:[&::-webkit-scrollbar-thumb]:bg-zinc-700/70",
+        ].join(" ")}
+        aria-label="게시글 본문 스크롤 영역"
+        role="region"
+      >
+        <PostContentView
+          contentJson={normalizeContentJson(post.content_json)}
+          contentMarkdown={post.content_markdown}
+        />
+      </div>
     </article>
   );
 }

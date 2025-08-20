@@ -28,7 +28,7 @@ export default function EditorToolbar({ editor }: Props) {
   if (!editor) return null;
 
   return (
-    <div className="sticky top-[100px] z-40 border-3 rounded-lg bg-white/90 p-2">
+    <div className="sticky top-[100px] z-40 border rounded-lg bg-background p-2">
       {" "}
       <div
         className="

@@ -6,15 +6,17 @@ import { supabase } from "@/shared/lib/supabase";
 import { cn } from "@/shared/lib/utils";
 import PostBox from "./PostBox";
 import { useNavigate } from "react-router-dom";
+// ❌ shadcn ScrollArea/ScrollBar 제거
+// import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
 
 type Props = {
   headerLabel?: string;
-  postIds?: string[]; // 정의되면 ids 모드
-  categoryId?: number | null; // 카테고리 필터
-  limit?: number; // 기본 12
+  postIds?: string[];
+  categoryId?: number | null;
+  limit?: number;
   className?: string;
   showHeader?: boolean;
-  showAll?: boolean; // ✅ 전체 보기 (외부 제어)
+  showAll?: boolean;
 };
 
 type PostRow = {
@@ -35,8 +37,7 @@ export default function PostsBoard({
   categoryId = null,
   limit = 12,
   className,
-
-  showAll = false, // ✅ 기본은 꺼짐
+  showAll = false,
 }: Props) {
   const [items, setItems] = useState<PostRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,22 +52,20 @@ export default function PostsBoard({
 
   useEffect(() => {
     let cancelled = false;
-
     (async () => {
       try {
         setLoading(true);
         setErrMsg(null);
 
         if (idsMode) {
-          // ✅ ids 모드
           if (!postIds || postIds.length === 0) {
             if (!cancelled) setItems([]);
             return;
           }
 
           const targetIds = showAll
-            ? postIds // 전체 사용
-            : postIds.slice(0, Math.max(0, limit)); // limit만큼
+            ? postIds
+            : postIds.slice(0, Math.max(0, limit));
 
           const { data, error } = await supabase
             .from("posts")
@@ -76,7 +75,6 @@ export default function PostsBoard({
 
           if (error) throw error;
 
-          // 입력 순서 유지
           const orderMap = new Map(
             targetIds.map((id, idx) => [id, idx] as const)
           );
@@ -86,7 +84,6 @@ export default function PostsBoard({
 
           if (!cancelled) setItems(sorted as PostRow[]);
         } else {
-          // ✅ 카테고리 모드 (showAll 지원)
           let base = supabase
             .from("posts")
             .select(FIELDS)
@@ -98,8 +95,7 @@ export default function PostsBoard({
           }
 
           if (showAll) {
-            // 페이지네이션으로 전체 수집
-            const PAGE = 100; // 페이지 크기(상황에 맞게 조절)
+            const PAGE = 100;
             let offset = 0;
             const acc: PostRow[] = [];
 
@@ -113,13 +109,11 @@ export default function PostsBoard({
               const chunk = (data ?? []) as PostRow[];
               acc.push(...chunk);
 
-              if (!chunk.length || chunk.length < PAGE) break; // 마지막 페이지
+              if (!chunk.length || chunk.length < PAGE) break;
               offset += PAGE;
             }
-
             if (!cancelled) setItems(acc);
           } else {
-            // 기존: limit만큼
             const { data, error } = await base.range(0, Math.max(0, limit - 1));
             if (error) throw error;
             if (!cancelled) setItems((data ?? []) as PostRow[]);
@@ -133,13 +127,11 @@ export default function PostsBoard({
         if (!cancelled) setLoading(false);
       }
     })();
-
     return () => {
       cancelled = true;
     };
-  }, [idsMode, idsKey, categoryId, limit, showAll]); // ✅ showAll 의존성 추가
+  }, [idsMode, idsKey, categoryId, limit, showAll]);
 
-  // 스켈레톤 개수 (대략)
   const skeletonCount = useMemo(() => {
     if (idsMode) {
       const n = postIds?.length ?? 0;
@@ -158,29 +150,48 @@ export default function PostsBoard({
     Array.isArray(c) ? c[0]?.name : c?.name;
 
   return (
-    <section className={cn("w-full p-2 ", className)}>
-      {loading && <GridSkeleton count={skeletonCount} />}
+    <section className={cn("w-full relative", className)}>
+      {/* ✅ Tailwind로 내부 스크롤 처리 */}
+      <div
+        className={cn(
+          "rounded-xl border-2 p-2",
+          // 높이 제한 + 세로 스크롤
+          "max-h-[70vh] overflow-y-auto",
+          // (선택) 스크롤바 얇게 + 여백
+          "pr-1"
+          // tailwind-scrollbar 플러그인 사용 시 아래 클래스들도 가능
+          // "scrollbar-thin scrollbar-thumb-zinc-300 hover:scrollbar-thumb-zinc-400"
+        )}
+        aria-label="게시글 목록 스크롤 영역"
+        role="region"
+      >
+        <div className="p-2">
+          {loading && <GridSkeleton count={skeletonCount} />}
 
-      {!loading && errMsg && <p className="text-sm text-red-600">{errMsg}</p>}
+          {!loading && errMsg && (
+            <p className="text-sm text-red-600">{errMsg}</p>
+          )}
 
-      {!loading && !errMsg && items.length === 0 && (
-        <p className="text-sm text-zinc-500">아직 등록된 글이 없어요.</p>
-      )}
+          {!loading && !errMsg && items.length === 0 && (
+            <p className="text-sm text-zinc-500">아직 등록된 글이 없어요.</p>
+          )}
 
-      {!loading && !errMsg && items.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
-          {items.map((p) => (
-            <PostBox
-              key={p.id}
-              id={p.id}
-              title={p.title ?? "(제목 없음)"}
-              categoryName={pickCategoryName(p.categories) ?? "-"}
-              tags={p.tags ?? []}
-              onClick={handlePostClick}
-            />
-          ))}
+          {!loading && !errMsg && items.length > 0 && (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+              {items.map((p) => (
+                <PostBox
+                  key={p.id}
+                  id={p.id}
+                  title={p.title ?? "(제목 없음)"}
+                  categoryName={pickCategoryName(p.categories) ?? "-"}
+                  tags={p.tags ?? []}
+                  onClick={handlePostClick}
+                />
+              ))}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </section>
   );
 }
@@ -191,7 +202,7 @@ function GridSkeleton({ count = 6 }: { count?: number }) {
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="aspect-square animate-pulse rounded-xl border bg-zinc-100 dark:bg-zinc-800"
+          className="aspect-square animate-pulse rounded-xl bg-zinc-100 dark:bg-zinc-800"
         />
       ))}
     </div>

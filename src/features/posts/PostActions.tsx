@@ -71,7 +71,7 @@ export default function PostActions({ postId }: Props) {
               variant="ghost"
               aria-label="수정"
               onClick={onEdit}
-              className="w-14 h-14 rounded-full bg-emerald-500 text-white shadow-lg transition-transform hover:scale-105 hover:cursor-pointer"
+              className="w-14 h-14 rounded-full bg-neutral-500 text-white shadow-lg transition-transform hover:scale-105 hover:  hover:cursor-pointer"
             >
               <Pencil className="h-6 w-6" />
               <span className="sr-only">수정</span>
@@ -89,7 +89,7 @@ export default function PostActions({ postId }: Props) {
                   size="icon"
                   variant="ghost"
                   aria-label="삭제"
-                  className="w-14 h-14 rounded-full bg-rose-500 text-white shadow-lg transition-transform hover:scale-105 hover:cursor-pointer"
+                  className="w-14 h-14 rounded-full bg-rose-400 text-white shadow-lg transition-transform hover:scale-105 hover:cursor-pointer"
                 >
                   <Trash2 className="h-6 w-6" />
                   <span className="sr-only">삭제</span>

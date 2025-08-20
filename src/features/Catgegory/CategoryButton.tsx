@@ -1,7 +1,7 @@
 // src/features/Catgegory/CategoryButton.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { cn } from "@/shared/lib/utils";
 import { supabase } from "@/shared/lib/supabase";
@@ -29,10 +29,19 @@ export default function CategoryButton({
 }: Props) {
   const [count, setCount] = useState<number | null>(null);
 
+  // ✅ 아이콘 경로 (shared/assets/{카테고리이름}.png)
+  const iconSrc = useMemo(() => {
+    if (!label || isAll) return undefined;
+    try {
+      return new URL(`../../shared/assets/${label}.png`, import.meta.url).href;
+    } catch {
+      return undefined;
+    }
+  }, [label, isAll]);
+
   useEffect(() => {
     let alive = true;
     (async () => {
-      // ✅ 전체보기면 카테고리 조건 없이 전체 발행글 수
       const base = supabase
         .from("posts")
         .select("*", { count: "exact", head: true })
@@ -53,15 +62,11 @@ export default function CategoryButton({
     return () => {
       alive = false;
     };
-    // isAll/id가 바뀌면 재조회
   }, [isAll, id]);
 
   const handleClick = () => {
-    if (isAll) {
-      onSelectAll?.();
-    } else {
-      onSelect(id);
-    }
+    if (isAll) onSelectAll?.();
+    else onSelect(id);
   };
 
   return (
@@ -71,16 +76,35 @@ export default function CategoryButton({
       onClick={handleClick}
       variant={selected ? "default" : "outline"}
       className={cn(
-        "w-full justify-between",
+        "w-full h-16 min-h-16 py-3 px-3",
+        "justify-between items-center gap-3",
         selected
-          ? "bg-emerald-600 text-white hover:bg-emerald-700 hover:cursor-pointer"
-          : "bg-green-50 dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:cursor-pointer",
+          ? "bg-neutral-500 text-white hover:bg-neutral-700 hover:cursor-pointer"
+          : "dark:bg-zinc-900  dark:hover:bg-zinc-800 hover:cursor-pointer",
         className
       )}
       title={label}
     >
-      <span>{label}</span>
-      <span className="text-xs opacity-70">({count ?? "…"})</span>
+      {/* LEFT: 아이콘 + 라벨 */}
+      <span className="flex items-center gap-3 min-w-0">
+        {/* 아이콘 (있을 때만) */}
+        {iconSrc ? (
+          <div className="w-9 h-9 rounded-md bg-background flex items-center justify-center ">
+            <img
+              src={iconSrc}
+              alt={label}
+              loading="lazy"
+              className="w-6 h-6 object-contain"
+            />
+          </div>
+        ) : null}
+
+        {/* 라벨 */}
+        <span className="font-semibold text-base truncate">{label}</span>
+      </span>
+
+      {/* RIGHT: 게시물 수 */}
+      <span className="text-xs opacity-70 shrink-0">({count ?? "…"})</span>
     </Button>
   );
 }

@@ -25,21 +25,21 @@ export function CyclingHighlighter({ children, holdMs = 1200 }: Props) {
       color: "#3b82f6",
       strokeWidth: 1.5,
       padding: 4,
-      animationDuration: 1200,
+      animationDuration: 3200,
     }, // 파란 네모
     {
       action: "highlight",
       color: "#fde68a",
       strokeWidth: 1.5,
       padding: 4,
-      animationDuration: 1200,
+      animationDuration: 3200,
     }, // 형광펜(옅은 노랑)
     {
       action: "underline",
       color: "#ef4444",
       strokeWidth: 2,
       padding: 2,
-      animationDuration: 1200,
+      animationDuration: 3200,
     }, // 빨간 동그라미
   ];
 

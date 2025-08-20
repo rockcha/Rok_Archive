@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dock, DockIcon } from "@/shared/magicui/dock";
 import { cn } from "@/shared/lib/utils";
-import { PencilLine, Tag, Github, Bot, CalendarDays } from "lucide-react"; // ⬅️ CalendarDays 추가
+import { PencilLine, Tag, Github, Bot, CalendarDays } from "lucide-react";
 import { SiSupabase } from "react-icons/si";
 import { useAdmin } from "@/features/Auth/useAdmin";
 import { supabase } from "@/shared/lib/supabase";
@@ -30,16 +30,10 @@ import { Separator } from "@/shared/ui/separator";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 
-import { ShineBorder } from "@/shared/magicui/shine-border";
-import { useTheme } from "next-themes"; // ✨ 추가
-
-type Props = { className?: string };
-
-export default function AdminDock({ className }: Props) {
+export default function AdminDock() {
   const navigate = useNavigate();
   const { isAdmin } = useAdmin();
   const [alertOpen, setAlertOpen] = useState(false);
-  const { theme } = useTheme(); // ✨ 추가
 
   // ▒▒ 카테고리 추가 모달 상태 ▒▒
   const [catOpen, setCatOpen] = useState(false);
@@ -58,8 +52,8 @@ export default function AdminDock({ className }: Props) {
 
   // 핸들러
   const handleNewPost = () => navigate("/posts/new");
-  const handleAddCategory = () => setCatOpen(true); // ✅ 모달 오픈
-  const handleCalendar = () => navigate("/schedular"); // ⬅️ 캘린더 라우트
+  const handleAddCategory = () => setCatOpen(true);
+  const handleCalendar = () => navigate("/schedular");
   const handleGitHub = () =>
     window.open(
       "https://github.com/rockcha/Rok_Archive",
@@ -97,134 +91,118 @@ export default function AdminDock({ className }: Props) {
 
   const iconBtn = cn(
     buttonVariants({ variant: "ghost", size: "icon" }),
-    "size-12 rounded-full",
-    "hover:cursor-pointer"
+    "size-12 rounded-full hover:cursor-pointer"
   );
-
-  // ✨ 모노톤 컬러 (라이트=검정계열, 다크=흰계열)
-  const monoColors =
-    theme === "dark"
-      ? ["#ffffff", "#d1d5db", "#9ca3af"]
-      : ["#000000", "#4b5563", "#9ca3af"];
 
   return (
     <>
-      <div
-        className={cn(
-          "relative inline-block text-center overflow-hidden rounded-2xl",
-          className
-        )}
-      >
-        {/* ✨ 모노톤 ShineBorder 추가 */}
-        <ShineBorder shineColor={monoColors} borderWidth={2} duration={14} />
-        <TooltipProvider>
-          <Dock
-            direction="middle"
-            iconSize={44}
-            iconMagnification={64}
-            iconDistance={130}
-            className="shadow-lg relative z-10" // ✨ ShineBorder 위로 올리기
-          >
-            {/* 글작성 */}
-            <DockIcon className="group">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    aria-label="글 작성"
-                    className={iconBtn}
-                    onClick={() => withAuth(handleNewPost)}
-                  >
-                    <PencilLine className="size-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>글 작성</TooltipContent>
-              </Tooltip>
-            </DockIcon>
+      <TooltipProvider>
+        <Dock
+          direction="middle"
+          iconSize={44}
+          iconMagnification={64}
+          iconDistance={140}
+        >
+          {/* 글작성 */}
+          <DockIcon className="group">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  aria-label="글 작성"
+                  className={iconBtn}
+                  onClick={() => withAuth(handleNewPost)}
+                >
+                  <PencilLine className="size-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>글 작성</TooltipContent>
+            </Tooltip>
+          </DockIcon>
 
-            {/* 카테고리 추가 */}
-            <DockIcon className="group">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    aria-label="카테고리 추가"
-                    className={iconBtn}
-                    onClick={() => withAuth(handleAddCategory)}
-                  >
-                    <Tag className="size-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>카테고리 추가</TooltipContent>
-              </Tooltip>
-            </DockIcon>
+          {/* 카테고리 추가 */}
+          <DockIcon className="group">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  aria-label="카테고리 추가"
+                  className={iconBtn}
+                  onClick={() => withAuth(handleAddCategory)}
+                >
+                  <Tag className="size-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>카테고리 추가</TooltipContent>
+            </Tooltip>
+          </DockIcon>
 
-            {/* 캘린더 */}
-            <DockIcon className="group">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    aria-label="캘린더"
-                    className={iconBtn}
-                    onClick={() => withAuth(handleCalendar)}
-                  >
-                    <CalendarDays className="size-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>캘린더</TooltipContent>
-              </Tooltip>
-            </DockIcon>
+          {/* 캘린더 */}
+          <DockIcon className="group">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  aria-label="캘린더"
+                  className={iconBtn}
+                  onClick={() => withAuth(handleCalendar)}
+                >
+                  <CalendarDays className="size-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>캘린더</TooltipContent>
+            </Tooltip>
+          </DockIcon>
 
-            <Separator orientation="vertical" className="h-full" />
+          <Separator orientation="vertical" className="h-full" />
 
-            {/* GitHub */}
-            <DockIcon className="group">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    aria-label="GitHub"
-                    className={iconBtn}
-                    onClick={() => withAuth(handleGitHub)}
-                  >
-                    <Github className="size-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>GitHub</TooltipContent>
-              </Tooltip>
-            </DockIcon>
+          {/* GitHub */}
+          <DockIcon className="group">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  aria-label="GitHub"
+                  className={iconBtn}
+                  onClick={() => withAuth(handleGitHub)}
+                >
+                  <Github className="size-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>GitHub</TooltipContent>
+            </Tooltip>
+          </DockIcon>
 
-            {/* Supabase */}
-            <DockIcon className="group">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    aria-label="Supabase"
-                    className={iconBtn}
-                    onClick={() => withAuth(handleSupabase)}
-                  >
-                    <SiSupabase className="size-4" color="#3ECF8E" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>Supabase</TooltipContent>
-              </Tooltip>
-            </DockIcon>
+          {/* Supabase */}
+          <DockIcon className="group">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  aria-label="Supabase"
+                  className={iconBtn}
+                  onClick={() => withAuth(handleSupabase)}
+                >
+                  <SiSupabase className="size-4" color="#3ECF8E" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Supabase</TooltipContent>
+            </Tooltip>
+          </DockIcon>
 
-            {/* ChatGPT */}
-            <DockIcon className="group">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    aria-label="ChatGPT"
-                    className={iconBtn}
-                    onClick={() => withAuth(handleChatGPT)}
-                  >
-                    <Bot className="size-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>ChatGPT</TooltipContent>
-              </Tooltip>
-            </DockIcon>
-          </Dock>
-        </TooltipProvider>
-      </div>
+          {/* ChatGPT */}
+          <DockIcon className="group">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  aria-label="ChatGPT"
+                  className={iconBtn}
+                  onClick={() => withAuth(handleChatGPT)}
+                >
+                  <Bot className="size-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>ChatGPT</TooltipContent>
+            </Tooltip>
+          </DockIcon>
+          <Separator orientation="vertical" className="h-full" />
+        </Dock>
+      </TooltipProvider>
 
       {/* 권한 없음 다이얼로그 */}
       <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>

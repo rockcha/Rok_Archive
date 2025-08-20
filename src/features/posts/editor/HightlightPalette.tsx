@@ -97,7 +97,7 @@ export default function HighlightPalette({ editor }: Props) {
           eraseOnce();
         }}
         title="하이라이트 끄기(지우개)"
-        className={`${swatchCls} ${!armed ? "ring-2 ring-gray-400" : ""}`}
+        className={`${swatchCls} ${!armed ? "ring-2 ring-neutral-400" : ""}`}
         style={{ background: "#ffffff" }}
         aria-pressed={!armed}
       />
@@ -109,7 +109,7 @@ export default function HighlightPalette({ editor }: Props) {
             onClick={() => setSelected(c)}
             title={c}
             className={`${swatchCls} ${
-              selected === c ? "ring-2 ring-gray-400" : ""
+              selected === c ? "ring-2 ring-neutral-400" : ""
             }`}
             style={{ background: c }}
             aria-pressed={selected === c}
