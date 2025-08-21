@@ -141,8 +141,7 @@ export default function FloatingMemo({
         <Button
           onClick={() => setOpen(true)}
           variant="secondary"
-          className="fixed z-[70] rounded-full backdrop-blur px-3 py-2 shadow-lg border text-sm cursor-pointer hover:opacity-95"
-          style={{ bottom: offset.bottom, right: offset.right }}
+          className="fixed z-[70] right-10 top-[32%] rounded-full backdrop-blur px-3 py-2 shadow-lg border text-sm cursor-pointer hover:opacity-95"
           aria-label="메모장 열기"
         >
           <span className="mr-1">🗒️</span>

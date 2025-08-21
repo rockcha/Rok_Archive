@@ -17,6 +17,7 @@ import TodayTodosPage from "@/pages/TodayTodosPage";
 //위젯 목록
 import Header from "@/widgets/Header/Header";
 import { Toaster } from "@/shared/ui/sonner";
+import FloatingMemo from "@/widgets/FloatingMemo";
 
 // 레이아웃 (Header + Footer 고정)
 function Layout() {
@@ -42,6 +43,7 @@ export default function App() {
   return (
     <Router>
       <Toaster />
+      <FloatingMemo />
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<MainPage />} />
