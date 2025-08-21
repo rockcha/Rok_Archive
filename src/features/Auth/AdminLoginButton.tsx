@@ -15,6 +15,7 @@ import {
 } from "@/shared/ui/dialog";
 import { Label } from "@radix-ui/react-label";
 import { Input } from "@/shared/ui/input";
+import { toast } from "sonner";
 
 export default function AdminLoginButton() {
   const { isAdmin, setAdmin, logout } = useAdmin();
@@ -41,13 +42,18 @@ export default function AdminLoginButton() {
         password,
       });
       if (error) throw error;
+
       setAdmin(true);
       setOpen(false);
       setEmail("");
       setPassword("");
+      // ✅ Sonner toast (브라우저 alert 대신)
+      toast.success("관리자로 로그인되었습니다.", {
+        description: email,
+      });
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "로그인 실패";
-      alert(msg);
+      toast.error("로그인에 실패했습니다.", { description: msg });
     } finally {
       setLoading(false);
     }
@@ -58,6 +64,11 @@ export default function AdminLoginButton() {
       setLoading(true);
       await logout(); // signOut + isAdmin=false
       setOpen(false);
+      // ✅ Sonner toast
+      toast.success("게스트 모드로 전환되었습니다.");
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : "로그아웃 실패";
+      toast.error("로그아웃 중 오류가 발생했습니다.", { description: msg });
     } finally {
       setLoading(false);
     }
@@ -83,8 +94,9 @@ export default function AdminLoginButton() {
             title={isAdmin ? "현재: 관리자 계정" : "현재: 게스트 계정"}
             className="
               w-20 h-20 p-2 
-                 hover:cursor-pointer
               flex flex-col items-center justify-center gap-1
+              hover:cursor-pointer
+              scale-[0.8]  /* ✅ 0.8배 크기 */
             "
           >
             {iconSrc ? (
@@ -95,7 +107,7 @@ export default function AdminLoginButton() {
                 loading="lazy"
               />
             ) : (
-              <div className="w-8 h-8  " />
+              <div className="w-8 h-8" />
             )}
             <span className="text-xs font-bold tracking-tight">
               {isAdmin ? "관리자 계정" : "게스트 계정"}
@@ -145,7 +157,7 @@ export default function AdminLoginButton() {
               variant="ghost"
               onClick={primaryAction}
               disabled={primaryDisabled}
-              className=" hover:cursor-pointer"
+              className="hover:cursor-pointer"
             >
               {primaryLabel}
             </Button>

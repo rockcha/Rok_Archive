@@ -1,3 +1,4 @@
+// src/app/scheduler/page.tsx (혹은 기존 경로 유지)
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -8,10 +9,7 @@ import { NewScheduleDialog } from "@/features/Schedule/NewScheduleDialog";
 import { ScheduleDialog } from "@/features/Schedule/ScheduleDialog";
 import { CalendarPlus } from "lucide-react";
 import { supabase } from "@/shared/lib/supabase";
-
-// ✨ 추가
-import { ShineBorder } from "@/shared/magicui/shine-border";
-import { useTheme } from "next-themes";
+import HomeButton from "@/widgets/Header/HomeButton";
 
 export type Schedule = {
   id: string;
@@ -42,13 +40,6 @@ export default function SchedulerPage() {
   const [openNew, setOpenNew] = useState(false);
   const [active, setActive] = useState<Schedule | null>(null);
 
-  const { theme } = useTheme();
-  // 모노톤 컬러(라이트=블랙계열, 다크=화이트계열)
-  const monoColors =
-    theme === "dark"
-      ? ["#ffffff", "#d1d5db", "#9ca3af"]
-      : ["#000000", "#4b5563", "#9ca3af"];
-
   const range = useMemo(() => {
     const start = firstOfMonth(cursor);
     const end = lastOfMonth(cursor);
@@ -76,6 +67,7 @@ export default function SchedulerPage() {
       .select("id,date,title,content")
       .single();
     if (error) throw error;
+
     const d = new Date(payload.date);
     if (d >= range.start && d <= range.end) {
       setItems((prev) => [...prev, data as Schedule]);
@@ -111,51 +103,62 @@ export default function SchedulerPage() {
     setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1));
 
   return (
-    <div className="w-full flex justify-center py-6">
-      <Card className="relative overflow-hidden rounded-2xl w-[80%] max-w-[1200px]">
-        {/* ✨ 모노톤 ShineBorder */}
-        <ShineBorder
-          className="z-20"
-          shineColor={monoColors}
-          borderWidth={2}
-          duration={14}
-        />
+    <div className="relative mx-auto w-full max-w-screen-lg bg-neutral-100 px-6 py-6 min-h-[100dvh] pb-[env(safe-area-inset-bottom)]">
+      {/* ── 헤더: 제목 가운데 + 홈버튼 오른쪽(오버레이, 높이 영향 X) ── */}
+      <div className="relative mb-4">
+        <h1 className="text-2xl font-bold text-center">스케줄러</h1>
 
-        <CardHeader className="grid grid-cols-3 items-center relative z-30">
-          <div className="justify-self-start">
-            <Button
-              variant="outline"
-              onClick={goPrev}
-              className="hover:cursor-pointer"
-            >
-              이전 달
-            </Button>
+        <div className="pointer-events-none absolute inset-0">
+          <div className="pointer-events-auto absolute right-0 top-1/2 -translate-y-1/2">
+            {/* 시각 균형을 위해 살짝 축소 */}
+            <div className="origin-right scale-75 sm:scale-90">
+              <HomeButton />
+            </div>
           </div>
+        </div>
+      </div>
 
-          <CardTitle className="justify-self-center text-xl">
-            {cursor.getFullYear()}년 {cursor.getMonth() + 1}월
-          </CardTitle>
+      {/* ── 본문: 카드 내부 스크롤 / 가운데 정렬 ── */}
+      <div className="w-full flex justify-center py-2">
+        <Card className="relative overflow-hidden rounded-2xl w-[80%] max-w-[1200px] h-[80vh] flex flex-col">
+          {/* 헤더 (고정) */}
+          <CardHeader className="grid grid-cols-3 items-center flex-none">
+            <div className="justify-self-start">
+              <Button
+                variant="outline"
+                onClick={goPrev}
+                className="hover:cursor-pointer"
+              >
+                이전 달
+              </Button>
+            </div>
 
-          <div className="justify-self-end flex gap-2">
-            <Button
-              variant="outline"
-              onClick={goNext}
-              className="hover:cursor-pointer"
-            >
-              다음 달
-            </Button>
-          </div>
-        </CardHeader>
+            <CardTitle className="justify-self-center text-xl">
+              {cursor.getFullYear()}년 {cursor.getMonth() + 1}월
+            </CardTitle>
 
-        <CardContent className="relative z-30">
-          <CalendarGrid
-            monthDate={cursor}
-            schedules={items}
-            onOpenDetail={(sch) => setActive(sch)}
-            loading={loading}
-          />
-        </CardContent>
-      </Card>
+            <div className="justify-self-end flex gap-2">
+              <Button
+                variant="outline"
+                onClick={goNext}
+                className="hover:cursor-pointer"
+              >
+                다음 달
+              </Button>
+            </div>
+          </CardHeader>
+
+          {/* 본문 (스크롤) */}
+          <CardContent className="flex-1 overflow-y-auto">
+            <CalendarGrid
+              monthDate={cursor}
+              schedules={items}
+              onOpenDetail={(sch) => setActive(sch)}
+              loading={loading}
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       <NewScheduleDialog
         open={openNew}
@@ -171,6 +174,7 @@ export default function SchedulerPage() {
         onDelete={handleDelete}
       />
 
+      {/* 플로팅 추가 버튼 */}
       <button
         onClick={() => setOpenNew(true)}
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full

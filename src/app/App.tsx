@@ -12,17 +12,18 @@ import PostCreatePage from "@/pages/PostCreatePage";
 import PostDetailPage from "@/pages/PostDetailPage";
 import PostEditPage from "@/pages/PostEditPage";
 import SchedularPage from "@/pages/SchedularPage";
+import TodayTodosPage from "@/pages/TodayTodosPage";
 
 //위젯 목록
 import Header from "@/widgets/Header/Header";
+import { Toaster } from "@/shared/ui/sonner";
 
 // 레이아웃 (Header + Footer 고정)
 function Layout() {
   return (
     <div className="h-screen overflow-hidden">
-      {" "}
       {/* ✅ 화면 높이 고정 + 전역 스크롤 차단 */}
-      <div className="h-full max-w-screen-2xl mx-auto flex flex-col bg-stone-50">
+      <div className="h-full max-w-screen-2xl mx-auto flex flex-col bg-neutral-100">
         {/* Header는 한 줄로 차지하고 */}
         <div className="shrink-0">
           <Header />
@@ -40,15 +41,17 @@ function Layout() {
 export default function App() {
   return (
     <Router>
+      <Toaster />
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<MainPage />} />
-          <Route path="/posts/new" element={<PostCreatePage />} />
-          <Route path="/posts/:slug" element={<PostDetailPage />} />
-          <Route path="/posts/id/:id" element={<PostDetailPage />} />
-          <Route path="/posts/edit/:id" element={<PostEditPage />} />
-          <Route path="/schedular" element={<SchedularPage />} />
         </Route>
+        <Route path="/schedular" element={<SchedularPage />} />
+        <Route path="/todos" element={<TodayTodosPage />} />
+        <Route path="/posts/new" element={<PostCreatePage />} />
+        <Route path="/posts/:slug" element={<PostDetailPage />} />
+        <Route path="/posts/id/:id" element={<PostDetailPage />} />
+        <Route path="/posts/edit/:id" element={<PostEditPage />} />
       </Routes>
     </Router>
   );

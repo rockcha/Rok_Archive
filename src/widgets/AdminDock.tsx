@@ -1,14 +1,19 @@
 // src/components/admin/AdminDock.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Dock, DockIcon } from "@/shared/magicui/dock";
 import { cn } from "@/shared/lib/utils";
-import { PencilLine, Tag, Github, Bot, CalendarDays } from "lucide-react";
+import {
+  PencilLine,
+  Github,
+  Bot,
+  CalendarDays,
+  CheckSquare,
+} from "lucide-react";
 import { SiSupabase } from "react-icons/si";
 import { useAdmin } from "@/features/Auth/useAdmin";
-import { supabase } from "@/shared/lib/supabase";
 
 import {
   AlertDialog,
@@ -25,25 +30,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/shared/ui/tooltip";
-import { buttonVariants, Button } from "@/shared/ui/button";
+import { buttonVariants } from "@/shared/ui/button";
 import { Separator } from "@/shared/ui/separator";
-import { Input } from "@/shared/ui/input";
-import { Label } from "@/shared/ui/label";
 
 export default function AdminDock() {
   const navigate = useNavigate();
   const { isAdmin } = useAdmin();
   const [alertOpen, setAlertOpen] = useState(false);
-
-  // ▒▒ 카테고리 추가 모달 상태 ▒▒
-  const [catOpen, setCatOpen] = useState(false);
-  const [catName, setCatName] = useState("");
-  const [catSaving, setCatSaving] = useState(false);
-  const catInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (catOpen) setTimeout(() => catInputRef.current?.focus(), 0);
-  }, [catOpen]);
 
   const withAuth = (fn: () => void) => {
     if (!isAdmin) return setAlertOpen(true);
@@ -52,7 +45,6 @@ export default function AdminDock() {
 
   // 핸들러
   const handleNewPost = () => navigate("/posts/new");
-  const handleAddCategory = () => setCatOpen(true);
   const handleCalendar = () => navigate("/schedular");
   const handleGitHub = () =>
     window.open(
@@ -69,26 +61,6 @@ export default function AdminDock() {
       "noopener,noreferrer"
     );
 
-  const onConfirmAddCategory = async () => {
-    const n = catName.trim();
-    if (!n) return alert("카테고리 이름을 입력하세요.");
-    if (n.length > 60) return alert("카테고리 이름이 너무 깁니다(최대 60자).");
-
-    setCatSaving(true);
-    try {
-      const { error } = await supabase.from("categories").insert({ name: n });
-      if (error) throw error;
-      alert("카테고리가 추가되었습니다.");
-      setCatName("");
-      setCatOpen(false);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "추가에 실패했습니다.";
-      alert(msg);
-    } finally {
-      setCatSaving(false);
-    }
-  };
-
   const iconBtn = cn(
     buttonVariants({ variant: "ghost", size: "icon" }),
     "size-12 rounded-full hover:cursor-pointer"
@@ -102,6 +74,7 @@ export default function AdminDock() {
           iconSize={44}
           iconMagnification={64}
           iconDistance={140}
+          className="border-none"
         >
           {/* 글작성 */}
           <DockIcon className="group">
@@ -119,19 +92,19 @@ export default function AdminDock() {
             </Tooltip>
           </DockIcon>
 
-          {/* 카테고리 추가 */}
+          {/* 오늘의 할일 */}
           <DockIcon className="group">
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  aria-label="카테고리 추가"
+                  aria-label="오늘의 할일"
                   className={iconBtn}
-                  onClick={() => withAuth(handleAddCategory)}
+                  onClick={() => navigate("/todos")}
                 >
-                  <Tag className="size-4" />
+                  <CheckSquare className="size-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent>카테고리 추가</TooltipContent>
+              <TooltipContent>오늘의 할일</TooltipContent>
             </Tooltip>
           </DockIcon>
 
@@ -151,7 +124,7 @@ export default function AdminDock() {
             </Tooltip>
           </DockIcon>
 
-          <Separator orientation="vertical" className="h-full" />
+          <Separator orientation="vertical" className="h-full bg-neutral-500" />
 
           {/* GitHub */}
           <DockIcon className="group">
@@ -200,7 +173,6 @@ export default function AdminDock() {
               <TooltipContent>ChatGPT</TooltipContent>
             </Tooltip>
           </DockIcon>
-          <Separator orientation="vertical" className="h-full" />
         </Dock>
       </TooltipProvider>
 
@@ -218,62 +190,6 @@ export default function AdminDock() {
               닫기
             </AlertDialogCancel>
           </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* 카테고리 추가 다이얼로그 */}
-      <AlertDialog
-        open={catOpen}
-        onOpenChange={(v) => {
-          if (!catSaving) setCatOpen(v);
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>카테고리 추가</AlertDialogTitle>
-            <AlertDialogDescription>
-              추가할 카테고리 이름을 입력하세요.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-
-          <form
-            className="grid gap-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (!catSaving) onConfirmAddCategory();
-            }}
-          >
-            <div className="grid gap-2">
-              <Label htmlFor="dock-category-name" className="text-sm">
-                이름
-              </Label>
-              <Input
-                id="dock-category-name"
-                ref={catInputRef}
-                value={catName}
-                onChange={(e) => setCatName(e.target.value)}
-                placeholder="예) React, Typescript"
-                disabled={catSaving}
-                className="h-11 text-base"
-              />
-            </div>
-
-            <AlertDialogFooter>
-              <AlertDialogCancel
-                disabled={catSaving}
-                className="hover:cursor-pointer"
-              >
-                취소
-              </AlertDialogCancel>
-              <Button
-                type="submit"
-                disabled={catSaving}
-                className="hover:cursor-pointer"
-              >
-                {catSaving ? "추가 중..." : "추가"}
-              </Button>
-            </AlertDialogFooter>
-          </form>
         </AlertDialogContent>
       </AlertDialog>
     </>

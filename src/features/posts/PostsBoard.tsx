@@ -6,8 +6,15 @@ import { supabase } from "@/shared/lib/supabase";
 import { cn } from "@/shared/lib/utils";
 import PostBox from "./PostBox";
 import { useNavigate } from "react-router-dom";
-// ❌ shadcn ScrollArea/ScrollBar 제거
-// import { ScrollArea, ScrollBar } from "@/shared/ui/scroll-area";
+
+// shadcn breadcrumb
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/shared/ui/breadcrumb";
 
 type Props = {
   headerLabel?: string;
@@ -24,11 +31,13 @@ type PostRow = {
   slug: string | null;
   title: string | null;
   tags: string[] | null;
-  category_id: string | number | null;
-  categories?: { name: string }[] | { name: string } | null;
+  category_id: number | string | null;
+  // posts → categories FK 조인이 설정되어 있다면 name만 가져와 PostBox 표시용으로 씀
+  categories?: { name: string } | { name: string }[] | null;
   published_at: string | null;
 };
 
+// posts 목록용 (카테고리명은 PostBox에 보여주려고 같이 불러옴 - 선택)
 const FIELDS =
   "id, slug, title, tags, category_id, categories(name), published_at";
 
@@ -42,6 +51,13 @@ export default function PostsBoard({
   const [items, setItems] = useState<PostRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [errMsg, setErrMsg] = useState<string | null>(null);
+
+  // ⬇️ 상단 제목용 메타: <type → category>
+  const [headerMeta, setHeaderMeta] = useState<{
+    type?: string;
+    category?: string;
+  } | null>(null);
+
   const navigate = useNavigate();
 
   const idsMode = useMemo(() => postIds !== undefined, [postIds]);
@@ -50,6 +66,53 @@ export default function PostsBoard({
     [postIds]
   );
 
+  // ✅ 카테고리 id → categories → categories_type 로 두 번 조회해 header 구성
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (categoryId == null) {
+        setHeaderMeta(null);
+        return;
+      }
+      try {
+        // 1) categories에서 name, type_id 조회
+        const { data: cat, error: catErr } = await supabase
+          .from("categories")
+          .select("name, type_id")
+          .eq("id", categoryId)
+          .maybeSingle();
+
+        if (catErr) throw catErr;
+        if (!cat) {
+          if (!cancelled) setHeaderMeta(null);
+          return;
+        }
+
+        // 2) categories_type에서 type 라벨 조회
+        let typeLabel: string | undefined = undefined;
+        if (cat.type_id != null) {
+          const { data: typeRow, error: typeErr } = await supabase
+            .from("categories_type")
+            .select("type")
+            .eq("id", cat.type_id)
+            .maybeSingle();
+          if (typeErr) throw typeErr;
+          typeLabel = typeRow?.type ?? undefined;
+        }
+
+        if (!cancelled) {
+          setHeaderMeta({ type: typeLabel, category: cat.name ?? undefined });
+        }
+      } catch {
+        if (!cancelled) setHeaderMeta(null); // 조용히 무시 (목록과 독립)
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [categoryId]);
+
+  // ✅ posts 목록 로딩
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -62,7 +125,6 @@ export default function PostsBoard({
             if (!cancelled) setItems([]);
             return;
           }
-
           const targetIds = showAll
             ? postIds
             : postIds.slice(0, Math.max(0, limit));
@@ -75,12 +137,17 @@ export default function PostsBoard({
 
           if (error) throw error;
 
-          const orderMap = new Map(
+          const orderMap = new Map<string, number>(
             targetIds.map((id, idx) => [id, idx] as const)
           );
-          const sorted = (data ?? [])
+
+          const rows = (data ?? []) as PostRow[]; // ← 한 번만 명시
+
+          const sorted = rows
             .filter((p) => orderMap.has(p.id))
             .sort((a, b) => orderMap.get(a.id)! - orderMap.get(b.id)!);
+
+          if (!cancelled) setItems(sorted);
 
           if (!cancelled) setItems(sorted as PostRow[]);
         } else {
@@ -98,17 +165,14 @@ export default function PostsBoard({
             const PAGE = 100;
             let offset = 0;
             const acc: PostRow[] = [];
-
             while (true) {
               const { data, error } = await base.range(
                 offset,
                 offset + PAGE - 1
               );
               if (error) throw error;
-
               const chunk = (data ?? []) as PostRow[];
               acc.push(...chunk);
-
               if (!chunk.length || chunk.length < PAGE) break;
               offset += PAGE;
             }
@@ -119,7 +183,7 @@ export default function PostsBoard({
             if (!cancelled) setItems((data ?? []) as PostRow[]);
           }
         }
-      } catch (e: unknown) {
+      } catch (e) {
         const msg =
           e instanceof Error ? e.message : "목록을 불러오지 못했습니다.";
         if (!cancelled) setErrMsg(msg);
@@ -142,25 +206,46 @@ export default function PostsBoard({
     return Math.min(limit, 8);
   }, [idsMode, postIds, limit, showAll]);
 
-  const handlePostClick = (postId: string) => {
-    navigate(`/posts/id/${postId}`);
-  };
+  const navigateToPost = (postId: string) => navigate(`/posts/id/${postId}`);
 
   const pickCategoryName = (c: PostRow["categories"]) =>
-    Array.isArray(c) ? c[0]?.name : c?.name;
+    Array.isArray(c) ? c?.[0]?.name : c?.name;
 
   return (
     <section className={cn("w-full relative", className)}>
-      {/* ✅ Tailwind로 내부 스크롤 처리 */}
+      {/* 🧭 상단 Breadcrumb: <type → category> */}
+      <div className="mb-4">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>홈</BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>게시글</BreadcrumbItem>
+
+            {headerMeta?.type && (
+              <>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem className="text-zinc-600">
+                  {headerMeta.type}
+                </BreadcrumbItem>
+              </>
+            )}
+
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage className="text-base font-semibold">
+                {headerMeta?.category ?? "전체보기"}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
+
+      {/* ✅ 내부 스크롤 영역 */}
       <div
         className={cn(
           "rounded-xl border-2 p-2",
-          // 높이 제한 + 세로 스크롤
           "max-h-[70vh] overflow-y-auto",
-          // (선택) 스크롤바 얇게 + 여백
           "pr-1"
-          // tailwind-scrollbar 플러그인 사용 시 아래 클래스들도 가능
-          // "scrollbar-thin scrollbar-thumb-zinc-300 hover:scrollbar-thumb-zinc-400"
         )}
         aria-label="게시글 목록 스크롤 영역"
         role="region"
@@ -183,9 +268,15 @@ export default function PostsBoard({
                   key={p.id}
                   id={p.id}
                   title={p.title ?? "(제목 없음)"}
-                  categoryName={pickCategoryName(p.categories) ?? "-"}
+                  // 상단이 특정 카테고리인 경우엔 그 이름을 공통으로 사용,
+                  // 아니면 posts→categories 조인에서 온 이름을 사용
+                  categoryName={
+                    headerMeta?.category ??
+                    pickCategoryName(p.categories) ??
+                    "-"
+                  }
                   tags={p.tags ?? []}
-                  onClick={handlePostClick}
+                  onClick={navigateToPost}
                 />
               ))}
             </div>

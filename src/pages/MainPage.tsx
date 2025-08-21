@@ -1,16 +1,15 @@
 // src/pages/MainPage.tsx
+"use client";
 
-//import IntroCard from "@/widgets/IntroCard";
+import { useCallback, useMemo, useState } from "react";
 
 import CategoryBar from "@/features/Catgegory/CategoryBar";
 import PostsSearchBar from "@/features/Search/PostsSearchBar";
 import PostsBoard from "@/features/posts/PostsBoard";
 import { IconCloudCard } from "@/widgets/IconCloudCard";
-
-import { useCallback, useMemo, useState } from "react";
-// import TodoList from "@/widgets/TodoList";
-// import SchedulePreviewAuto from "@/features/Schedule/SchedulePreviewAuto";
 import { CyclingHighlighter } from "@/widgets/Header/Cycling-highlighter";
+import AddCategoryButton from "@/features/Catgegory/AddCategoryButton";
+import FloatingMemo from "@/widgets/FloatingMemo";
 
 // ✅ idle 타입 제거
 type Mode = "selected" | "searched" | "showall";
@@ -34,7 +33,7 @@ export default function MainPage() {
   const handleApplySearch = useCallback((ids: string[]) => {
     setSelectedCategoryId(null);
     setSearchedPostIds(ids);
-    setMode("searched"); // ✅ 여기! ids.length 조건 삭제
+    setMode("searched"); // ✅ ids.length 조건 삭제
   }, []);
 
   // SearchBar의 category 필터는 selected 모드일 때만 적용
@@ -44,33 +43,38 @@ export default function MainPage() {
   );
 
   return (
-    <div className="w-full flex-col  ">
-      {/* ⬇️ 툴바 섹션: 헤더 높이만큼 sticky + 모노톤 보더 */}
-      <div className="w-full ">
-        <section className="relative isolate overflow-hidden bg-neutral-50 border-b-2 p-4">
-          <div className="relative z-10 w-full p-4 flex items-center ">
-            <p className="text-lg">
-              정록이의 소소한&nbsp;&nbsp;
-              <CyclingHighlighter holdMs={5000}>개발 기록소</CyclingHighlighter>
-            </p>
+    // ✅ 내용물과 무관하게 뷰포트에 가리지 않도록 최소 높이 고정
+    <div className="w-full flex flex-col min-h-[100svh]">
+      <FloatingMemo />
+      {/* ⬇️ 툴바 섹션: 고정 높이(내용과 무관) + 중앙에 검색바 */}
+      <section className="relative bg-neutral-50 border-b-2 h-16 sm:h-20">
+        <div className="h-full px-4 flex items-center">
+          <p className="text-lg">
+            정록이의 소소한&nbsp;&nbsp;
+            <CyclingHighlighter holdMs={5000}>개발 기록소</CyclingHighlighter>
+          </p>
 
-            {/* ✅ 무조건 부모 기준 가운데 */}
-            <div className="absolute left-1/2 -translate-x-1/2">
-              <PostsSearchBar
-                onApply={handleApplySearch}
-                limit={50}
-                categoryIdFilter={categoryIdFilter ?? null}
-                onError={(m) => console.error(m)}
-                className="w-full sm:w-[20rem] lg:w-[25rem] 2xl:w-[30rem] max-w-full bg-background"
-              />
-            </div>
+          {/* ✅ 섹션 높이에 맞춰 정확히 가운데 정렬 (내용과 무관) */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <PostsSearchBar
+              onApply={handleApplySearch}
+              limit={50}
+              categoryIdFilter={categoryIdFilter ?? null}
+              onError={(m) => console.error(m)}
+              className="w-full sm:w-[20rem] lg:w-[25rem] 2xl:w-[30rem] max-w-full bg-background"
+            />
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
 
-      <div className="mx-auto w-full grid grid-cols-12 gap-2">
+      {/* 메인 콘텐츠 */}
+      <div className="mx-auto w-full grid grid-cols-12 gap-2 flex-1 ">
         {/* 왼쪽: 카테고리 */}
-        <aside className="col-span-12 md:col-span-2 pl-2 mt-10">
+        <aside className="col-span-12 md:col-span-2 pl-2 ">
+          <div className="flex justify-center mt-1">
+            <AddCategoryButton />
+          </div>
+
           <CategoryBar
             selected={selectedCategoryId}
             onSelect={handleSelectCategory}
@@ -87,7 +91,7 @@ export default function MainPage() {
 
         {/* 오른쪽: 컨텐츠 */}
         <main className="col-span-12 md:col-span-10 min-w-0 pl-2">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_160px] pt-12">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_160px] p-2">
             {/* LEFT: Posts */}
             <section className="min-w-0">
               {mode === "showall" && (

@@ -1,9 +1,12 @@
 // src/features/posts/CategoryBar.tsx
 "use client";
 
+import { useEffect, useState } from "react";
 import { cn } from "@/shared/lib/utils";
 import CategoryButton from "./CategoryButton";
-import { useCategories } from "./useCategories";
+import CategoryTypeGroup from "./CategoryTypeGroup";
+
+import { supabase } from "@/shared/lib/supabase";
 
 type Props = {
   selected: number | null;
@@ -15,6 +18,11 @@ type Props = {
   showAllLabel?: string;
 };
 
+type CategoryTypeRow = {
+  id: number;
+  type: string;
+};
+
 export default function CategoryBar({
   selected,
   onSelect,
@@ -23,53 +31,73 @@ export default function CategoryBar({
   onToggleShowAll,
   showAllLabel = "전체보기",
 }: Props) {
-  const { data: categories, loading } = useCategories();
+  const [types, setTypes] = useState<CategoryTypeRow[]>([]);
+  const [loadingTypes, setLoadingTypes] = useState(true);
+
+  // 카테고리 타입 목록 로드
+  useEffect(() => {
+    (async () => {
+      setLoadingTypes(true);
+      const { data, error } = await supabase
+        .from("categories_type")
+        .select("id, type")
+        .order("id", { ascending: true });
+
+      if (!error) {
+        setTypes((data ?? []) as CategoryTypeRow[]);
+      } else {
+        setTypes([]);
+      }
+      setLoadingTypes(false);
+    })();
+  }, []);
 
   return (
     <nav
       className={cn(
-        "relative rounded-lg p-2 mt-2 flex flex-col gap-2",
-        // ✅ 높이 제한 + 세로 스크롤
-        "max-h-[65vh] overflow-y-auto scrollbar-thin scrollbar-thumb-zinc-300 hover:scrollbar-thumb-zinc-400",
+        "relative rounded-lg  mt-2 flex flex-col gap-2",
+        "h-[65vh] overflow-y-auto",
+        "scrollbar-thin scrollbar-thumb-zinc-300 hover:scrollbar-thumb-zinc-400",
+        "border-2 ",
         className
       )}
       aria-label="카테고리"
     >
-      <div className="flex flex-col gap-1">
-        <CategoryButton
-          id={null}
-          label={showAllLabel}
-          selected={!!showAllActive}
-          isAll
-          onSelectAll={() => onToggleShowAll?.(true)}
-          onSelect={() => {}}
-          className="shadow-md"
-        />
+      {/* 전체보기 */}
+      <CategoryButton
+        id={null}
+        label={showAllLabel}
+        selected={!!showAllActive}
+        isAll
+        onSelectAll={() => onToggleShowAll?.(true)}
+        onSelect={() => {}}
+        className="shadow-md "
+      />
 
-        {loading ? (
-          <div className="px-1 py-2 text-sm text-zinc-500">
-            카테고리 불러오는 중…
-          </div>
-        ) : categories.length ? (
-          categories.map((cat) => (
-            <CategoryButton
-              key={String(cat.id)}
-              id={cat.id}
-              label={cat.name}
-              selected={selected === cat.id && !showAllActive}
-              onSelect={(id) => {
-                onToggleShowAll?.(false);
-                onSelect(id as number);
-              }}
-              className="shadow-md"
-            />
-          ))
-        ) : (
-          <div className="px-1 py-2 text-sm text-emerald-500">
-            카테고리가 없습니다.
-          </div>
-        )}
-      </div>
+      {/* 타입별 접이식 그룹 */}
+      {loadingTypes ? (
+        <div className="px-1 py-2 text-base text-zinc-500">
+          타입 불러오는 중…
+        </div>
+      ) : types.length === 0 ? (
+        <div className="px-1 py-2 text-base text-emerald-500">
+          타입이 없습니다.
+        </div>
+      ) : (
+        types.map((t) => (
+          <CategoryTypeGroup
+            key={t.id}
+            typeId={t.id}
+            typeLabel={t.type} // 유저에겐 문자열로 표시
+            selected={selected}
+            showAllActive={!!showAllActive}
+            onSelectCategory={(id) => {
+              onToggleShowAll?.(false);
+              onSelect(id);
+            }}
+          />
+        ))
+      )}
     </nav>
   );
 }

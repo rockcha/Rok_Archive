@@ -17,7 +17,7 @@ export default function PostBox({
   id,
   title,
   categoryName,
-  tags,
+
   onClick,
   className,
 }: Props) {

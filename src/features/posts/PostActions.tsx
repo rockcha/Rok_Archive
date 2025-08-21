@@ -23,6 +23,7 @@ import {
 } from "@/shared/ui/tooltip";
 
 import { Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 type Props = {
   postId: string;
@@ -43,17 +44,19 @@ export default function PostActions({ postId }: Props) {
     navigate(`/posts/edit/${postId}`);
   };
 
-  // 🗑️ 삭제 버튼 클릭 시 실행
+  // 🗑️ 삭제 버튼 클릭 시 실행 (toast 사용)
   const onDelete = async () => {
     try {
       setDeleting(true);
       const { error } = await supabase.from("posts").delete().eq("id", postId);
       if (error) throw error;
+
       setOpen(false);
+      toast.success("게시글이 삭제되었습니다.");
       navigate("/");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "삭제 실패";
-      alert(msg);
+      toast.error("삭제 중 오류가 발생했습니다.", { description: msg });
     } finally {
       setDeleting(false);
     }
@@ -62,8 +65,8 @@ export default function PostActions({ postId }: Props) {
   return (
     <TooltipProvider>
       {/* ✅ 화면 우측 하단 고정된 액션 버튼 영역 */}
-      <div className="fixed bottom-6 right-6 z-50 flex jutify-center gap-2">
-        {/* ✏️ 수정 버튼 */}
+      <div className="fixed bottom-6 right-6 z-50 flex justify-center gap-2">
+        {/* ✏️ 수정 버튼 (neutral) */}
         <Tooltip>
           <TooltipTrigger asChild>
             <Button
@@ -71,7 +74,7 @@ export default function PostActions({ postId }: Props) {
               variant="ghost"
               aria-label="수정"
               onClick={onEdit}
-              className="w-14 h-14 rounded-full bg-neutral-500 text-white shadow-lg transition-transform hover:scale-105 hover:  hover:cursor-pointer"
+              className="w-14 h-14 rounded-full bg-neutral-500 text-white shadow-lg hover:bg-neutral-700 hover:text-white hover:cursor-pointer"
             >
               <Pencil className="h-6 w-6" />
               <span className="sr-only">수정</span>
@@ -80,7 +83,7 @@ export default function PostActions({ postId }: Props) {
           <TooltipContent>수정</TooltipContent>
         </Tooltip>
 
-        {/* 🗑️ 삭제 버튼 (다이얼로그 포함) */}
+        {/* 🗑️ 삭제 버튼 (rose) + 다이얼로그 */}
         <Dialog open={open} onOpenChange={setOpen}>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -89,7 +92,7 @@ export default function PostActions({ postId }: Props) {
                   size="icon"
                   variant="ghost"
                   aria-label="삭제"
-                  className="w-14 h-14 rounded-full bg-rose-400 text-white shadow-lg transition-transform hover:scale-105 hover:cursor-pointer"
+                  className="w-14 h-14 rounded-full bg-rose-500 text-white shadow-lg hover:bg-rose-700 hover:text-white  hover:cursor-pointer"
                 >
                   <Trash2 className="h-6 w-6" />
                   <span className="sr-only">삭제</span>

@@ -2,11 +2,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import type { Content } from "@tiptap/core";
+import type { Content, JSONContent } from "@tiptap/core";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/shared/lib/supabase";
+import { toast } from "sonner";
 
-// ── UI 컴포넌트 ──
+// ── UI ──
 import { Label } from "@radix-ui/react-label";
 import { Input } from "@/shared/ui/input";
 import { Button } from "@/shared/ui/button";
@@ -19,18 +20,16 @@ import {
   SelectItem,
 } from "@/shared/ui/select";
 
-// ── 에디터 ──
+// ── Editor ──
 import { EditorContent } from "@tiptap/react";
 import { useRichEditor } from "@/features/posts/editor/useRichEditor";
 import EditorToolbar from "@/features/posts/editor/EditorToolbar";
 
-// ── 유틸 ──
+// ── Utils ──
 import { slugify } from "@/shared/utils/slugify";
 import { parseTags } from "@/shared/utils/parseTags";
-import type { JSONContent } from "@tiptap/core";
 import { Save } from "lucide-react";
 
-// ── 타입 정의 ──
 type Category = { id: string | number; name: string };
 type ComposerMode = "create" | "edit";
 
@@ -51,7 +50,6 @@ export default function PostComposer({
   initial?: InitialData;
   onSaved?: (postId: string) => void;
 }) {
-  // ── 상태 관리 ──
   const [title, setTitle] = useState(initial?.title ?? "");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>(
     initial?.categoryId != null ? String(initial.categoryId) : ""
@@ -67,16 +65,7 @@ export default function PostComposer({
   const navigate = useNavigate();
   const editor = useRichEditor();
 
-  // 디버깅 (원하면 주석 처리)
-  useEffect(() => {
-    if (!editor) return;
-    // console.log(
-    //   "[extensions]",
-    //   editor.extensionManager.extensions.map((e) => e.name)
-    // );
-  }, [editor]);
-
-  // ── 카테고리 목록 로드 ──
+  // 카테고리 로드
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -85,11 +74,13 @@ export default function PostComposer({
         .from("categories")
         .select("id, name")
         .order("name", { ascending: true });
+
       if (!mounted) return;
 
       if (error) {
         console.error("카테고리 로드 실패:", error.message);
         setCategories([]);
+        toast.error("카테고리를 불러오지 못했습니다.");
       } else {
         setCategories((data ?? []) as Category[]);
       }
@@ -100,7 +91,7 @@ export default function PostComposer({
     };
   }, []);
 
-  // ── 에디터 초기 컨텐츠 설정 (수정 모드일 경우) ──
+  // 에디터 초기 내용
   useEffect(() => {
     if (!editor) return;
     const content = initial?.content as Content | null | undefined;
@@ -114,43 +105,39 @@ export default function PostComposer({
     }
   }, [editor, initial?.content]);
 
-  // ── 저장 가능 여부 판별 ──
+  // 제출 가능 여부
   const isReadyToSubmit = useMemo(() => {
     const tags = parseTags(tagsRaw);
     return title.trim().length > 0 && !!selectedCategoryId && tags.length > 0;
   }, [title, selectedCategoryId, tagsRaw]);
 
-  // ── 저장/수정 처리 ──
+  // 저장/수정
   const onSave = async () => {
     if (!editor) return;
     if (!isReadyToSubmit) {
-      alert("제목·카테고리·태그는 필수입니다.");
+      toast.info("제목·카테고리·태그는 필수입니다.");
       return;
     }
     setSaving(true);
 
     try {
-      // 에디터 본문
       const json = editor.getJSON();
-      const summary = editor.getText().trim().slice(0, 200);
-      const tags = parseTags(tagsRaw);
 
+      const tags = parseTags(tagsRaw);
       const category_id: string | number = /^\d+$/.test(selectedCategoryId)
         ? Number(selectedCategoryId)
         : selectedCategoryId;
 
       if (mode === "edit" && initial?.id) {
-        // ✏️ 수정 모드
         const { error } = await supabase
           .from("posts")
-          .update({ title, category_id, tags, content_json: json, summary })
+          .update({ title, category_id, tags, content_json: json })
           .eq("id", initial.id);
         if (error) throw error;
 
-        alert("수정 완료!");
+        toast.success("수정 완료");
         onSaved?.(initial.id);
       } else {
-        // 📝 새 글 작성
         const slug = slugify(title);
         const { data, error } = await supabase
           .from("posts")
@@ -160,17 +147,17 @@ export default function PostComposer({
             category_id,
             tags,
             content_json: json,
-            summary,
+
             published_at: new Date().toISOString(),
           })
           .select("id")
           .single();
         if (error) throw error;
 
-        alert("작성 완료!");
+        toast.success("작성 완료", { description: "홈으로 이동합니다." });
         onSaved?.(data!.id);
 
-        // 폼 초기화
+        // reset
         setTitle("");
         setSelectedCategoryId("");
         setTagsRaw("");
@@ -179,38 +166,34 @@ export default function PostComposer({
       }
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "저장 실패";
-      alert(msg);
+      toast.error("처리 중 오류가 발생했습니다.", { description: msg });
     } finally {
       setSaving(false);
     }
   };
 
-  // ── 새로고침/탭 닫기 방지 ──
+  // 리로드/창닫기: 브라우저 기본 confirm 제거, 안내 토스트만 시도
   useEffect(() => {
-    const handler = (e: BeforeUnloadEvent) => {
-      if (saving) return;
+    const handler = () => {
       const dirty =
         title.trim() ||
         tagsRaw.trim() ||
         selectedCategoryId ||
         (editor?.getText().trim() ?? "");
       if (dirty) {
-        e.preventDefault();
-        e.returnValue = "";
+        toast("페이지를 떠나는 중입니다.", {
+          description: "작성 중인 내용이 저장되지 않을 수 있어요.",
+        });
       }
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
-  }, [saving, title, tagsRaw, selectedCategoryId, editor]);
+  }, [title, tagsRaw, selectedCategoryId, editor]);
 
-  // ── UI ──
   return (
     <div className="space-y-4">
-      {/* 상단 안내/입력 바: 한 줄로 배치 (작은 화면에서는 세로로 스택) */}
+      {/* 상단 입력 바 */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center">
-        {/* 안내 문구 */}
-
-        {/* 입력 영역 */}
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:flex-1">
           {/* 카테고리 */}
           <div className="flex items-center gap-2 md:min-w-[220px] ">
@@ -272,13 +255,12 @@ export default function PostComposer({
       {/* 툴바 */}
       <EditorToolbar editor={editor} />
 
-      {/* 본문 에디터 */}
+      {/* 에디터 */}
       <EditorContent editor={editor} className="tiptap min-h-[60vh]" />
 
-      {/* 구분선 (투명) */}
       <Separator className="opacity-0" />
 
-      {/* 고정 동그라미 등록 버튼 (오른쪽 하단) */}
+      {/* 저장 FAB */}
       <Button
         type="button"
         onClick={onSave}
@@ -297,7 +279,7 @@ function cnFloatingBtn(disabled: boolean) {
   const base =
     "fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full shadow-lg flex items-center justify-center";
   const enabled =
-    "bg-emerald-600 hover:bg-emerald-700 text-white hover:cursor-pointer";
-  const disabledCls = "bg-emerald-300 text-white opacity-70 cursor-not-allowed";
+    "bg-neutral-700 hover:bg-neutral-800 text-white hover:cursor-pointer";
+  const disabledCls = "bg-neutral-400 text-white opacity-70 cursor-not-allowed";
   return `${base} ${disabled ? disabledCls : enabled}`;
 }

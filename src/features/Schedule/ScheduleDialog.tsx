@@ -1,13 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/shared/ui/dialog";
+import { Dialog, DialogContent, DialogFooter } from "@/shared/ui/dialog";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
@@ -58,10 +52,6 @@ export function ScheduleDialog({
   return (
     <Dialog open={open} onOpenChange={(v) => (!v ? onClose() : null)}>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>일정 {editing ? "수정" : "상세"}</DialogTitle>
-        </DialogHeader>
-
         {!schedule ? null : (
           <div className="space-y-4">
             {editing ? (
@@ -95,9 +85,6 @@ export function ScheduleDialog({
               </>
             ) : (
               <div className="space-y-2">
-                <div className="text-sm text-muted-foreground">
-                  {schedule.date}
-                </div>
                 <h3 className="text-lg font-semibold">{schedule.title}</h3>
                 <p className="whitespace-pre-wrap">{schedule.content}</p>
               </div>
@@ -109,10 +96,18 @@ export function ScheduleDialog({
           <div className="flex gap-2">
             {!editing && (
               <>
-                <Button variant="outline" onClick={() => setEditing(true)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setEditing(true)}
+                  className="hover:cursor-pointer"
+                >
                   수정
                 </Button>
-                <Button variant="destructive" onClick={remove}>
+                <Button
+                  variant="destructive"
+                  onClick={remove}
+                  className="hover:cursor-pointer"
+                >
                   삭제
                 </Button>
               </>
@@ -121,17 +116,23 @@ export function ScheduleDialog({
           <div className="flex gap-2">
             {editing ? (
               <>
-                <Button variant="outline" onClick={() => setEditing(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => setEditing(false)}
+                  className="hover:cursor-pointer"
+                >
                   취소
                 </Button>
-                <Button onClick={save} disabled={!title.trim()}>
+                <Button
+                  onClick={save}
+                  disabled={!title.trim()}
+                  className="hover:cursor-pointer"
+                >
                   저장
                 </Button>
               </>
             ) : (
-              <Button variant="outline" onClick={onClose}>
-                닫기
-              </Button>
+              <></>
             )}
           </div>
         </DialogFooter>

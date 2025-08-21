@@ -8,6 +8,7 @@ import { Separator } from "@/shared/ui/separator";
 import PostContentView from "@/features/posts/PostContentView";
 import PostActions from "@/features/posts/PostActions";
 import type { JSONContent } from "@tiptap/core";
+import HomeButton from "@/widgets/Header/HomeButton";
 
 // unknown을 안전한 타입으로 변환
 function normalizeContentJson(v: unknown): JSONContent | string | null {
@@ -24,8 +25,7 @@ type Post = {
   category_id: string | number | null;
   categories?: { name: string } | null;
   tags: string[];
-  content_json: unknown | null;
-  content_markdown: string | null;
+  content_json: unknown | null; // ✅ markdown 제거
   summary?: string | null;
   created_at: string;
   updated_at: string;
@@ -56,7 +56,7 @@ export default function PostDetailPage() {
         let q = supabase
           .from("posts")
           .select(
-            "id, slug, title, category_id, categories(name), tags, content_json, content_markdown, summary, created_at, updated_at, published_at"
+            "id, slug, title, category_id, categories(name), tags, content_json, created_at, updated_at, published_at"
           )
           .limit(1);
 
@@ -102,11 +102,25 @@ export default function PostDetailPage() {
   }
 
   return (
-    <article className="mx-auto w-full max-w-screen-lg px-6 py-6 min-h-[80vh]">
+    <article className="mx-auto w-full max-w-screen-lg px-6 py-6 bg-neutral-100">
       {/* ── 헤더 ───────────────────────────────────────────── */}
-      <header className="text-center">
-        <h1 className="text-3xl font-bold">{post.title}</h1>
+      <header className="space-y-2">
+        {/* 1행: 제목 가운데 + 홈버튼 우측(오버레이) */}
+        <div className="relative">
+          <h1 className="text-3xl font-bold text-center">{post.title}</h1>
 
+          {/* 레이아웃에 영향 X */}
+          <div className="pointer-events-none absolute inset-0">
+            <div className="pointer-events-auto absolute right-0 top-1/2 -translate-y-1/2">
+              {/* 크기 줄이고 싶으면 scale 조정 (선택) */}
+              {/* <div className="origin-right scale-90"> */}
+              <HomeButton />
+              {/* </div> */}
+            </div>
+          </div>
+        </div>
+
+        {/* 2행: 태그/날짜 */}
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm text-zinc-500">
           {post.tags?.length > 0 && (
             <span>· {post.tags.map((t) => `#${t}`).join(" ")}</span>
@@ -124,25 +138,38 @@ export default function PostDetailPage() {
 
       <Separator className="my-4" />
 
-      {/* ── 본문(내부 스크롤) ──────────────────────────────── */}
-      <div
-        className={[
-          // 높이 상한 + 내부 스크롤
-          "max-h-[75vh] overflow-y-auto",
-          // 스크롤바 살짝 얇게 (선택)
-          "pr-1 [scrollbar-width:thin] [-ms-overflow-style:auto]",
-          "[&::-webkit-scrollbar]:w-2",
-          "[&::-webkit-scrollbar-thumb]:rounded-full",
-          "[&::-webkit-scrollbar-thumb]:bg-zinc-300/70",
-          "dark:[&::-webkit-scrollbar-thumb]:bg-zinc-700/70",
-        ].join(" ")}
-        aria-label="게시글 본문 스크롤 영역"
-        role="region"
-      >
-        <PostContentView
-          contentJson={normalizeContentJson(post.content_json)}
-          contentMarkdown={post.content_markdown}
-        />
+      {/* ── 본문(내부 스크롤, 보더 고정) ───────────────────── */}
+      <div className="rounded-lg border border-neutral-300 bg-background">
+        <div
+          className={[
+            // 안쪽만 스크롤
+            "max-h-[80vh] overflow-y-auto ",
+
+            // 스크롤 끝 여유
+            "after:block after:h-4",
+            // 스크롤바 스타일/안정화
+            "[scrollbar-gutter:stable_both-edges]",
+            "[scrollbar-width:thin] [-ms-overflow-style:auto]",
+            "[&::-webkit-scrollbar]:w-2",
+            "[&::-webkit-scrollbar-thumb]:rounded-full",
+            "[&::-webkit-scrollbar-thumb]:bg-zinc-300/70]",
+            "dark:[&::-webkit-scrollbar-thumb]:bg-zinc-700/70]",
+          ].join(" ")}
+          aria-label="게시글 본문 스크롤 영역"
+          role="region"
+        >
+          <div
+            className="
+      [&_>div]:border-0 [&_>div]:rounded-none [&_>div]:bg-transparent
+      [&_.tiptap]:border-0 [&_.tiptap]:rounded-none [&_.tiptap]:bg-transparent
+      [&_.ProseMirror]:border-0 [&_.ProseMirror]:rounded-none [&_.ProseMirror]:bg-transparent
+    "
+          >
+            <PostContentView
+              contentJson={normalizeContentJson(post.content_json)}
+            />
+          </div>
+        </div>
       </div>
     </article>
   );

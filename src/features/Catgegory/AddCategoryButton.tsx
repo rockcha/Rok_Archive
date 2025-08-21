@@ -1,179 +1,231 @@
-// src/features/posts/AddCategoryButton.tsx
+// src/features/categories/CategoryAddButton.tsx
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/shared/lib/supabase";
-import { cn } from "@/shared/lib/utils";
+import { toast } from "sonner";
+
 import { Button } from "@/shared/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+  DialogTrigger,
+} from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import { Tag, X } from "lucide-react";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/shared/ui/select";
+import { Tag, Plus } from "lucide-react";
 
-type Props = {
-  className?: string;
-  isAdmin?: boolean; // 관리자 모드 여부
-  floating?: boolean; // 기본 true (FAB)
-  label?: string; // 버튼 라벨
-  onAdded?: (name: string) => void; // 추가 성공 시 부모 알림(선택)
-};
+type CategoryType = { id: number; type: string };
 
-export default function AddCategoryButton({
-  className,
-  isAdmin = false,
-  floating = true,
-  label = "카테고리 추가",
-  onAdded,
-}: Props) {
+export default function AddCategoryButton() {
   const [open, setOpen] = useState(false);
-  const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
+
+  const [name, setName] = useState("");
+  const [types, setTypes] = useState<CategoryType[]>([]);
+  const [selectedTypeId, setSelectedTypeId] = useState<string>("");
+
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // ESC로 닫기
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !saving) setOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, saving]);
-
-  // 열릴 때 입력에 포커스
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 0);
   }, [open]);
 
-  const onOpen = () => {
-    if (!isAdmin) {
-      alert("관리자 모드가 아닙니다.");
-      return;
-    }
-    setOpen(true);
-  };
+  useEffect(() => {
+    if (!open) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from("categories_type")
+        .select("id, type")
+        .order("id", { ascending: true });
 
-  const onConfirm = async () => {
+      if (error) {
+        toast.error("타입 목록을 불러오지 못했습니다.", {
+          description: error.message,
+        });
+        setTypes([]);
+        return;
+      }
+
+      const rows = (data ?? []) as CategoryType[];
+      setTypes(rows);
+      if (rows.length && !selectedTypeId) {
+        setSelectedTypeId(String(rows[0].id));
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+
     const n = name.trim();
-    if (n.length === 0) {
-      alert("카테고리 이름을 입력하세요.");
+    if (!n) {
+      toast("카테고리 이름을 입력하세요.");
       return;
     }
-    if (n.length > 10) {
-      alert("카테고리 이름이 너무 깁니다(최대 60자).");
+    if (n.length > 60) {
+      toast.error("카테고리 이름이 너무 깁니다(최대 60자).");
+      return;
+    }
+    if (!selectedTypeId) {
+      toast("카테고리 타입을 선택하세요.");
       return;
     }
 
     setSaving(true);
     try {
-      const { error } = await supabase.from("categories").insert({ name: n });
+      const payload = { name: n, type_id: Number(selectedTypeId) };
+      const { error } = await supabase
+        .from("categories")
+        .insert(payload)
+        .select("id, name, type_id")
+        .single();
+
       if (error) throw error;
-      alert("카테고리가 추가되었습니다.");
-      onAdded?.(n);
+
+      toast.success("카테고리가 추가되었습니다.");
       setName("");
+      if (types.length) setSelectedTypeId(String(types[0].id));
       setOpen(false);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "추가에 실패했습니다.";
-      alert(msg);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "추가에 실패했습니다.";
+      toast.error("추가 중 오류가 발생했습니다.", { description: msg });
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <>
-      <Button
-        type="button"
-        onClick={onOpen}
-        className={cn(
-          floating
-            ? "fixed bottom-18 right-6 z-50 h-12 rounded-full px-4 shadow-lg"
-            : "",
-          className
-        )}
-      >
-        <div className="flex items-center gap-2">
-          <Tag size={18} />
-          <span>{label}</span>
-        </div>
-      </Button>
+    <Dialog open={open} onOpenChange={(v) => !saving && setOpen(v)}>
+      <DialogTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          aria-label="카테고리 추가"
+          title="카테고리 추가"
+          className="
+            group cursor-pointer hover:cursor-pointer
+            px-3 py-2 rounded-xl
+            text-neutral-700 dark:text-neutral-200
+            hover:text-neutral-700 dark:hover:text-neutral-200  /* ✅ 텍스트 색 고정 */
+            transition-transform duration-200
+            hover:scale-[1.03] active:scale-[0.98]
+            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400/60
+            hover:bg-transparent data-[state=open]:bg-transparent
+            motion-reduce:transform-none "
+        >
+          {/* 아이콘만 살짝 점프 */}
+          <span
+            className="
+              mr-2 inline-flex items-center
+              transition-transform duration-200
+              group-hover:-translate-y-0.5
+              motion-reduce:transform-none
+            "
+          >
+            <Tag className="h-4 w-4" />
+          </span>
 
-      {/* 오버레이 + 커스텀 모달 */}
-      {open && (
-        <div className="fixed inset-0 z-[70]">
-          {/* dim + blur */}
-          <div
-            className={cn(
-              "absolute inset-0 bg-black/50 backdrop-blur-[2px]",
-              saving ? "pointer-events-none" : "cursor-pointer"
-            )}
-            onClick={() => !saving && setOpen(false)}
-          />
-          {/* center container */}
-          <div className="absolute inset-0 flex items-center justify-center p-4">
-            <div className="relative w-full max-w-lg rounded-2xl border bg-white p-6 shadow-xl dark:border-zinc-700 dark:bg-zinc-900 sm:p-8">
-              {/* close */}
-              <button
-                type="button"
-                aria-label="닫기"
-                className="absolute right-3 top-3 rounded p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                onClick={() => !saving && setOpen(false)}
-                disabled={saving}
-              >
-                <X className="h-4 w-4" />
-              </button>
+          {/* ✅ 텍스트는 호버 영향 없음 */}
+          <span className="text-sm font-semibold">카테고리 추가</span>
 
-              {/* title/desc */}
-              <div className="mb-5">
-                <h3 className="text-lg font-semibold tracking-tight">
-                  카테고리 추가
-                </h3>
-                <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">
-                  추가할 카테고리의 이름을 입력하세요.
-                </p>
-              </div>
+          {/* 아이콘만 살짝 점프 */}
+          <span
+            className="
+              ml-2 inline-flex items-center
+              transition-transform duration-200
+              group-hover:translate-y-0.5
+              motion-reduce:transform-none
+            "
+          >
+            <Plus className="h-4 w-4" />
+          </span>
+        </Button>
+      </DialogTrigger>
 
-              {/* form */}
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  if (!saving) void onConfirm();
-                }}
-                className="grid gap-4"
-              >
-                <div className="grid gap-2">
-                  <Label htmlFor="category-name" className="text-sm">
-                    이름
-                  </Label>
-                  <Input
-                    id="category-name"
-                    ref={inputRef}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="예) React, Typescript"
-                    disabled={saving}
-                    className="h-11 text-base"
-                  />
-                </div>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>카테고리 추가</DialogTitle>
+          <DialogDescription>
+            이름과 타입을 선택해 새 카테고리를 추가합니다.
+          </DialogDescription>
+        </DialogHeader>
 
-                <div className="mt-2 flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setOpen(false)}
-                    disabled={saving}
-                    className="h-10 px-4"
-                  >
-                    취소
-                  </Button>
-                  <Button type="submit" disabled={saving} className="h-10 px-5">
-                    {saving ? "추가 중..." : "추가"}
-                  </Button>
-                </div>
-              </form>
-            </div>
+        <form className="grid gap-4" onSubmit={handleSubmit}>
+          <div className="grid gap-2">
+            <Label htmlFor="cat-name">이름</Label>
+            <Input
+              id="cat-name"
+              ref={inputRef}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="예) React, TypeScript"
+              disabled={saving}
+              className="h-11 text-base"
+            />
           </div>
-        </div>
-      )}
-    </>
+
+          <div className="grid gap-2">
+            <Label htmlFor="cat-type">타입</Label>
+            <Select
+              value={selectedTypeId}
+              onValueChange={setSelectedTypeId}
+              disabled={saving || types.length === 0}
+            >
+              <SelectTrigger
+                id="cat-type"
+                className="h-11 hover:cursor-pointer"
+              >
+                <SelectValue
+                  placeholder={types.length ? "타입 선택" : "불러오는 중…"}
+                />
+              </SelectTrigger>
+              <SelectContent className="max-h-64">
+                {types.map((t) => (
+                  <SelectItem
+                    key={t.id}
+                    value={String(t.id)}
+                    className="hover:cursor-pointer"
+                  >
+                    {t.type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={saving}
+              className="hover:cursor-pointer"
+            >
+              취소
+            </Button>
+            <Button
+              type="submit"
+              disabled={saving}
+              className="hover:cursor-pointer"
+            >
+              {saving ? "추가 중..." : "추가"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

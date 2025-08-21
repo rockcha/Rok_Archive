@@ -26,11 +26,8 @@ export function useRichEditor(options?: Partial<EditorOptions>) {
       attributes: {
         class: [
           "tiptap",
-          "min-h-[520px]", // 최소 높이
-          "max-h-[70vh]", // 최대 높이 (예: 화면 70%)
-          "overflow-y-auto", // 세로 스크롤 허용
-          "p-4 rounded-xl border",
-          "bg-background dark:bg-zinc-900",
+          "h-[65vh] overflow-y-auto box-border", // ✅ 기본 보이는 높이 고정 + 내부 스크롤
+          "p-6 rounded-xl border bg-background dark:bg-zinc-900",
           "focus:outline-none",
         ].join(" "),
         autocorrect: "off",

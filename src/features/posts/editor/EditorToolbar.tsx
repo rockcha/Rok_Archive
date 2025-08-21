@@ -39,9 +39,9 @@ export default function EditorToolbar({ editor }: Props) {
         aria-label="편집 도구 막대"
       >
         <DividerSelect editor={editor} />
-        <ToolbarDivider />
+        <ToolbarDivider tall />
         <BulletSelect editor={editor} />
-        <ToolbarDivider subtle />
+        <ToolbarDivider tall />
         <FormatGroup editor={editor} />
         <ToolbarDivider tall />
         <HighlightPalette editor={editor} />
