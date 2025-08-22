@@ -24,7 +24,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/shared/ui/select";
-import { Tag, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 type CategoryType = { id: number; type: string };
 
@@ -71,18 +71,10 @@ export default function AddCategoryButton() {
     e?.preventDefault();
 
     const n = name.trim();
-    if (!n) {
-      toast("카테고리 이름을 입력하세요.");
-      return;
-    }
-    if (n.length > 60) {
-      toast.error("카테고리 이름이 너무 깁니다(최대 60자).");
-      return;
-    }
-    if (!selectedTypeId) {
-      toast("카테고리 타입을 선택하세요.");
-      return;
-    }
+    if (!n) return toast("카테고리 이름을 입력하세요.");
+    if (n.length > 60)
+      return toast.error("카테고리 이름이 너무 깁니다(최대 60자).");
+    if (!selectedTypeId) return toast("카테고리 타입을 선택하세요.");
 
     setSaving(true);
     try {
@@ -112,46 +104,21 @@ export default function AddCategoryButton() {
       <DialogTrigger asChild>
         <Button
           type="button"
-          variant="ghost"
+          variant="ghost" // ✅ ghost 기본 hover 사용
           aria-label="카테고리 추가"
           title="카테고리 추가"
           className="
-            group cursor-pointer hover:cursor-pointer
+            cursor-pointer                  /* ✅ 포인터 */
             px-3 py-2 rounded-xl
-            text-neutral-700 dark:text-neutral-200
-            hover:text-neutral-700 dark:hover:text-neutral-200  /* ✅ 텍스트 색 고정 */
-            transition-transform duration-200
-            hover:scale-[1.03] active:scale-[0.98]
-            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400/60
-            hover:bg-transparent data-[state=open]:bg-transparent
-            motion-reduce:transform-none "
+            inline-flex items-center gap-2
+            transition-colors
+            /* fallback이 필요하면 아래 한 줄 주석 해제:
+               hover:bg-accent/20 hover:text-accent-foreground
+            */
+          "
         >
-          {/* 아이콘만 살짝 점프 */}
-          <span
-            className="
-              mr-2 inline-flex items-center
-              transition-transform duration-200
-              group-hover:-translate-y-0.5
-              motion-reduce:transform-none
-            "
-          >
-            <Tag className="h-4 w-4" />
-          </span>
-
-          {/* ✅ 텍스트는 호버 영향 없음 */}
+          <Plus className="h-4 w-4" />
           <span className="text-sm font-semibold">카테고리 추가</span>
-
-          {/* 아이콘만 살짝 점프 */}
-          <span
-            className="
-              ml-2 inline-flex items-center
-              transition-transform duration-200
-              group-hover:translate-y-0.5
-              motion-reduce:transform-none
-            "
-          >
-            <Plus className="h-4 w-4" />
-          </span>
         </Button>
       </DialogTrigger>
 
@@ -184,21 +151,14 @@ export default function AddCategoryButton() {
               onValueChange={setSelectedTypeId}
               disabled={saving || types.length === 0}
             >
-              <SelectTrigger
-                id="cat-type"
-                className="h-11 hover:cursor-pointer"
-              >
+              <SelectTrigger id="cat-type" className="h-11">
                 <SelectValue
                   placeholder={types.length ? "타입 선택" : "불러오는 중…"}
                 />
               </SelectTrigger>
               <SelectContent className="max-h-64">
                 {types.map((t) => (
-                  <SelectItem
-                    key={t.id}
-                    value={String(t.id)}
-                    className="hover:cursor-pointer"
-                  >
+                  <SelectItem key={t.id} value={String(t.id)}>
                     {t.type}
                   </SelectItem>
                 ))}
@@ -212,15 +172,10 @@ export default function AddCategoryButton() {
               variant="outline"
               onClick={() => setOpen(false)}
               disabled={saving}
-              className="hover:cursor-pointer"
             >
               취소
             </Button>
-            <Button
-              type="submit"
-              disabled={saving}
-              className="hover:cursor-pointer"
-            >
+            <Button type="submit" disabled={saving}>
               {saving ? "추가 중..." : "추가"}
             </Button>
           </DialogFooter>

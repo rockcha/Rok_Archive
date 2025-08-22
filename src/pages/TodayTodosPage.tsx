@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/shared/ui/card";
 import { toast } from "sonner";
 
-import HomeButton from "@/widgets/Header/HomeButton";
 import TodoForm from "@/features/Todo/TodoForm";
 import TodoList from "@/features/Todo/TodoList";
 import type { TodoRow } from "@/features/Todo/types";
@@ -63,15 +62,6 @@ export default function TodayTodosPage() {
       {/* ── 헤더: 제목 가운데 + 홈버튼 오른쪽(오버레이, 높이 영향 X) ── */}
       <div className="relative mb-4">
         <h1 className="text-2xl font-bold text-center">오늘의 할일</h1>
-
-        <div className="pointer-events-none absolute inset-0">
-          <div className="pointer-events-auto absolute right-0 top-1/2 -translate-y-1/2">
-            {/* 시각 균형을 위해 살짝 축소 */}
-            <div className="origin-right scale-75 sm:scale-90">
-              <HomeButton />
-            </div>
-          </div>
-        </div>
       </div>
 
       {/* ── 본문 카드 ── */}

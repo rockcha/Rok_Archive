@@ -1,5 +1,6 @@
 import AdminLoginButton from "@/features/Auth/AdminLoginButton";
 import AdminDock from "../AdminDock";
+import { CyclingHighlighter } from "./Cycling-highlighter";
 
 export default function Header() {
   return (
@@ -12,9 +13,19 @@ export default function Header() {
       {/* 좌/우 레일: 가운데 Dock은 절대배치로 분리 */}
       <div className="flex items-center justify-between">
         {/* 왼쪽: 로고/타이틀 */}
-        <h1 className="text-3xl font-bold text-green-900 shrink-0">
-          록차 아카이브
-        </h1>
+        <div className="flex flex-col items-start gap-1">
+          <h1 className="text-3xl font-bold text-green-900 shrink-0 leading-tight">
+            록차 아카이브
+          </h1>
+          <p className="text-base text-neutral-800">
+            <span className="mr-2">
+              {" "}
+              &ensp;&ensp;&ensp;&ensp;정록이의 소소한{" "}
+            </span>
+            <CyclingHighlighter holdMs={5000}>개발 기록소</CyclingHighlighter>
+          </p>
+        </div>
+
         {/* 로고 컴포넌트가 있을 경우 */}
         {/* <div className="shrink-0"><LogoTitle /></div> */}
 

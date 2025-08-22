@@ -8,7 +8,6 @@ import { Separator } from "@/shared/ui/separator";
 import PostContentView from "@/features/posts/PostContentView";
 import PostActions from "@/features/posts/PostActions";
 import type { JSONContent } from "@tiptap/core";
-import HomeButton from "@/widgets/Header/HomeButton";
 
 // unknown을 안전한 타입으로 변환
 function normalizeContentJson(v: unknown): JSONContent | string | null {
@@ -108,16 +107,6 @@ export default function PostDetailPage() {
         {/* 1행: 제목 가운데 + 홈버튼 우측(오버레이) */}
         <div className="relative">
           <h1 className="text-3xl font-bold text-center">{post.title}</h1>
-
-          {/* 레이아웃에 영향 X */}
-          <div className="pointer-events-none absolute inset-0">
-            <div className="pointer-events-auto absolute right-0 top-1/2 -translate-y-1/2">
-              {/* 크기 줄이고 싶으면 scale 조정 (선택) */}
-              {/* <div className="origin-right scale-90"> */}
-              <HomeButton />
-              {/* </div> */}
-            </div>
-          </div>
         </div>
 
         {/* 2행: 태그/날짜 */}

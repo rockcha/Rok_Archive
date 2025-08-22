@@ -10,16 +10,14 @@ type Props = {
   memoId?: string; // memo_singleton PK
 };
 
-export default function FloatingMemo({
-  offset = { bottom: 24, right: 24 },
-  memoId = "memo",
-}: Props) {
+export default function FloatingMemo({ memoId = "memo" }: Props) {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const lastLoadedRef = useRef<string>("");
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const dirty = useMemo(() => text !== lastLoadedRef.current, [text]);
 
@@ -52,8 +50,7 @@ export default function FloatingMemo({
       }
     })();
 
-    // ⚠️ (우회) 어떤 코드가 beforeunload를 걸어놔서 경고가 뜨는 경우가 있음.
-    // open 동안은 임시로 끄고, 닫힐 때 원복한다. (property 방식만 무력화 가능)
+    // beforeunload 경고 임시 비활성화
     const prev = window.onbeforeunload;
     window.onbeforeunload = null;
     return () => {
@@ -85,12 +82,10 @@ export default function FloatingMemo({
     }
   };
 
-  // 닫기(오버레이/ESC/토글 단축키) → 자동 저장 후 닫기
+  // 닫기(오버레이/ESC/단축키) → 자동 저장 후 닫기
   const closeAfterAutoSave = async () => {
     const ok = await saveIfDirty(false); // 실패 시 닫지 않음
-    if (ok) {
-      setOpen(false);
-    }
+    if (ok) setOpen(false);
   };
 
   // ESC & 단축키
@@ -121,7 +116,7 @@ export default function FloatingMemo({
     };
   }, [open, dirty, text]);
 
-  // 탭 전환/브라우저 숨김 시에도 최대한 저장 시도(실패해도 페이지 막지는 않음)
+  // 탭 전환/브라우저 숨김 시에도 최대한 저장 시도
   useEffect(() => {
     const onHide = () => {
       if (open) saveIfDirty(false);
@@ -133,6 +128,44 @@ export default function FloatingMemo({
       window.removeEventListener("pagehide", onHide);
     };
   }, [open, text, dirty]);
+
+  // 커서 위치에 '📌 ' 삽입 (스크롤 점프 방지)
+  const insertPinAtCaret = () => {
+    if (!textareaRef.current) {
+      setText((prev) => (prev ? `${prev}\n📌 ` : `📌 `));
+      return;
+    }
+    const el = textareaRef.current;
+
+    // 1) 현재 선택/스크롤 상태 저장
+    const start = el.selectionStart ?? el.value.length;
+    const end = el.selectionEnd ?? el.value.length;
+    const prevScrollTop = el.scrollTop;
+
+    // 2) 텍스트 계산
+    const before = text.slice(0, start);
+    const selected = text.slice(start, end);
+    const after = text.slice(end);
+    const insert = "📌 ";
+    const next = `${before}${insert}${selected}${after}`;
+
+    // 3) 상태 업데이트 (리렌더)
+    setText(next);
+
+    // 4) 다음 프레임에서 포커스/선택/스크롤 복구
+    const caretStart = start + insert.length;
+    const caretEnd = caretStart + selected.length;
+
+    requestAnimationFrame(() => {
+      (el as any).focus?.({ preventScroll: true });
+      el.setSelectionRange(caretStart, caretEnd);
+      el.scrollTop = prevScrollTop;
+      // iOS/Safari 보강
+      requestAnimationFrame(() => {
+        el.scrollTop = prevScrollTop;
+      });
+    });
+  };
 
   return (
     <>
@@ -149,7 +182,7 @@ export default function FloatingMemo({
         </Button>
       )}
 
-      {/* 펼친 상태: 오버레이 + 중앙 카드 (버튼 없음) */}
+      {/* 펼친 상태: 오버레이 + 중앙 카드 */}
       {open && (
         <div className="fixed inset-0 z-[80]" aria-modal="true" role="dialog">
           {/* 오버레이 클릭 → 자동 저장 후 닫기 */}
@@ -157,10 +190,13 @@ export default function FloatingMemo({
             className="absolute inset-0 bg-black/50 backdrop-blur-sm cursor-pointer"
             onClick={closeAfterAutoSave}
           />
+
+          {/* 중앙 카드 */}
           <div className="absolute left-1/2 top-1/2 w-[min(92vw,720px)] -translate-x-1/2 -translate-y-1/2">
             <div
               className="rounded-2xl bg-white shadow-2xl border"
               aria-busy={loading || saving}
+              onClick={(e) => e.stopPropagation()} // 카드 내부 클릭 시 닫힘 방지
             >
               {/* 헤더(상태만 표시) */}
               <div className="flex items-center justify-between p-3 border-b">
@@ -187,13 +223,40 @@ export default function FloatingMemo({
                 {error && (
                   <div className="mb-2 text-xs text-red-600">{error}</div>
                 )}
-                <textarea
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="여기에 메모를 적어주세요…"
-                  className="w-full h-[60vh] min-h-[320px] outline-none border rounded-lg p-3 leading-6 resize-y disabled:opacity-60"
-                  disabled={loading}
-                />
+
+                {/* textarea 래퍼를 relative로 감싸고, 내부 우하단에 FAB 배치 */}
+                <div className="relative">
+                  <textarea
+                    ref={textareaRef}
+                    value={text}
+                    onChange={(e) => setText(e.target.value)}
+                    placeholder="여기에 메모를 적어주세요…"
+                    className="w-full h-[60vh] min-h-[320px] outline-none border rounded-lg p-3 pr-12 leading-6 resize-y disabled:opacity-60"
+                    disabled={loading}
+                  />
+
+                  {/* 메모장 우하단 📌 버튼 (카드 내부 고정) */}
+                  <button
+                    type="button"
+                    onClick={insertPinAtCaret}
+                    aria-label="글머리기호 추가"
+                    className="
+                      absolute bottom-3 right-3 z-10
+                      h-10 w-10 rounded-full
+                      bg-white border shadow-md
+                      flex items-center justify-center
+                      text-xl
+                      cursor-pointer
+                      transition
+                      hover:scale-105 hover:shadow-lg hover:bg-white
+                      active:scale-95
+                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-300
+                    "
+                  >
+                    <span className="select-none">📌</span>
+                  </button>
+                </div>
+
                 <div className="flex justify-end items-center pt-2 text-xs text-muted-foreground">
                   <span>{text.length}자</span>
                 </div>

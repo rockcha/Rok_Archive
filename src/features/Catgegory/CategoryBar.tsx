@@ -29,7 +29,7 @@ export default function CategoryBar({
   className,
   showAllActive = false,
   onToggleShowAll,
-  showAllLabel = "전체보기",
+  showAllLabel = "# 전체보기",
 }: Props) {
   const [types, setTypes] = useState<CategoryTypeRow[]>([]);
   const [loadingTypes, setLoadingTypes] = useState(true);
@@ -88,7 +88,7 @@ export default function CategoryBar({
           <CategoryTypeGroup
             key={t.id}
             typeId={t.id}
-            typeLabel={t.type} // 유저에겐 문자열로 표시
+            typeLabel={`# ${t.type}`} // 유저에겐 문자열로 표시
             selected={selected}
             showAllActive={!!showAllActive}
             onSelectCategory={(id) => {

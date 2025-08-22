@@ -7,9 +7,8 @@ import CategoryBar from "@/features/Catgegory/CategoryBar";
 import PostsSearchBar from "@/features/Search/PostsSearchBar";
 import PostsBoard from "@/features/posts/PostsBoard";
 import { IconCloudCard } from "@/widgets/IconCloudCard";
-import { CyclingHighlighter } from "@/widgets/Header/Cycling-highlighter";
+
 import AddCategoryButton from "@/features/Catgegory/AddCategoryButton";
-import FloatingMemo from "@/widgets/FloatingMemo";
 
 // ✅ idle 타입 제거
 type Mode = "selected" | "searched" | "showall";
@@ -45,15 +44,9 @@ export default function MainPage() {
   return (
     // ✅ 내용물과 무관하게 뷰포트에 가리지 않도록 최소 높이 고정
     <div className="w-full flex flex-col min-h-[100svh]">
-      <FloatingMemo />
       {/* ⬇️ 툴바 섹션: 고정 높이(내용과 무관) + 중앙에 검색바 */}
       <section className="relative bg-neutral-50 border-b-2 h-16 sm:h-20">
         <div className="h-full px-4 flex items-center">
-          <p className="text-lg">
-            정록이의 소소한&nbsp;&nbsp;
-            <CyclingHighlighter holdMs={5000}>개발 기록소</CyclingHighlighter>
-          </p>
-
           {/* ✅ 섹션 높이에 맞춰 정확히 가운데 정렬 (내용과 무관) */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <PostsSearchBar
