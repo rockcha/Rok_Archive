@@ -45,26 +45,21 @@ export default function MainPage() {
     // ✅ 내용물과 무관하게 뷰포트에 가리지 않도록 최소 높이 고정
     <div className="w-full flex flex-col min-h-[100svh]">
       {/* ⬇️ 툴바 섹션: 고정 높이(내용과 무관) + 중앙에 검색바 */}
-      <section className="relative bg-neutral-50 border-b-2 h-16 sm:h-20">
-        <div className="h-full px-4 flex items-center">
-          {/* ✅ 섹션 높이에 맞춰 정확히 가운데 정렬 (내용과 무관) */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <PostsSearchBar
-              onApply={handleApplySearch}
-              limit={50}
-              categoryIdFilter={categoryIdFilter ?? null}
-              onError={(m) => console.error(m)}
-              className="w-full sm:w-[20rem] lg:w-[25rem] 2xl:w-[30rem] max-w-full bg-background"
-            />
-          </div>
-        </div>
+      <section className=" mx-auto h-16 sm:h-20 pt-5">
+        <PostsSearchBar
+          onApply={handleApplySearch}
+          limit={50}
+          categoryIdFilter={categoryIdFilter ?? null}
+          onError={(m) => console.error(m)}
+          className=" sm:w-[20rem] lg:w-[25rem] 2xl:w-[30rem]  bg-background"
+        />
       </section>
 
       {/* 메인 콘텐츠 */}
       <div className="mx-auto w-full grid grid-cols-12 gap-2 flex-1 ">
         {/* 왼쪽: 카테고리 */}
         <aside className="col-span-12 md:col-span-2 pl-2 ">
-          <div className="flex justify-center mt-1">
+          <div className="flex justify-end mt-2 pt-2">
             <AddCategoryButton />
           </div>
 
@@ -84,9 +79,9 @@ export default function MainPage() {
 
         {/* 오른쪽: 컨텐츠 */}
         <main className="col-span-12 md:col-span-10 min-w-0 pl-2">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_160px] p-2">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_200px] p-2">
             {/* LEFT: Posts */}
-            <section className="min-w-0">
+            <section>
               {mode === "showall" && (
                 <PostsBoard headerLabel="전체 글" showAll showHeader />
               )}

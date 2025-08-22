@@ -23,19 +23,30 @@ import HomeButton from "@/widgets/Header/HomeButton";
 // 레이아웃 (Header + Footer 고정)
 function Layout() {
   return (
-    <div className="h-screen overflow-hidden">
-      {/* ✅ 화면 높이 고정 + 전역 스크롤 차단 */}
-      <div className="h-full max-w-screen-2xl mx-auto flex flex-col bg-neutral-200">
-        {/* Header는 한 줄로 차지하고 */}
+    <div className="h-dvh bg-neutral-100 overflow-hidden">
+      <div className="h-full max-w-screen-2xl mx-auto flex flex-col ">
         <div className="shrink-0">
           <Header />
         </div>
 
-        {/* 나머지 영역을 1fr로: 내부 스크롤만 허용하려면 min-h-0 필수 */}
-        <div className="flex-1 min-h-0">
+        {/* 내부 스크롤 전용 영역 */}
+        <main className="flex-1 min-h-0  min-w-0">
           <Outlet />
-        </div>
+        </main>
       </div>
+    </div>
+  );
+}
+
+function ContainerLayout() {
+  return (
+    <div className=" mx-auto  max-w-screen-lg bg-neutral-100 px-6 py-6 h-dvh overflow-hidden ">
+      {/* 고정 위젯 (뷰포트 기준 fixed) */}
+      <FloatingMemo />
+      <HomeButton />
+
+      {/* 페이지 콘텐츠 */}
+      <Outlet />
     </div>
   );
 }
@@ -44,19 +55,19 @@ export default function App() {
   return (
     <Router>
       <Toaster />
-      <FloatingMemo />
-      <HomeButton />
+
       <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<MainPage />} />
         </Route>
-
-        <Route path="/schedular" element={<SchedularPage />} />
-        <Route path="/todos" element={<TodayTodosPage />} />
-        <Route path="/posts/new" element={<PostCreatePage />} />
-        <Route path="/posts/:slug" element={<PostDetailPage />} />
-        <Route path="/posts/id/:id" element={<PostDetailPage />} />
-        <Route path="/posts/edit/:id" element={<PostEditPage />} />
+        <Route element={<ContainerLayout />}>
+          <Route path="/schedular" element={<SchedularPage />} />
+          <Route path="/todos" element={<TodayTodosPage />} />
+          <Route path="/posts/new" element={<PostCreatePage />} />
+          <Route path="/posts/:slug" element={<PostDetailPage />} />
+          <Route path="/posts/id/:id" element={<PostDetailPage />} />
+          <Route path="/posts/edit/:id" element={<PostEditPage />} />
+        </Route>
       </Routes>
     </Router>
   );

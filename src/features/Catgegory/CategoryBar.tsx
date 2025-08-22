@@ -29,7 +29,7 @@ export default function CategoryBar({
   className,
   showAllActive = false,
   onToggleShowAll,
-  showAllLabel = "# 전체보기",
+  showAllLabel = ">  전체보기",
 }: Props) {
   const [types, setTypes] = useState<CategoryTypeRow[]>([]);
   const [loadingTypes, setLoadingTypes] = useState(true);
@@ -59,20 +59,24 @@ export default function CategoryBar({
         "h-[65vh] overflow-y-auto",
         "scrollbar-thin scrollbar-thumb-zinc-300 hover:scrollbar-thumb-zinc-400",
         "border-2 ",
+        "bg-neutral-100",
         className
       )}
       aria-label="카테고리"
     >
       {/* 전체보기 */}
-      <CategoryButton
-        id={null}
-        label={showAllLabel}
-        selected={!!showAllActive}
-        isAll
-        onSelectAll={() => onToggleShowAll?.(true)}
-        onSelect={() => {}}
-        className="shadow-md "
-      />
+      <div className="p-2">
+        {" "}
+        <CategoryButton
+          id={null}
+          label={showAllLabel}
+          selected={!!showAllActive}
+          isAll
+          onSelectAll={() => onToggleShowAll?.(true)}
+          onSelect={() => {}}
+          className="shadow-md "
+        />
+      </div>
 
       {/* 타입별 접이식 그룹 */}
       {loadingTypes ? (

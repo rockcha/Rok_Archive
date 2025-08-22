@@ -102,12 +102,8 @@ export default function SchedulerPage() {
     setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1));
 
   return (
-    <div className="relative mx-auto w-full max-w-screen-lg bg-neutral-100 px-6 py-6 min-h-[100dvh] pb-[env(safe-area-inset-bottom)]">
-      {/* ── 헤더: 제목 가운데 + 홈버튼 오른쪽(오버레이, 높이 영향 X) ── */}
-      <div className="relative mb-4">
-        <h1 className="text-2xl font-bold text-center">스케줄러</h1>
-      </div>
-
+    <div className="relative mb-4">
+      <h1 className="text-2xl font-bold text-center">스케줄러</h1>
       {/* ── 본문: 카드 내부 스크롤 / 가운데 정렬 ── */}
       <div className="w-full flex justify-center py-2">
         <Card className="relative overflow-hidden rounded-2xl w-[80%] max-w-[1200px] h-[80vh] flex flex-col">

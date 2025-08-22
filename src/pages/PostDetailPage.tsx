@@ -101,13 +101,11 @@ export default function PostDetailPage() {
   }
 
   return (
-    <article className="mx-auto w-full max-w-screen-lg px-6 py-6 bg-neutral-100">
-      {/* ── 헤더 ───────────────────────────────────────────── */}
+    <div className="relative w-full">
       <header className="space-y-2">
         {/* 1행: 제목 가운데 + 홈버튼 우측(오버레이) */}
-        <div className="relative">
-          <h1 className="text-3xl font-bold text-center">{post.title}</h1>
-        </div>
+
+        <h1 className="text-3xl font-bold text-center">{post.title}</h1>
 
         {/* 2행: 태그/날짜 */}
         <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm text-zinc-500">
@@ -124,9 +122,7 @@ export default function PostDetailPage() {
           <PostActions postId={post.id} slug={post.slug} />
         </div>
       </header>
-
       <Separator className="my-4" />
-
       {/* ── 본문(내부 스크롤, 보더 고정) ───────────────────── */}
       <div className="rounded-lg border border-neutral-300 bg-background">
         <div
@@ -160,6 +156,6 @@ export default function PostDetailPage() {
           </div>
         </div>
       </div>
-    </article>
+    </div>
   );
 }

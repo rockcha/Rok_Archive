@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent } from "@/shared/ui/card";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react"; // ⬅️ 스피너 아이콘
 
 import TodoForm from "@/features/Todo/TodoForm";
 import TodoList from "@/features/Todo/TodoList";
@@ -58,19 +59,27 @@ export default function TodayTodosPage() {
   };
 
   return (
-    <div className="relative mx-auto w-full max-w-screen-lg bg-neutral-100 px-6 py-6 min-h-[100dvh] pb-[env(safe-area-inset-bottom)] ">
-      {/* ── 헤더: 제목 가운데 + 홈버튼 오른쪽(오버레이, 높이 영향 X) ── */}
-      <div className="relative mb-4">
-        <h1 className="text-2xl font-bold text-center">오늘의 할일</h1>
-      </div>
+    <div className="relative mb-4">
+      <h1 className="text-2xl font-bold text-center">오늘의 할일</h1>
+      <Card
+        className="mt-10 border-neutral-200 min-h-[85dvh] relative" // ⬅️ overlay 포지셔닝
+        aria-busy={loading}
+      >
+        {/* 🔸 로딩 오버레이 */}
+        {loading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 dark:bg-neutral-900/40 backdrop-blur-[1px]">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="ml-2 text-sm">불러오는 중…</span>
+          </div>
+        )}
 
-      {/* ── 본문 카드 ── */}
-      <Card className="mt-10 border-neutral-200 min-h-[85dvh]">
-        <CardContent className="mt-4">
-          {/* 입력 영역 */}
+        <CardContent
+          className={`mt-4 ${loading ? "pointer-events-none select-none" : ""}`}
+        >
+          {/* 입력 영역 (로딩 중엔 클릭/입력 방지) */}
           <TodoForm onAdd={handleAdd} className="mb-4" />
 
-          {/* 리스트 영역: 두 컬럼 */}
+          {/* 리스트 영역 */}
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <TodoList
               title="Daily Todo"

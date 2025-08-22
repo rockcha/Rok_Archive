@@ -27,12 +27,13 @@ export default function CategoryTypeGroup({
   onSelectCategory: (id: number) => void;
   className?: string;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true); // ✅ 처음부터 펼침
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [cats, setCats] = useState<CategoryRow[]>([]);
   const [count, setCount] = useState<number | null>(null);
 
+  // 개수(접힘 상태에서도 보이게 하려면 유지)
   useEffect(() => {
     (async () => {
       const { count, error } = await supabase
@@ -43,29 +44,42 @@ export default function CategoryTypeGroup({
     })();
   }, [typeId]);
 
-  const toggle = async () => {
-    if (!open && !loaded) {
+  // ✅ 처음 열려 있을 때 자동 로딩 (또는 다시 열릴 때 최초 1회 로딩)
+  useEffect(() => {
+    let canceled = false;
+    const loadIfNeeded = async () => {
+      if (!open || loaded) return;
       setLoading(true);
       const { data, error } = await supabase
         .from("categories")
         .select("id, name, type_id")
         .eq("type_id", typeId)
         .order("name", { ascending: true });
-
-      if (!error) {
-        const rows = (data ?? []) as CategoryRow[];
-        setCats(rows);
-        setLoaded(true);
-        setCount(rows.length);
+      if (!canceled) {
+        if (!error) {
+          const rows = (data ?? []) as CategoryRow[];
+          setCats(rows);
+          setLoaded(true);
+          setCount(rows.length);
+        }
+        setLoading(false);
       }
-      setLoading(false);
-    }
+    };
+    loadIfNeeded();
+    return () => {
+      canceled = true;
+    };
+  }, [open, loaded, typeId]);
+
+  // 토글(이미 로드됐다면 재요청 안 함)
+  const toggle = async () => {
+    // 닫혀 있는 상태에서 여는 순간, 위 useEffect가 로딩 처리함
     setOpen((v) => !v);
   };
 
   return (
     <div className={cn("rounded-md", className)}>
-      {/* 라벨은 앞쪽(좌측) 고정, 우측 끝에 (개수) + ⌄ 아이콘 */}
+      {/* 헤더 버튼 */}
       <button
         type="button"
         onClick={toggle}
@@ -77,13 +91,8 @@ export default function CategoryTypeGroup({
         aria-expanded={open}
         aria-controls={`type-panel-${typeId}`}
       >
-        {/* 좌측: 라벨(내용 길이만큼, 앞쪽 고정) */}
         <span className="text-base font-semibold">{typeLabel}</span>
-
-        {/* 가운데: 유동 공간 */}
         <span aria-hidden className="block" />
-
-        {/* 우측: (개수)와 펼치기 아이콘 - 살짝 간격 */}
         <span className="flex items-center gap-1 shrink-0">
           <span className="text-sm text-neutral-500">({count ?? 0})</span>
           <ChevronDown

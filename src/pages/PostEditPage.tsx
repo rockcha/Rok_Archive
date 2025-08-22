@@ -8,8 +8,6 @@ import PostComposer from "@/features/posts/PostComposer";
 import { Separator } from "@/shared/ui/separator";
 import type { JSONContent } from "@tiptap/core";
 
-import HomeButton from "@/widgets/Header/HomeButton";
-
 function normalizeContentJson(v: unknown): JSONContent | string | null {
   if (v == null) return null;
   if (typeof v === "string") return v;
@@ -85,24 +83,12 @@ export default function PostEditPage() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-screen-lg bg-neutral-100 px-6 py-6">
-      {/* 헤더: 가운데 제목 + 오른쪽 홈버튼(오버레이) */}
-      <div className="relative">
-        <h1 className="text-2xl font-bold text-center">글 수정</h1>
+    <div className="">
+      <h1 className="text-2xl font-bold text-center">글 수정</h1>
 
-        {/* 레이아웃에 영향 없도록 절대배치 */}
-        <div className="pointer-events-none absolute inset-0">
-          <div className="pointer-events-auto absolute right-0 top-1/2 -translate-y-1/2">
-            {/* 필요 시 축소: <div className="origin-right scale-90"><HomeButton/></div> */}
-            <HomeButton />
-          </div>
-        </div>
-
-        <p className="mt-1 text-sm text-zinc-500 text-center">
-          제목 · 카테고리 · 태그는 필수입니다.
-        </p>
-      </div>
-
+      <p className="mt-1 text-sm text-zinc-500 text-center">
+        제목 · 카테고리 · 태그는 필수입니다.
+      </p>
       <Separator className="my-4" />
 
       <PostComposer

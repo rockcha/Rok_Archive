@@ -212,9 +212,9 @@ export default function PostsBoard({
     Array.isArray(c) ? c?.[0]?.name : c?.name;
 
   return (
-    <section className={cn("w-full relative", className)}>
+    <section className={cn("w-full  mt-4", className)}>
       {/* 🧭 상단 Breadcrumb: <type → category> */}
-      <div className="mb-4">
+      <div className=" pl-2 pb-1">
         <Breadcrumb>
           <BreadcrumbList>
             <BreadcrumbItem>홈</BreadcrumbItem>
