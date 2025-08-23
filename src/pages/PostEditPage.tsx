@@ -1,11 +1,19 @@
 // src/features/posts/pages/PostEditPage.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/shared/lib/supabase";
-import PostComposer from "@/features/posts/PostComposer";
+
+import PostComposer, {
+  type PostComposerHandle,
+} from "@/features/posts/PostComposer";
+import SavePostButton from "@/features/posts/editor/SavePostButton";
+
 import { Separator } from "@/shared/ui/separator";
+import HomeButton from "@/widgets/Header/HomeButton";
+import FloatingMemo from "@/widgets/FloatingMemo";
+
 import type { JSONContent } from "@tiptap/core";
 
 function normalizeContentJson(v: unknown): JSONContent | string | null {
@@ -27,6 +35,8 @@ type PostRow = {
 export default function PostEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+
+  const composerRef = useRef<PostComposerHandle | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [post, setPost] = useState<PostRow | null>(null);
@@ -85,13 +95,27 @@ export default function PostEditPage() {
   return (
     <div className="">
       <h1 className="text-2xl font-bold text-center">글 수정</h1>
-
       <p className="mt-1 text-sm text-zinc-500 text-center">
         제목 · 카테고리 · 태그는 필수입니다.
       </p>
-      <Separator className="my-4" />
 
+      <Separator className="my-2" />
+
+      <div className="flex justify-between">
+        <div className="flex">
+          <HomeButton />
+          <FloatingMemo />
+        </div>
+
+        {/* 우측 상단 저장 버튼 */}
+        <SavePostButton
+          label="저장"
+          onClick={() => composerRef.current?.requestSave()}
+        />
+      </div>
+      <Separator className="my-2" />
       <PostComposer
+        ref={composerRef}
         mode="edit"
         initial={{
           id: post.id,

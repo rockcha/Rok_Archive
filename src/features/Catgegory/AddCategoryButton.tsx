@@ -7,14 +7,15 @@ import { toast } from "sonner";
 
 import { Button } from "@/shared/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogTrigger,
-} from "@/shared/ui/dialog";
+  Sheet,
+  SheetTrigger,
+  SheetContent,
+  SheetHeader,
+  SheetFooter,
+  SheetTitle,
+  SheetDescription,
+  SheetClose,
+} from "@/shared/ui/sheet";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import {
@@ -100,87 +101,95 @@ export default function AddCategoryButton() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => !saving && setOpen(v)}>
-      <DialogTrigger asChild>
+    <Sheet open={open} onOpenChange={(v) => !saving && setOpen(v)}>
+      <SheetTrigger asChild>
         <Button
           type="button"
-          variant="ghost" // ✅ ghost 기본 hover 사용
+          variant="ghost"
           aria-label="카테고리 추가"
           title="카테고리 추가"
           className="
-            cursor-pointer                  /* ✅ 포인터 */
+            cursor-pointer
             px-3 py-2 rounded-xl
             inline-flex items-center gap-2
             transition-colors
-            /* fallback이 필요하면 아래 한 줄 주석 해제:
-               hover:bg-accent/20 hover:text-accent-foreground
-            */
           "
         >
           <Plus className="h-4 w-4" />
-          <span className="text-sm font-semibold">카테고리 추가</span>
+          <span className="text-base font-semibold">카테고리 추가</span>
         </Button>
-      </DialogTrigger>
+      </SheetTrigger>
 
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>카테고리 추가</DialogTitle>
-          <DialogDescription>
-            이름과 타입을 선택해 새 카테고리를 추가합니다.
-          </DialogDescription>
-        </DialogHeader>
+      {/* ✅ 왼쪽 시트, 중앙 정렬 + 폭 일치 */}
+      <SheetContent side="left" className="p-0 sm:max-w-md">
+        <div className="flex h-full w-full items-center justify-center p-6">
+          <div className="w-full max-w-md">
+            <SheetHeader className="p-0 mb-4 text-xl text-center">
+              <SheetTitle>카테고리 추가</SheetTitle>
+              <SheetDescription>
+                이름과 타입을 선택해 새 카테고리를 추가합니다.
+              </SheetDescription>
+            </SheetHeader>
 
-        <form className="grid gap-4" onSubmit={handleSubmit}>
-          <div className="grid gap-2">
-            <Label htmlFor="cat-name">이름</Label>
-            <Input
-              id="cat-name"
-              ref={inputRef}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="예) React, TypeScript"
-              disabled={saving}
-              className="h-11 text-base"
-            />
-          </div>
-
-          <div className="grid gap-2">
-            <Label htmlFor="cat-type">타입</Label>
-            <Select
-              value={selectedTypeId}
-              onValueChange={setSelectedTypeId}
-              disabled={saving || types.length === 0}
-            >
-              <SelectTrigger id="cat-type" className="h-11">
-                <SelectValue
-                  placeholder={types.length ? "타입 선택" : "불러오는 중…"}
+            <form className="grid gap-4" onSubmit={handleSubmit}>
+              <div className="grid gap-2">
+                <Label htmlFor="cat-name">이름</Label>
+                <Input
+                  id="cat-name"
+                  ref={inputRef}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="예) React, TypeScript"
+                  disabled={saving}
+                  className="h-11 text-base w-full"
                 />
-              </SelectTrigger>
-              <SelectContent className="max-h-64">
-                {types.map((t) => (
-                  <SelectItem key={t.id} value={String(t.id)}>
-                    {t.type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-              disabled={saving}
-            >
-              취소
-            </Button>
-            <Button type="submit" disabled={saving}>
-              {saving ? "추가 중..." : "추가"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+              <div className="grid gap-2">
+                <Label htmlFor="cat-type">타입</Label>
+                <Select
+                  value={selectedTypeId}
+                  onValueChange={setSelectedTypeId}
+                  disabled={saving || types.length === 0}
+                >
+                  <SelectTrigger id="cat-type" className="h-11 w-full">
+                    <SelectValue
+                      placeholder={types.length ? "타입 선택" : "불러오는 중…"}
+                    />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-64">
+                    {types.map((t) => (
+                      <SelectItem key={t.id} value={String(t.id)}>
+                        {t.type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <SheetFooter className="mt-0 p-0 pt-6 flex-row justify-center gap-2">
+                <SheetClose asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={saving}
+                    className="hover:cursor-pointer"
+                  >
+                    닫기
+                  </Button>
+                </SheetClose>
+                <Button
+                  type="submit"
+                  disabled={saving}
+                  className="hover:cursor-pointer"
+                >
+                  {saving ? "추가 중..." : "추가"}
+                </Button>
+              </SheetFooter>
+            </form>
+          </div>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

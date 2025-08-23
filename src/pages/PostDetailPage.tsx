@@ -7,6 +7,8 @@ import { supabase } from "@/shared/lib/supabase";
 import { Separator } from "@/shared/ui/separator";
 import PostContentView from "@/features/posts/PostContentView";
 import PostActions from "@/features/posts/PostActions";
+import FloatingMemo from "@/widgets/FloatingMemo";
+import HomeButton from "@/widgets/Header/HomeButton";
 import type { JSONContent } from "@tiptap/core";
 
 // unknown을 안전한 타입으로 변환
@@ -105,10 +107,10 @@ export default function PostDetailPage() {
       <header className="space-y-2">
         {/* 1행: 제목 가운데 + 홈버튼 우측(오버레이) */}
 
-        <h1 className="text-3xl font-bold text-center">{post.title}</h1>
+        <h1 className="text-2xl font-bold text-center">{post.title}</h1>
 
         {/* 2행: 태그/날짜 */}
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-sm text-zinc-500">
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-zinc-500">
           {post.tags?.length > 0 && (
             <span>· {post.tags.map((t) => `#${t}`).join(" ")}</span>
           )}
@@ -116,13 +118,18 @@ export default function PostDetailPage() {
             <span>{new Date(post.published_at).toLocaleDateString()}</span>
           )}
         </div>
-
-        {/* 관리자 액션 */}
-        <div className="mt-3">
-          <PostActions postId={post.id} slug={post.slug} />
-        </div>
       </header>
       <Separator className="my-4" />
+      <div className="flex justify-between mb-3">
+        <div className="flex">
+          <HomeButton />
+          <FloatingMemo />
+        </div>
+
+        <div>
+          <PostActions postId={post.id} slug={post.slug} />
+        </div>
+      </div>
       {/* ── 본문(내부 스크롤, 보더 고정) ───────────────────── */}
       <div className="rounded-lg border border-neutral-300 bg-background">
         <div

@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/shared/ui/card";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react"; // ⬅️ 스피너 아이콘
 
-import TodoForm from "@/features/Todo/TodoForm";
+import AddTodoButton from "@/features/Todo/AddTodoButton";
 import TodoList from "@/features/Todo/TodoList";
 import type { TodoRow } from "@/features/Todo/types";
 import {
@@ -15,6 +15,8 @@ import {
   updateTodo,
   deleteTodo,
 } from "@/features/Todo/api";
+import HomeButton from "@/widgets/Header/HomeButton";
+import FloatingMemo from "@/widgets/FloatingMemo";
 
 export default function TodayTodosPage() {
   const [todos, setTodos] = useState<TodoRow[]>([]);
@@ -61,6 +63,16 @@ export default function TodayTodosPage() {
   return (
     <div className="relative mb-4">
       <h1 className="text-2xl font-bold text-center">오늘의 할일</h1>
+      <div className="flex justify-between ">
+        <div className="flex">
+          <HomeButton />
+          <FloatingMemo />
+        </div>
+
+        {/* 입력 영역 (로딩 중엔 클릭/입력 방지) */}
+        <AddTodoButton onAdd={handleAdd} />
+      </div>
+
       <Card
         className="mt-10 border-neutral-200 min-h-[85dvh] relative" // ⬅️ overlay 포지셔닝
         aria-busy={loading}
@@ -76,9 +88,6 @@ export default function TodayTodosPage() {
         <CardContent
           className={`mt-4 ${loading ? "pointer-events-none select-none" : ""}`}
         >
-          {/* 입력 영역 (로딩 중엔 클릭/입력 방지) */}
-          <TodoForm onAdd={handleAdd} className="mb-4" />
-
           {/* 리스트 영역 */}
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <TodoList

@@ -10,6 +10,8 @@ import { ScheduleDialog } from "@/features/Schedule/ScheduleDialog";
 import { CalendarPlus } from "lucide-react";
 import { supabase } from "@/shared/lib/supabase";
 
+import FloatingMemo from "@/widgets/FloatingMemo";
+import HomeButton from "@/widgets/Header/HomeButton";
 export type Schedule = {
   id: string;
   date: string; // "YYYY-MM-DD"
@@ -104,8 +106,32 @@ export default function SchedulerPage() {
   return (
     <div className="relative mb-4">
       <h1 className="text-2xl font-bold text-center">스케줄러</h1>
+      <div className="flex justify-between ">
+        <div className="flex">
+          <HomeButton />
+          <FloatingMemo />
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => setOpenNew(true)}
+          aria-label="일정 추가"
+          className="
+    inline-flex flex-col items-center justify-center gap-1
+    px-3 py-2
+    cursor-pointer
+    [&>svg]:!h-6 [&>svg]:!w-6
+   
+  "
+        >
+          <CalendarPlus className="text-neutral-600 dark:text-neutral-200" />
+          <span className="text-[12px] font-semibold text-neutral-800 dark:text-neutral-100">
+            일정 추가
+          </span>
+        </Button>
+      </div>
       {/* ── 본문: 카드 내부 스크롤 / 가운데 정렬 ── */}
-      <div className="w-full flex justify-center py-2">
+      <div className="w-full flex justify-center py-5">
         <Card className="relative overflow-hidden rounded-2xl w-[80%] max-w-[1200px] h-[80vh] flex flex-col">
           {/* 헤더 (고정) */}
           <CardHeader className="grid grid-cols-3 items-center flex-none">
@@ -159,19 +185,6 @@ export default function SchedulerPage() {
         onUpdate={handleUpdate}
         onDelete={handleDelete}
       />
-
-      {/* 플로팅 추가 버튼 */}
-      <button
-        onClick={() => setOpenNew(true)}
-        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full
-             bg-primary text-primary-foreground shadow-lg
-             flex items-center justify-center
-             transition-transform hover:scale-105
-             hover:cursor-pointer"
-        aria-label="새 일정 추가"
-      >
-        <CalendarPlus className="w-6 h-6" />
-      </button>
     </div>
   );
 }

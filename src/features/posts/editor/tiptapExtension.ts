@@ -4,7 +4,7 @@ import Underline from "@tiptap/extension-underline";
 import Highlight from "@tiptap/extension-highlight";
 import Link from "@tiptap/extension-link";
 import { TextStyle } from "@tiptap/extension-text-style";
-import ImageWithDataAttrs from "./imageWithDataAttrs";
+import ImageWithDataAttrs from "@/features/posts/editor/imageWithDataAttrs.ts"
 
 export function createExtensions() {
   return [

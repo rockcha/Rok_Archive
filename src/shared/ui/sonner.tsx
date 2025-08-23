@@ -9,8 +9,8 @@ type Props = ToasterProps & {
 };
 
 const Toaster = ({
-  duration = 3000,
-  position = "top-center",
+  duration = 2000,
+  position = "bottom-right",
   closeOnOutsideClick = true,
   ...props
 }: Props) => {

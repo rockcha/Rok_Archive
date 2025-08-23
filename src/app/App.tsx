@@ -18,7 +18,6 @@ import TodayTodosPage from "@/pages/TodayTodosPage";
 import Header from "@/widgets/Header/Header";
 import { Toaster } from "@/shared/ui/sonner";
 import FloatingMemo from "@/widgets/FloatingMemo";
-import HomeButton from "@/widgets/Header/HomeButton";
 
 // 레이아웃 (Header + Footer 고정)
 function Layout() {
@@ -28,7 +27,7 @@ function Layout() {
         <div className="shrink-0">
           <Header />
         </div>
-
+        <FloatingMemo />
         {/* 내부 스크롤 전용 영역 */}
         <main className="flex-1 min-h-0  min-w-0">
           <Outlet />
@@ -42,8 +41,6 @@ function ContainerLayout() {
   return (
     <div className=" mx-auto  max-w-screen-lg bg-neutral-100 px-6 py-6 h-dvh overflow-hidden ">
       {/* 고정 위젯 (뷰포트 기준 fixed) */}
-      <FloatingMemo />
-      <HomeButton />
 
       {/* 페이지 콘텐츠 */}
       <Outlet />
@@ -54,6 +51,7 @@ function ContainerLayout() {
 export default function App() {
   return (
     <Router>
+      {/* 전역 위젯 */}
       <Toaster />
 
       <Routes>

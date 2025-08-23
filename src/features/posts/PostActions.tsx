@@ -15,12 +15,6 @@ import {
   DialogFooter,
   DialogTrigger,
 } from "@/shared/ui/dialog";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/shared/ui/tooltip";
 
 import { Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -63,73 +57,67 @@ export default function PostActions({ postId }: Props) {
   };
 
   return (
-    <TooltipProvider>
-      {/* ✅ 화면 우측 하단 고정된 액션 버튼 영역 */}
-      <div className="fixed bottom-6 right-6 z-50 flex justify-center gap-2">
-        {/* ✏️ 수정 버튼 (neutral) */}
-        <Tooltip>
-          <TooltipTrigger asChild>
+    <div className="flex justify-center ">
+      {/* ✏️ 수정 */}
+      <Button
+        type="button"
+        variant="ghost"
+        aria-label="수정"
+        onClick={onEdit}
+        className="
+         cursor-pointer
+          px-2 py-2
+           [&>svg]:!h-6 [&>svg]:!w-6
+        "
+      >
+        <Pencil className="!h-6 !w-6 text-neutral-600" />
+      </Button>
+
+      {/* 🗑️ 삭제 + 다이얼로그 */}
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            aria-label="삭제"
+            className="
+          
+            ursor-pointer
+              px-2 py-2
+             
+               [&>svg]:!h-6 [&>svg]:!w-6
+            "
+          >
+            <Trash2 className="!h-6 !w-6 text-rose-600" />
+          </Button>
+        </DialogTrigger>
+
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>정말 삭제하시겠습니까?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-zinc-600 dark:text-zinc-300">
+            이 작업은 되돌릴 수 없습니다.
+          </p>
+          <DialogFooter>
             <Button
-              size="icon"
-              variant="ghost"
-              aria-label="수정"
-              onClick={onEdit}
-              className="w-14 h-14 rounded-full bg-neutral-500 text-white shadow-lg hover:bg-neutral-700 hover:text-white hover:cursor-pointer"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              className="hover:cursor-pointer"
             >
-              <Pencil className="h-6 w-6" />
-              <span className="sr-only">수정</span>
+              취소
             </Button>
-          </TooltipTrigger>
-          <TooltipContent>수정</TooltipContent>
-        </Tooltip>
-
-        {/* 🗑️ 삭제 버튼 (rose) + 다이얼로그 */}
-        <Dialog open={open} onOpenChange={setOpen}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <DialogTrigger asChild>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  aria-label="삭제"
-                  className="w-14 h-14 rounded-full bg-rose-500 text-white shadow-lg hover:bg-rose-700 hover:text-white  hover:cursor-pointer"
-                >
-                  <Trash2 className="h-6 w-6" />
-                  <span className="sr-only">삭제</span>
-                </Button>
-              </DialogTrigger>
-            </TooltipTrigger>
-            <TooltipContent>삭제</TooltipContent>
-          </Tooltip>
-
-          {/* 🗨️ 삭제 확인 다이얼로그 */}
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>정말 삭제하시겠습니까?</DialogTitle>
-            </DialogHeader>
-            <p className="text-sm text-zinc-600 dark:text-zinc-300">
-              이 작업은 되돌릴 수 없습니다.
-            </p>
-            <DialogFooter>
-              <Button
-                variant="outline"
-                onClick={() => setOpen(false)}
-                className="hover:cursor-pointer"
-              >
-                취소
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={onDelete}
-                disabled={deleting}
-                className="hover:cursor-pointer transition-transform hover:scale-[1.02] active:scale-95"
-              >
-                {deleting ? "삭제 중..." : "삭제"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </TooltipProvider>
+            <Button
+              variant="destructive"
+              onClick={onDelete}
+              disabled={deleting}
+              className="hover:cursor-pointer transition-transform hover:scale-[1.02] active:scale-95"
+            >
+              {deleting ? "삭제 중..." : "삭제"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

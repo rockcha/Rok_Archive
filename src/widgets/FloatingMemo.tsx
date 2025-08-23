@@ -2,8 +2,10 @@
 "use client";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/shared/lib/supabase";
-import { Button } from "@/shared/ui/button";
 import { toast } from "sonner";
+import { Button } from "@/shared/ui/button";
+import { useLocation } from "react-router-dom";
+import { Notebook } from "lucide-react";
 
 type Props = {
   offset?: { bottom?: number; right?: number };
@@ -11,6 +13,9 @@ type Props = {
 };
 
 export default function FloatingMemo({ memoId = "memo" }: Props) {
+  const { pathname } = useLocation();
+  const isHome = pathname === "/";
+
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
@@ -84,7 +89,7 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
 
   // 닫기(오버레이/ESC/단축키) → 자동 저장 후 닫기
   const closeAfterAutoSave = async () => {
-    const ok = await saveIfDirty(false); // 실패 시 닫지 않음
+    const ok = await saveIfDirty(false);
     if (ok) setOpen(false);
   };
 
@@ -157,7 +162,7 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
     const caretEnd = caretStart + selected.length;
 
     requestAnimationFrame(() => {
-      (el as any).focus?.({ preventScroll: true });
+      el.focus({ preventScroll: true });
       el.setSelectionRange(caretStart, caretEnd);
       el.scrollTop = prevScrollTop;
       // iOS/Safari 보강
@@ -169,16 +174,19 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
 
   return (
     <>
-      {/* 접힌 상태: 고정 배지 */}
+      {/* 접힌 상태: 아이콘 + “메모장” */}
       {!open && (
         <Button
+          variant="ghost"
           onClick={() => setOpen(true)}
-          variant="secondary"
-          className="fixed z-[70] right-10 top-[32%] rounded-full backdrop-blur px-3 py-2 shadow-lg border text-sm cursor-pointer hover:opacity-95"
           aria-label="메모장 열기"
+          className={`
+           ${isHome ? "  fixed z-[70] bottom-12 right-12" : ""}
+           cursor-pointer
+            [&>svg]:!h-6 [&>svg]:!w-6
+          `}
         >
-          <span className="mr-1">🗒️</span>
-          <span className="align-middle">메모장</span>
+          <Notebook className="text-neutral-600" />
         </Button>
       )}
 
@@ -213,9 +221,6 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
                       : "최신"}
                   </span>
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  ESC 또는 바깥 클릭 시 자동 저장
-                </span>
               </div>
 
               {/* 바디 */}
@@ -241,19 +246,16 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
                     onClick={insertPinAtCaret}
                     aria-label="글머리기호 추가"
                     className="
-                      absolute bottom-3 right-3 z-10
+                      absolute top-3 right-5 z-10
                       h-10 w-10 rounded-full
-                      bg-white border shadow-md
+                     
                       flex items-center justify-center
-                      text-xl
+                      text-base
                       cursor-pointer
-                      transition
-                      hover:scale-105 hover:shadow-lg hover:bg-white
-                      active:scale-95
-                      focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-neutral-300
+                    
                     "
                   >
-                    <span className="select-none">📌</span>
+                    <span>📌</span>
                   </button>
                 </div>
 
