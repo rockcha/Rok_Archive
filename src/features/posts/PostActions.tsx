@@ -31,15 +31,30 @@ export default function PostActions({ postId }: Props) {
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  if (!isAdmin) return null;
-
-  // ✏️ 수정 버튼 클릭 시 이동
+  // ✏️ 수정
   const onEdit = () => {
+    if (!isAdmin) {
+      toast.error("권한 없음", { description: "관리자만 수정할 수 있습니다." });
+      return;
+    }
     navigate(`/posts/edit/${postId}`);
   };
 
-  // 🗑️ 삭제 버튼 클릭 시 실행 (toast 사용)
+  // 🗑️ 삭제 다이얼로그 열기
+  const onRequestDelete = () => {
+    if (!isAdmin) {
+      toast.error("권한 없음", { description: "관리자만 삭제할 수 있습니다." });
+      return;
+    }
+    setOpen(true);
+  };
+
+  // 🗑️ 삭제 실행
   const onDelete = async () => {
+    if (!isAdmin) {
+      toast.error("권한 없음", { description: "관리자만 삭제할 수 있습니다." });
+      return;
+    }
     try {
       setDeleting(true);
       const { error } = await supabase.from("posts").delete().eq("id", postId);
@@ -57,7 +72,7 @@ export default function PostActions({ postId }: Props) {
   };
 
   return (
-    <div className="flex justify-center ">
+    <div className="flex justify-center">
       {/* ✏️ 수정 */}
       <Button
         type="button"
@@ -65,9 +80,9 @@ export default function PostActions({ postId }: Props) {
         aria-label="수정"
         onClick={onEdit}
         className="
-         cursor-pointer
+          cursor-pointer
           px-2 py-2
-           [&>svg]:!h-6 [&>svg]:!w-6
+          [&>svg]:!h-6 [&>svg]:!w-6
         "
       >
         <Pencil className="!h-6 !w-6 text-neutral-600" />
@@ -80,12 +95,11 @@ export default function PostActions({ postId }: Props) {
             type="button"
             variant="ghost"
             aria-label="삭제"
+            onClick={onRequestDelete}
             className="
-          
-            ursor-pointer
+              cursor-pointer
               px-2 py-2
-             
-               [&>svg]:!h-6 [&>svg]:!w-6
+              [&>svg]:!h-6 [&>svg]:!w-6
             "
           >
             <Trash2 className="!h-6 !w-6 text-rose-600" />

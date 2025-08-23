@@ -26,6 +26,7 @@ import {
   SelectItem,
 } from "@/shared/ui/select";
 import { Plus } from "lucide-react";
+import { useAdmin } from "@/features/Auth/useAdmin"; // ✅ 추가
 
 type CategoryType = { id: number; type: string };
 
@@ -38,6 +39,7 @@ export default function AddCategoryButton() {
   const [selectedTypeId, setSelectedTypeId] = useState<string>("");
 
   const inputRef = useRef<HTMLInputElement>(null);
+  const { isAdmin } = useAdmin(); // ✅ 관리자 여부
 
   useEffect(() => {
     if (open) setTimeout(() => inputRef.current?.focus(), 0);
@@ -70,6 +72,14 @@ export default function AddCategoryButton() {
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
+
+    // ✅ 관리자 체크 (최소 변경)
+    if (!isAdmin) {
+      toast.error("권한 없음", {
+        description: "관리자만 카테고리를 추가할 수 있습니다.",
+      });
+      return;
+    }
 
     const n = name.trim();
     if (!n) return toast("카테고리 이름을 입력하세요.");

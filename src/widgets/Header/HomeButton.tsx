@@ -10,9 +10,9 @@ export default function HomeButton() {
   const { pathname } = useLocation();
 
   // 메인페이지("/")에서는 렌더 X
-  if (pathname === "/") return null;
+  if (pathname === "/main") return null;
 
-  const goHome = () => navigate("/");
+  const goHome = () => navigate("/main");
 
   return (
     <Button

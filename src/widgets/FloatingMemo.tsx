@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/shared/ui/button";
 import { useLocation } from "react-router-dom";
 import { Notebook } from "lucide-react";
+import { useAdmin } from "@/features/Auth/useAdmin"; // ✅ 추가
 
 type Props = {
   offset?: { bottom?: number; right?: number };
@@ -14,7 +15,8 @@ type Props = {
 
 export default function FloatingMemo({ memoId = "memo" }: Props) {
   const { pathname } = useLocation();
-  const isHome = pathname === "/";
+  const isHome = pathname === "/main";
+  const { isAdmin } = useAdmin(); // ✅ 관리자 여부
 
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
@@ -26,7 +28,7 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
 
   const dirty = useMemo(() => text !== lastLoadedRef.current, [text]);
 
-  // 열릴 때마다 서버에서 최신 content 가져오기
+  // 열릴 때마다 서버에서 최신 content 가져오기 (원본 유지)
   useEffect(() => {
     if (!open) return;
     let canceled = false;
@@ -64,7 +66,7 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
     };
   }, [open, memoId]);
 
-  // 저장 로직 (필요할 때만)
+  // 저장 로직 (원본 유지)
   const saveIfDirty = async (showToast = true) => {
     if (!dirty) return true;
     setSaving(true);
@@ -87,13 +89,22 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
     }
   };
 
-  // 닫기(오버레이/ESC/단축키) → 자동 저장 후 닫기
+  // 닫기(오버레이/ESC/단축키) → 자동 저장 후 닫기 (원본 유지)
   const closeAfterAutoSave = async () => {
     const ok = await saveIfDirty(false);
     if (ok) setOpen(false);
   };
 
-  // ESC & 단축키
+  // ✅ 메모장 열기 전에 관리자 체크만 추가 (기존 로직 보존)
+  const handleOpen = () => {
+    if (!isAdmin) {
+      toast.error("관리자만 메모장을 열 수 있습니다.");
+      return;
+    }
+    setOpen(true);
+  };
+
+  // ESC & 단축키 (원본 로직 유지 + admin 체크만 추가)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       // 토글 단축키
@@ -103,6 +114,10 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
         e.key.toLowerCase() === "m"
       ) {
         e.preventDefault();
+        if (!isAdmin) {
+          toast.error("관리자만 메모장을 열 수 있습니다.");
+          return;
+        }
         if (open) closeAfterAutoSave();
         else setOpen(true);
       }
@@ -119,9 +134,9 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
     };
-  }, [open, dirty, text]);
+  }, [open, dirty, text, isAdmin]);
 
-  // 탭 전환/브라우저 숨김 시에도 최대한 저장 시도
+  // 탭 전환/브라우저 숨김 시에도 최대한 저장 시도 (원본 유지)
   useEffect(() => {
     const onHide = () => {
       if (open) saveIfDirty(false);
@@ -134,7 +149,7 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
     };
   }, [open, text, dirty]);
 
-  // 커서 위치에 '📌 ' 삽입 (스크롤 점프 방지)
+  // 커서 위치에 '📌 ' 삽입 (원본 유지)
   const insertPinAtCaret = () => {
     if (!textareaRef.current) {
       setText((prev) => (prev ? `${prev}\n📌 ` : `📌 `));
@@ -178,10 +193,10 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
       {!open && (
         <Button
           variant="ghost"
-          onClick={() => setOpen(true)}
+          onClick={handleOpen}
           aria-label="메모장 열기"
           className={`
-           ${isHome ? "  fixed z-[70] bottom-12 right-12" : ""}
+           ${isHome ? "fixed z-[70] bottom-12 right-12" : ""}
            cursor-pointer
             [&>svg]:!h-6 [&>svg]:!w-6
           `}
@@ -190,7 +205,7 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
         </Button>
       )}
 
-      {/* 펼친 상태: 오버레이 + 중앙 카드 */}
+      {/* 펼친 상태: 오버레이 + 중앙 카드 (원본 유지) */}
       {open && (
         <div className="fixed inset-0 z-[80]" aria-modal="true" role="dialog">
           {/* 오버레이 클릭 → 자동 저장 후 닫기 */}
@@ -252,7 +267,6 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
                       flex items-center justify-center
                       text-base
                       cursor-pointer
-                    
                     "
                   >
                     <span>📌</span>
