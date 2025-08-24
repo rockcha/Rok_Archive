@@ -72,9 +72,7 @@ export default function FloatingNoteButton({
                   ⚠️ 잘못하면 서버 데이터에 영향을 줄 수 있습니다. 조심해주세요
                   ㅠ
                 </p>
-                <p className="opacity-80">
-                  💡 지식 공유는 언제나 환영입니다. 버그 제보도 부탁드릴게요!
-                </p>
+
                 <p className="opacity-80">
                   🚨 휴대폰으로 보면 UI가 깨질 수 있습니다.
                 </p>

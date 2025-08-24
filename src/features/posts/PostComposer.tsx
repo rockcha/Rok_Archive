@@ -161,7 +161,7 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
           setSelectedCategoryId("");
           setTagsRaw("");
           editor.commands.clearContent(true);
-          navigate("/");
+          navigate("/main");
         }
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : "저장 실패";
