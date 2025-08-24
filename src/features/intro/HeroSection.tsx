@@ -112,7 +112,7 @@ export default function HeroSection() {
                 grayscaleAnimation
                 pixelFadeInDuration={900}
                 maxAnimationDelay={900}
-                colorRevealDelay={1000}
+                colorRevealDelay={0}
                 className="h-80 w-80 sm:h-[25rem] sm:w-[25rem] 
                            md:h-[32rem] md:w-[32rem]
                            rounded-[2.5rem] overflow-hidden bg-transparent"
@@ -127,7 +127,7 @@ export default function HeroSection() {
               </p>
               <p className="flex items-center gap-2 justify-center md:justify-start">
                 <span>🎓</span>
-                <span>연세대학교 행정학과 (졸)</span>
+                <span>행정학과 (졸)</span>
               </p>
               <p className="flex items-center gap-2 justify-center md:justify-start">
                 <span>🌱</span>

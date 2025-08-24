@@ -32,7 +32,7 @@ export const PixelImage = ({
   grayscaleAnimation = true,
   pixelFadeInDuration = 1000,
   maxAnimationDelay = 1200,
-  colorRevealDelay = 1300,
+  colorRevealDelay = 0,
   customGrid,
   className = "",
 }: PixelImageProps) => {
