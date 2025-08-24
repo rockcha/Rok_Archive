@@ -16,7 +16,7 @@ function parseYouTubeId(input: string): string | null {
       const m = u.pathname.match(/\/embed\/([^/]+)/);
       if (m) return m[1];
     }
-  } catch {}
+  } catch { void 0;}
   // 혹시 그냥 ID만 넘어오면 그대로 사용
   if (/^[\w-]{11}$/.test(input)) return input;
   return null;

@@ -7,6 +7,7 @@ import { Button } from "@/shared/ui/button";
 import { useLocation } from "react-router-dom";
 import { Notebook } from "lucide-react";
 import { useAdmin } from "@/features/Auth/useAdmin"; // ✅ 추가
+import { Switch } from "@/shared/ui/switch"; // ✅ 추가: 슬라이더 스위치
 
 type Props = {
   offset?: { bottom?: number; right?: number };
@@ -27,6 +28,9 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const dirty = useMemo(() => text !== lastLoadedRef.current, [text]);
+
+  // ⭐ 추가: 보기/편집 토글 상태 (기본 'view')
+  const [viewMode, setViewMode] = useState<"edit" | "view">("view");
 
   // 열릴 때마다 서버에서 최신 content 가져오기 (원본 유지)
   useEffect(() => {
@@ -149,42 +153,50 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
     };
   }, [open, text, dirty]);
 
-  // 커서 위치에 '📌 ' 삽입 (원본 유지)
-  const insertPinAtCaret = () => {
-    if (!textareaRef.current) {
-      setText((prev) => (prev ? `${prev}\n📌 ` : `📌 `));
-      return;
-    }
-    const el = textareaRef.current;
+  // ⭐ URL을 안전하게 <a>로 렌더링 (http/https, www.* 모두)
+  const linkify = (raw: string) => {
+    const urlRegex =
+      /((https?:\/\/[^\s]+)|(?:www\.[^\s]+(?:\.[^\s]+)+[^\s]*))/gi;
 
-    // 1) 현재 선택/스크롤 상태 저장
-    const start = el.selectionStart ?? el.value.length;
-    const end = el.selectionEnd ?? el.value.length;
-    const prevScrollTop = el.scrollTop;
+    const parts = raw.split(urlRegex);
+    return parts.map((part, idx) => {
+      if (!part) return null;
 
-    // 2) 텍스트 계산
-    const before = text.slice(0, start);
-    const selected = text.slice(start, end);
-    const after = text.slice(end);
-    const insert = "📌 ";
-    const next = `${before}${insert}${selected}${after}`;
+      if (part.match(urlRegex)) {
+        const href = part.startsWith("http") ? part : `https://${part}`;
+        return (
+          <a
+            key={`url-${idx}`}
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-2 hover:opacity-80 break-words"
+          >
+            {part}
+          </a>
+        );
+      }
 
-    // 3) 상태 업데이트 (리렌더)
-    setText(next);
-
-    // 4) 다음 프레임에서 포커스/선택/스크롤 복구
-    const caretStart = start + insert.length;
-    const caretEnd = caretStart + selected.length;
-
-    requestAnimationFrame(() => {
-      el.focus({ preventScroll: true });
-      el.setSelectionRange(caretStart, caretEnd);
-      el.scrollTop = prevScrollTop;
-      // iOS/Safari 보강
-      requestAnimationFrame(() => {
-        el.scrollTop = prevScrollTop;
-      });
+      // 일반 텍스트: 줄바꿈 유지
+      const lines = part.split("\n");
+      return lines.map((line, i) => (
+        <span key={`t-${idx}-${i}`}>
+          {line}
+          {i < lines.length - 1 ? <br /> : null}
+        </span>
+      ));
     });
+  };
+
+  // ⭐ 보기/편집 전환 시 저장(편집→보기) 후 전환
+  const toggleViewMode = async () => {
+    if (viewMode === "edit") {
+      const ok = await saveIfDirty(false);
+      if (!ok) return;
+      setViewMode("view");
+    } else {
+      setViewMode("edit");
+    }
   };
 
   return (
@@ -236,6 +248,38 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
                       : "최신"}
                   </span>
                 </div>
+
+                {/* ⭐ 변경: 버튼 → 슬라이더 스위치 */}
+                <div className="flex items-center gap-2 text-sm">
+                  <span
+                    className={`${
+                      viewMode === "edit"
+                        ? "text-foreground"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    편집
+                  </span>
+                  <Switch
+                    checked={viewMode === "view"}
+                    onCheckedChange={async () => {
+                      // 스위치 토글 → 기존 토글 로직 사용
+                      await toggleViewMode();
+                    }}
+                    disabled={loading || saving}
+                    aria-label="보기 모드로 전환"
+                    className="hover:cursor-pointer"
+                  />
+                  <span
+                    className={`${
+                      viewMode === "view"
+                        ? "text-foreground"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    보기
+                  </span>
+                </div>
               </div>
 
               {/* 바디 */}
@@ -246,35 +290,27 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
 
                 {/* textarea 래퍼를 relative로 감싸고, 내부 우하단에 FAB 배치 */}
                 <div className="relative">
-                  <textarea
-                    ref={textareaRef}
-                    value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    placeholder="여기에 메모를 적어주세요…"
-                    className="w-full h-[60vh] min-h-[320px] outline-none border rounded-lg p-3 pr-12 leading-6 resize-y disabled:opacity-60"
-                    disabled={loading}
-                  />
-
-                  {/* 메모장 우하단 📌 버튼 (카드 내부 고정) */}
-                  <button
-                    type="button"
-                    onClick={insertPinAtCaret}
-                    aria-label="글머리기호 추가"
-                    className="
-                      absolute top-3 right-5 z-10
-                      h-10 w-10 rounded-full
-                     
-                      flex items-center justify-center
-                      text-base
-                      cursor-pointer
-                    "
-                  >
-                    <span>📌</span>
-                  </button>
-                </div>
-
-                <div className="flex justify-end items-center pt-2 text-xs text-muted-foreground">
-                  <span>{text.length}자</span>
+                  {viewMode === "view" ? (
+                    // 보기 모드 - 링크 클릭 가능
+                    <div
+                      className="h-[60vh] min-h-[320px] overflow-auto rounded-lg border p-3 leading-6
+                                 prose prose-sm max-w-none break-words"
+                    >
+                      {linkify(text || "")}
+                    </div>
+                  ) : (
+                    // 편집 모드: 기존 textarea 유지
+                    <>
+                      <textarea
+                        ref={textareaRef}
+                        value={text}
+                        onChange={(e) => setText(e.target.value)}
+                        placeholder="여기에 메모를 적어주세요…"
+                        className="w-full h-[60vh] min-h-[320px] outline-none border rounded-lg p-3 pr-12 leading-6 resize-y disabled:opacity-60"
+                        disabled={loading}
+                      />
+                    </>
+                  )}
                 </div>
               </div>
             </div>
