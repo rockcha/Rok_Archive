@@ -29,6 +29,7 @@ import { useRichEditor } from "@/features/posts/editor/useRichEditor";
 import EditorToolbar from "@/features/posts/editor/EditorToolbar";
 import { slugify } from "@/shared/utils/slugify";
 import { parseTags } from "@/shared/utils/parseTags";
+import { useWarnOnUnload } from "./UseWarnOnUnload";
 
 type Category = { id: string | number; name: string };
 type ComposerMode = "create" | "edit";
@@ -202,6 +203,11 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
       return () => window.removeEventListener("beforeunload", handler);
     }, [title, tagsRaw, selectedCategoryId, editor]);
 
+    const dirty = editor && editor.getHTML() !== "<p></p>";
+
+    // 창 닫을 때만 경고
+    useWarnOnUnload(dirty);
+
     return (
       <div className="space-y-4">
         {/* 상단 입력 바 */}
@@ -269,8 +275,6 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
         <EditorContent editor={editor} className="tiptap min-h-[60vh]" />
 
         <Separator className="opacity-0" />
-
-        {/* ⛔️ 내부 FAB는 제거했습니다. (페이지에서 렌더) */}
       </div>
     );
   }

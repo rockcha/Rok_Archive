@@ -11,7 +11,7 @@ export const LINE_DOTTED =
 export const LINE_EMOJI =
   "✦――✦――✦――✦――✦――✦――✦――✦――✦――✦――✦――✦――✦――✦――✦――✦――✦――✦――✦――✦――✦――✦――✦";
 
-export const BULLETS = ["•", "▪", "➜", "✅", "☑️", "🔹", "🔸", "🔷", "🔶"];
+export const BULLETS = ["📌", "➜", "✅", "☑️", "🔹", "🔸", "🔷", "🔶"];
 export const FAVORITE_HL_COLORS = [
   "#fff3a3",
   "#ffe8a3",

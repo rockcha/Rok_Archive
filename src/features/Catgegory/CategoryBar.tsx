@@ -29,7 +29,7 @@ export default function CategoryBar({
   className,
   showAllActive = false,
   onToggleShowAll,
-  showAllLabel = ">  전체보기",
+  showAllLabel = ">  ROOT",
 }: Props) {
   const [types, setTypes] = useState<CategoryTypeRow[]>([]);
   const [loadingTypes, setLoadingTypes] = useState(true);
