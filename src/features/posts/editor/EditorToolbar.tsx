@@ -9,6 +9,7 @@ import BulletSelect from "./BulletSelect";
 import FormatGroup from "./FormatGroup";
 import HighlightPalette from "./HightlightPalette";
 import ToolbarDivider from "./ToolbarDivider";
+import InsertCodeModal from "./InsertCodeModal";
 
 type Props = { editor: Editor | null };
 
@@ -45,6 +46,8 @@ export default function EditorToolbar({ editor }: Props) {
         <FormatGroup editor={editor} />
         <ToolbarDivider tall />
         <HighlightPalette editor={editor} />
+        <ToolbarDivider tall />
+        <InsertCodeModal editor={editor} />
       </div>
     </div>
   );

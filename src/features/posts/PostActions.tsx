@@ -62,7 +62,7 @@ export default function PostActions({ postId }: Props) {
 
       setOpen(false);
       toast.success("게시글이 삭제되었습니다.");
-      navigate("/");
+      navigate("/main");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : "삭제 실패";
       toast.error("삭제 중 오류가 발생했습니다.", { description: msg });
