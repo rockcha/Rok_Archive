@@ -21,7 +21,7 @@ export default function PostCreatePage() {
       </p>
 
       <div className="flex justify-between">
-        <div className="flex">
+        <div className="flex gap-1">
           <HomeButton />
           <FloatingMemo />
         </div>

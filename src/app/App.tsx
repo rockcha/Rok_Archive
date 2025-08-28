@@ -19,6 +19,7 @@ import IntroPage from "@/pages/IntroPage";
 import Header from "@/widgets/Header/Header";
 import { Toaster } from "@/shared/ui/sonner";
 import FloatingMemo from "@/widgets/FloatingMemo";
+import FloatingTodo from "@/widgets/FloatingTodo";
 
 // 레이아웃 (Header + Footer 고정)
 function Layout() {
@@ -29,6 +30,8 @@ function Layout() {
           <Header />
         </div>
         <FloatingMemo />
+        <FloatingTodo />
+
         {/* 내부 스크롤 전용 영역 */}
         <main className="flex-1 min-h-0  min-w-0">
           <Outlet />

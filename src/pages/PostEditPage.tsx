@@ -102,7 +102,7 @@ export default function PostEditPage() {
       <Separator className="my-2" />
 
       <div className="flex justify-between">
-        <div className="flex">
+        <div className="flex gap-1">
           <HomeButton />
           <FloatingMemo />
         </div>

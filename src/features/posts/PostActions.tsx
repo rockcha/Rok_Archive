@@ -72,17 +72,17 @@ export default function PostActions({ postId }: Props) {
   };
 
   return (
-    <div className="flex justify-center">
+    <div className="flex justify-center gap-1">
       {/* ✏️ 수정 */}
       <Button
         type="button"
-        variant="ghost"
+        variant="outline"
         aria-label="수정"
         onClick={onEdit}
         className="
           cursor-pointer
           px-2 py-2
-          [&>svg]:!h-6 [&>svg]:!w-6
+          [&>svg]:!h-4 [&>svg]:!w-4
         "
       >
         <Pencil className="!h-6 !w-6 text-neutral-600" />
@@ -93,13 +93,13 @@ export default function PostActions({ postId }: Props) {
         <DialogTrigger asChild>
           <Button
             type="button"
-            variant="ghost"
+            variant="outline"
             aria-label="삭제"
             onClick={onRequestDelete}
             className="
               cursor-pointer
               px-2 py-2
-              [&>svg]:!h-6 [&>svg]:!w-6
+              [&>svg]:!h-4 [&>svg]:!w-4
             "
           >
             <Trash2 className="!h-6 !w-6 text-rose-600" />

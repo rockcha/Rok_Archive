@@ -26,13 +26,12 @@ export default function SavePostButton({
 
   return (
     <Button
-      type="button"
-      variant="ghost"
+      variant="outline"
       onClick={handleClick}
       className={`
         px-3 py-2
         cursor-pointer
-        [&>svg]:!h-6 [&>svg]:!w-6
+        [&>svg]:!h-5 [&>svg]:!w-5
         ${className ?? ""}
       `}
     >

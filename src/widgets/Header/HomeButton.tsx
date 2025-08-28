@@ -17,12 +17,12 @@ export default function HomeButton() {
   return (
     <Button
       type="button"
-      variant="ghost"
+      variant="outline"
       onClick={goHome}
       aria-label="홈으로"
       title="홈으로"
       className=" cursor-pointer
-      [&>svg]:!h-6 [&>svg]:!w-6 "
+      [&>svg]:!h-4 [&>svg]:!w-4 "
     >
       <Home className="text-neutral-600" aria-hidden="true" />
     </Button>

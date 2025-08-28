@@ -1,20 +1,20 @@
-// src/components/FloatingMemo.tsx
+// src/components/FloatingTodo.tsx
 "use client";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { supabase } from "@/shared/lib/supabase";
 import { toast } from "sonner";
 import { Button } from "@/shared/ui/button";
 import { useLocation } from "react-router-dom";
-import { Notebook } from "lucide-react";
+import { ListTodo } from "lucide-react";
 import { useAdmin } from "@/features/Auth/useAdmin";
 import { Switch } from "@/shared/ui/switch";
 
 type Props = {
   offset?: { bottom?: number; right?: number };
-  memoId?: string;
+  todoId?: string;
 };
 
-export default function FloatingMemo({ memoId = "memo" }: Props) {
+export default function FloatingTodo({ todoId = "todo" }: Props) {
   const { pathname } = useLocation();
   const isHome = pathname === "/main";
   const { isAdmin } = useAdmin();
@@ -38,9 +38,9 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
       setError(null);
       try {
         const { data, error } = await supabase
-          .from("memo_singleton")
+          .from("todo_singleton")
           .select("content")
-          .eq("id", memoId)
+          .eq("id", todoId)
           .maybeSingle();
         if (error) throw error;
         const content = data?.content ?? "";
@@ -58,9 +58,8 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
     return () => {
       canceled = true;
     };
-  }, [open, memoId]);
+  }, [open, todoId]);
 
-  // ✅ useCallback으로 안정화
   const saveIfDirty = useCallback(
     async (showToast = true) => {
       if (!dirty) return true;
@@ -68,8 +67,8 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
       setError(null);
       try {
         const { error } = await supabase
-          .from("memo_singleton")
-          .upsert({ id: memoId, content: text }, { onConflict: "id" });
+          .from("todo_singleton")
+          .upsert({ id: todoId, content: text }, { onConflict: "id" });
         if (error) throw error;
         lastLoadedRef.current = text;
         if (showToast) toast.success("자동 저장됐습니다.");
@@ -83,7 +82,7 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
         setSaving(false);
       }
     },
-    [dirty, memoId, text]
+    [dirty, todoId, text]
   );
 
   const closeAfterAutoSave = useCallback(async () => {
@@ -91,7 +90,6 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
     if (ok) setOpen(false);
   }, [saveIfDirty]);
 
-  // 떠나기 경고
   useEffect(() => {
     if (!open) return;
     const handler = (e: BeforeUnloadEvent) => {
@@ -106,13 +104,12 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
 
   const handleOpen = () => {
     if (!isAdmin) {
-      toast.error("관리자만 메모장을 열 수 있습니다.");
+      toast.error("관리자만 할 일 패널을 열 수 있습니다.");
       return;
     }
     setOpen(true);
   };
 
-  // ESC & 단축키
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (
@@ -122,7 +119,7 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
       ) {
         e.preventDefault();
         if (!isAdmin) {
-          toast.error("관리자만 메모장을 열 수 있습니다.");
+          toast.error("관리자만 할 일 패널을 열 수 있습니다.");
           return;
         }
         if (open) closeAfterAutoSave();
@@ -142,7 +139,6 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
     };
   }, [open, isAdmin, closeAfterAutoSave]); // ✅ deps 정리
 
-  // 탭 전환/페이지 숨김 시 저장 시도
   useEffect(() => {
     const onHide = () => {
       if (open) void saveIfDirty(false);
@@ -153,7 +149,7 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
       document.removeEventListener("visibilitychange", onHide);
       window.removeEventListener("pagehide", onHide);
     };
-  }, [open, saveIfDirty]); // ✅ saveIfDirty 포함
+  }, [open, saveIfDirty]); // ✅ deps 정리
 
   const linkify = (raw: string) => {
     const urlRegex =
@@ -201,14 +197,12 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
         <Button
           variant="outline"
           onClick={handleOpen}
-          aria-label="메모장 열기"
-          className={`
-           ${isHome ? "fixed z-[70] top-24 right-11" : ""}
-           cursor-pointer
-            [&>svg]:!h-4 [&>svg]:!w-4
-          `}
+          aria-label="할 일 열기"
+          className={`${
+            isHome ? "fixed z-[70] top-24 right-22" : ""
+          } cursor-pointer [&>svg]:!h-4 [&>svg]:!w-4`}
         >
-          <Notebook className="text-neutral-600" />
+          <ListTodo className="text-neutral-600" />
         </Button>
       )}
 
@@ -226,8 +220,8 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
             >
               <div className="flex items-center justify-between p-3 border-b">
                 <div className="flex items-center gap-2 font-medium">
-                  <span>🗒️</span>
-                  <span>메모장</span>
+                  <span>✅</span>
+                  <span>할 일</span>
                   <span className="ml-2 text-xs text-muted-foreground">
                     {loading
                       ? "불러오는 중…"
@@ -283,7 +277,7 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
                       ref={textareaRef}
                       value={text}
                       onChange={(e) => setText(e.target.value)}
-                      placeholder="여기에 메모를 적어주세요…"
+                      placeholder="할 일을 적어주세요…"
                       className="w-full h-[60vh] min-h-[320px] outline-none border rounded-lg p-3 pr-12 leading-6 resize-y disabled:opacity-60"
                       disabled={loading}
                     />

@@ -121,7 +121,7 @@ export default function PostDetailPage() {
       </header>
       <Separator className="my-4" />
       <div className="flex justify-between mb-3">
-        <div className="flex">
+        <div className="flex gap-1">
           <HomeButton />
           <FloatingMemo />
         </div>
