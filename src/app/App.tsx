@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   Outlet,
+  Navigate,
 } from "react-router-dom";
 
 // 페이지 목록
@@ -24,7 +25,7 @@ import FloatingTodo from "@/widgets/FloatingTodo";
 // 레이아웃 (Header + Footer 고정)
 function Layout() {
   return (
-    <div className="h-dvh bg-neutral-100 overflow-hidden">
+    <div className=" bg-neutral-100 ">
       <div className="h-full max-w-screen-2xl mx-auto flex flex-col ">
         <div className="shrink-0">
           <Header />
@@ -43,7 +44,7 @@ function Layout() {
 
 function ContainerLayout() {
   return (
-    <div className=" mx-auto  max-w-screen-lg bg-neutral-100 px-6 py-6 h-dvh overflow-hidden ">
+    <div className=" mx-auto  max-w-screen-lg bg-neutral-100 px-6 py-6  ">
       {/* 고정 위젯 (뷰포트 기준 fixed) */}
 
       {/* 페이지 콘텐츠 */}
@@ -60,7 +61,7 @@ export default function App() {
 
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={<MainPage />} />
+          <Route path="/" element={<Navigate to="/main" replace />} />
           <Route path="/main" element={<MainPage />} />
         </Route>
         <Route element={<ContainerLayout />}>
