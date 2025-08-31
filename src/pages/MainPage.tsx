@@ -8,6 +8,7 @@ import PostsSearchBar from "@/features/Search/PostsSearchBar";
 import PostsBoard from "@/features/posts/PostsBoard";
 import { IconCloudCard as IconCloudCardBase } from "@/widgets/IconCloudCard"; // 기존 named export
 import AddCategoryButton from "@/features/Catgegory/AddCategoryButton";
+import MusicCard from "@/features/Music/MusicCard";
 
 // 👇 메모된 버전으로 한번 래핑
 const IconCloudCard = memo(IconCloudCardBase);
@@ -41,13 +42,15 @@ export default function MainPage() {
   return (
     <div className="w-full flex flex-col min-h-[100svh]">
       <section className="mx-auto h-16 sm:h-20 pt-5">
-        <PostsSearchBar
-          onApply={handleApplySearch}
-          limit={50}
-          categoryIdFilter={categoryIdFilter ?? null}
-          onError={(m) => console.error(m)}
-          className="sm:w-[20rem] lg:w-[25rem] 2xl:w-[30rem] bg-background"
-        />
+        <div className="flex ">
+          <PostsSearchBar
+            onApply={handleApplySearch}
+            limit={50}
+            categoryIdFilter={categoryIdFilter ?? null}
+            onError={(m) => console.error(m)}
+            className="sm:w-[20rem] lg:w-[25rem] 2xl:w-[30rem] bg-background"
+          />
+        </div>
       </section>
 
       <div className="mx-auto w-full grid grid-cols-12 gap-2 flex-1">
@@ -71,7 +74,7 @@ export default function MainPage() {
         </aside>
 
         <main className="col-span-12 md:col-span-10 min-w-0 pl-2">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_200px] p-2">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] p-2">
             <section>
               {mode === "showall" && (
                 <PostsBoard headerLabel="전체 글" showAll showHeader />
@@ -94,6 +97,7 @@ export default function MainPage() {
 
             {/* 👉 메모된 컴포넌트 사용 */}
             <aside>
+              <MusicCard />
               <IconCloudCard />
             </aside>
           </div>

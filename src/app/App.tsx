@@ -13,7 +13,7 @@ import PostDetailPage from "@/pages/PostDetailPage";
 import PostEditPage from "@/pages/PostEditPage";
 import SchedularPage from "@/pages/SchedularPage";
 import TodayTodosPage from "@/pages/TodayTodosPage";
-import IntroPage from "@/pages/IntroPage";
+// import IntroPage from "@/pages/IntroPage";  //포폴용
 
 //위젯 목록
 import Header from "@/widgets/Header/Header";
@@ -59,8 +59,8 @@ export default function App() {
       <Toaster />
 
       <Routes>
-        <Route path="/" element={<IntroPage />} />
         <Route element={<Layout />}>
+          <Route path="/" element={<MainPage />} />
           <Route path="/main" element={<MainPage />} />
         </Route>
         <Route element={<ContainerLayout />}>
