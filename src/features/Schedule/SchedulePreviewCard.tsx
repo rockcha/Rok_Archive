@@ -60,7 +60,7 @@ export default function SchedulePreviewCard({
 
   return (
     <Card className="w-full">
-      <CardHeader className="py-3">
+      <CardHeader className="">
         <CardTitle className="flex items-center gap-2 text-base">
           <CalendarDays className="h-5 w-5 text-neutral-600" />
           일정 미리보기

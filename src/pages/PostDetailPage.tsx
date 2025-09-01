@@ -135,7 +135,7 @@ export default function PostDetailPage() {
         <div
           className={[
             // 안쪽만 스크롤
-            "max-h-[80vh] overflow-y-auto ",
+            "min-h-screen  ",
 
             // 스크롤 끝 여유
             "after:block after:h-4",

@@ -46,7 +46,8 @@ export function useRichEditor(options?: Partial<EditorOptions>) {
       attributes: {
         class: [
           "tiptap",
-          "h-[65vh] overflow-y-auto box-border",
+          "min-h-screen",
+          " box-border",
           "p-6 rounded-xl border bg-background dark:bg-zinc-900",
           "focus:outline-none",
         ].join(" "),
