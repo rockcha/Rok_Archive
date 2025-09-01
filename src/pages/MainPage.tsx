@@ -40,9 +40,9 @@ export default function MainPage() {
   );
 
   return (
-    <div className="w-full flex flex-col ">
+    <div className="w-full flex flex-col">
       <section className="mx-auto mt-2 pt-5">
-        <div className="flex ">
+        <div className="flex">
           <PostsSearchBar
             onApply={handleApplySearch}
             limit={50}
@@ -53,8 +53,10 @@ export default function MainPage() {
         </div>
       </section>
 
-      <div className="mx-auto w-full grid grid-cols-12 gap-2 flex-1">
-        <aside className="col-span-12 md:col-span-2 pl-2">
+      {/* ✅ 단일 3컬럼: 2fr / 5.5fr / 2.5fr */}
+      <div className="mx-auto w-full grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,5.5fr)_minmax(0,2.5fr)] gap-2 flex-1">
+        {/* 좌: 카테고리 (2fr) */}
+        <aside className="pl-2">
           <div className="flex justify-end mt-2 pt-2">
             <AddCategoryButton />
           </div>
@@ -73,37 +75,36 @@ export default function MainPage() {
           />
         </aside>
 
-        <main className="col-span-12 md:col-span-10 min-w-0 pl-2 ">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_500px] p-2 ">
-            <section>
-              {mode === "showall" && (
-                <PostsBoard headerLabel="전체 글" showAll showHeader />
-              )}
-              {mode === "selected" && selectedCategoryId != null && (
-                <PostsBoard
-                  categoryId={selectedCategoryId}
-                  limit={12}
-                  showHeader
-                />
-              )}
-              {mode === "searched" && (
-                <PostsBoard
-                  headerLabel="검색 결과"
-                  postIds={searchedPostIds}
-                  showHeader
-                />
-              )}
-            </section>
-
-            {/* 👉 메모된 컴포넌트 사용 */}
-            <aside className="mt-8  p-4 ">
-              <div className="flex flex-col items-center justify-center ">
-                <MusicCard />
-                <IconCloudCard />
-              </div>
-            </aside>
-          </div>
+        {/* 중간: 본문 (5.5fr) */}
+        <main className="min-w-0 pl-2">
+          <section>
+            {mode === "showall" && (
+              <PostsBoard headerLabel="전체 글" showAll showHeader />
+            )}
+            {mode === "selected" && selectedCategoryId != null && (
+              <PostsBoard
+                categoryId={selectedCategoryId}
+                limit={12}
+                showHeader
+              />
+            )}
+            {mode === "searched" && (
+              <PostsBoard
+                headerLabel="검색 결과"
+                postIds={searchedPostIds}
+                showHeader
+              />
+            )}
+          </section>
         </main>
+
+        {/* 우: 뮤직/아이콘 (2.5fr) */}
+        <aside className="mt-8 p-4">
+          <div className="w-full flex flex-col items-center justify-center">
+            <MusicCard />
+            <IconCloudCard />
+          </div>
+        </aside>
       </div>
     </div>
   );

@@ -252,36 +252,42 @@ export default function MusicCard() {
   };
 
   return (
-    <div className="bg-white rounded-xl border shadow-sm">
-      <div className="px-6 pt-5 pb-2">
-        <div className="flex flex-col  justify-between gap-3">
-          <h3 className="flex items-center justify-between gap-2 text-[#3d2b1f] font-semibold">
-            🎧 뮤직 플레이어
+    <div className="w-full bg-white rounded-xl border shadow-sm">
+      {/* ← w-full 추가 */}
+      <div className="px-4 pt-5">
+        <div className="flex flex-col gap-3">
+          {/* 헤더: 제목 말줄임 + 상태 배지 */}
+          <div className="flex items-center gap-2">
+            <span className="flex-1 min-w-0 truncate text-[#3d2b1f] font-semibold">
+              🎧 뮤직 플레이어
+            </span>
             <StatusBadge active={isAudible} />
-          </h3>
+          </div>
 
-          {/* ▲ 제목 선택 + 추가 버튼 */}
-          <div className="flex items-center justify-between  gap-2">
-            <select
-              aria-label="곡 선택"
-              className="h-9 rounded-md border px-2 text-sm bg-background"
-              disabled={loading || playlist.length === 0}
-              value={selectedId ?? ""}
-              onChange={(e) => {
-                setPlayerOpen(false); // 곡 바꾸면 썸네일 상태로
-                setSelectedId(e.target.value || null);
-              }}
-            >
-              {playlist.length === 0 ? (
-                <option value="">(재생목록 없음)</option>
-              ) : (
-                playlist.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.title}
-                  </option>
-                ))
-              )}
-            </select>
+          {/* 제목 선택 + 추가 버튼 */}
+          <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <select
+                aria-label="곡 선택"
+                className="w-full h-9 rounded-md border px-2 text-sm bg-background"
+                disabled={loading || playlist.length === 0}
+                value={selectedId ?? ""}
+                onChange={(e) => {
+                  setPlayerOpen(false);
+                  setSelectedId(e.target.value || null);
+                }}
+              >
+                {playlist.length === 0 ? (
+                  <option value="">(재생목록 없음)</option>
+                ) : (
+                  playlist.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.title}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
 
             <Button
               size="sm"
@@ -298,48 +304,40 @@ export default function MusicCard() {
 
       <div className="px-6 pb-6 pt-2">
         {loading ? (
-          <div className="flex flex-col items-center">
-            <div className="w-full max-w-5xl md:max-w-6xl">
-              <div className="relative">
-                <div className="relative aspect-video overflow-hidden rounded-lg">
-                  <div className="absolute inset-0 rounded-3xl bg-muted animate-pulse" />
-                </div>
-              </div>
+          <div className="w-full">
+            <div className="relative aspect-video overflow-hidden rounded-lg">
+              <div className="absolute inset-0 rounded-3xl bg-muted animate-pulse" />
             </div>
           </div>
         ) : url && videoId ? (
-          <div className="flex flex-col items-center">
-            <div className="w-full max-w-5xl md:max-w-6xl">
-              <div className="relative">
-                <div
-                  className={[
-                    "relative aspect-video overflow-hidden rounded-3xl shadow-2xl transition-shadow",
-                    isAudible ? "shadow-emerald-200/50" : "",
-                  ].join(" ")}
+          <div className="w-full">
+            <div
+              className={[
+                "relative aspect-video overflow-hidden rounded-3xl shadow-2xl transition-shadow",
+                isAudible ? "shadow-emerald-200/50" : "",
+              ].join(" ")}
+            >
+              {playerOpen ? (
+                <div ref={playerHostRef} className="w-full h-full" />
+              ) : (
+                <button
+                  onClick={() => setPlayerOpen(true)}
+                  className="relative w-full h-full transition-transform duration-300 hover:scale-[1.02]"
+                  title="재생"
+                  aria-label="재생"
+                  type="button"
                 >
-                  {playerOpen ? (
-                    <div ref={playerHostRef} className="w-full h-full" />
-                  ) : (
-                    <button
-                      onClick={() => setPlayerOpen(true)}
-                      className="relative w-full h-full transition-transform duration-300 hover:scale-[1.02]"
-                      title="재생"
-                      aria-label="재생"
-                      type="button"
-                    >
-                      {thumb && (
-                        <img
-                          src={thumb}
-                          alt={selected?.title ?? "thumbnail"}
-                          className="w-full h-full object-cover"
-                          loading="lazy"
-                        />
-                      )}
-                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
-                    </button>
+                  {thumb && (
+                    <img
+                      src={thumb}
+                      alt={selected?.title ?? "thumbnail"}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                    />
                   )}
-                </div>
-              </div>
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/35 via-black/10 to-transparent" />
+                </button>
+              )}
             </div>
           </div>
         ) : (
@@ -350,7 +348,7 @@ export default function MusicCard() {
         )}
       </div>
 
-      {/* 곡 추가 모달 */}
+      {/* 곡 추가 모달 (그대로) */}
       <Dialog
         open={addOpen}
         onOpenChange={(v) => {
