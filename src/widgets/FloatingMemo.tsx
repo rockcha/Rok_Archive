@@ -111,6 +111,18 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
     }
     setOpen(true);
   };
+  useEffect(() => {
+    const onOpen = () => {
+      if (!isAdmin) {
+        toast.error("관리자만 메모장을 열 수 있습니다.");
+        return;
+      }
+      setOpen(true);
+    };
+    window.addEventListener("open-floating-memo", onOpen as EventListener);
+    return () =>
+      window.removeEventListener("open-floating-memo", onOpen as EventListener);
+  }, [isAdmin]);
 
   // ESC & 단축키
   useEffect(() => {
@@ -197,16 +209,13 @@ export default function FloatingMemo({ memoId = "memo" }: Props) {
 
   return (
     <>
-      {!open && (
+      {!open && !isHome && (
         <Button
           variant="outline"
           onClick={handleOpen}
           aria-label="메모장 열기"
-          className={`
-           ${isHome ? "fixed z-[70] top-24 right-11" : ""}
-           cursor-pointer
-            [&>svg]:!h-4 [&>svg]:!w-4
-          `}
+          className="cursor-pointer
+            [&>svg]:!h-4 [&>svg]:!w-4"
         >
           <Notebook className="text-neutral-600" />
         </Button>

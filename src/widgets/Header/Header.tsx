@@ -6,8 +6,8 @@ export default function Header() {
   return (
     <header
       className="
-        relative w-full mx-auto min-w-[42rem]
-        bg-neutral-200 border-b-2 px-6 py-2
+        relative w-full mx-auto 
+        bg-neutral-200 border-b-2 px-6 p-4
       "
     >
       {/* 좌/우 레일: 가운데 Dock은 절대배치로 분리 */}

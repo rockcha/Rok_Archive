@@ -109,6 +109,18 @@ export default function FloatingTodo({ todoId = "todo" }: Props) {
     }
     setOpen(true);
   };
+  useEffect(() => {
+    const onOpen = () => {
+      if (!isAdmin) {
+        toast.error("관리자만 할 일 패널을 열 수 있습니다.");
+        return;
+      }
+      setOpen(true);
+    };
+    window.addEventListener("open-floating-todo", onOpen as EventListener);
+    return () =>
+      window.removeEventListener("open-floating-todo", onOpen as EventListener);
+  }, [isAdmin]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -193,14 +205,13 @@ export default function FloatingTodo({ todoId = "todo" }: Props) {
 
   return (
     <>
-      {!open && (
+      {!open && !isHome && (
         <Button
           variant="outline"
           onClick={handleOpen}
-          aria-label="할 일 열기"
-          className={`${
-            isHome ? "fixed z-[70] top-24 right-22" : ""
-          } cursor-pointer [&>svg]:!h-4 [&>svg]:!w-4`}
+          aria-label="메모장 열기"
+          className="cursor-pointer
+            [&>svg]:!h-4 [&>svg]:!w-4"
         >
           <ListTodo className="text-neutral-600" />
         </Button>

@@ -40,8 +40,8 @@ export default function MainPage() {
   );
 
   return (
-    <div className="w-full flex flex-col min-h-[100svh]">
-      <section className="mx-auto h-16 sm:h-20 pt-5">
+    <div className="w-full flex flex-col ">
+      <section className="mx-auto mt-2 pt-5">
         <div className="flex ">
           <PostsSearchBar
             onApply={handleApplySearch}
@@ -73,8 +73,8 @@ export default function MainPage() {
           />
         </aside>
 
-        <main className="col-span-12 md:col-span-10 min-w-0 pl-2">
-          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_300px] p-2">
+        <main className="col-span-12 md:col-span-10 min-w-0 pl-2 ">
+          <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_500px] p-2 ">
             <section>
               {mode === "showall" && (
                 <PostsBoard headerLabel="전체 글" showAll showHeader />
@@ -96,9 +96,11 @@ export default function MainPage() {
             </section>
 
             {/* 👉 메모된 컴포넌트 사용 */}
-            <aside>
-              <MusicCard />
-              <IconCloudCard />
+            <aside className="mt-8  p-4 ">
+              <div className="flex flex-col items-center justify-center ">
+                <MusicCard />
+                <IconCloudCard />
+              </div>
             </aside>
           </div>
         </main>

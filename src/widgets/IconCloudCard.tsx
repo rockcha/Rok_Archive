@@ -37,7 +37,7 @@ export function IconCloudCard() {
   const images = slugs.map((slug) => `https://cdn.simpleicons.org/${slug}`);
 
   return (
-    <div className="relative flex size-full items-center justify-center overflow-hidden ">
+    <div className="relative flex size-full items-center justify-center  ">
       <IconCloud images={images} />
     </div>
   );

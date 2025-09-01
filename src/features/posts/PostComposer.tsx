@@ -272,7 +272,7 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
 
         {/* 툴바 & 에디터 */}
         <EditorToolbar editor={editor} />
-        <EditorContent editor={editor} className="tiptap min-h-[60vh]" />
+        <EditorContent editor={editor} className="tiptap min-h-[80vh]" />
 
         <Separator className="opacity-0" />
       </div>

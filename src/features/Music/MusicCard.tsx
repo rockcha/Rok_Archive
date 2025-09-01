@@ -4,6 +4,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/shared/lib/supabase";
 import { Button } from "@/shared/ui/button";
+import { Input } from "@/shared/ui/input";
+
 import {
   Dialog,
   DialogContent,
@@ -11,11 +13,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/shared/ui/dialog";
-import { Input } from "@/shared/ui/input";
-import { PencilLine, Check, X } from "lucide-react";
 import { toast } from "sonner";
-import { useAdmin } from "../Auth/useAdmin";
 import { getYT, getYTReadyCb, setYTReadyCb, type YTPlayer } from "./yt-helpers";
+import { useAdmin } from "../Auth/useAdmin";
 
 /* ——— YouTube ID 파싱 ——— */
 function extractYouTubeId(u: string): string | null {
@@ -58,26 +58,37 @@ async function ensureYouTubeApi(): Promise<void> {
   });
 }
 
+type PlaylistRow = {
+  id: string;
+  title: string;
+  url: string;
+  created_at: string;
+};
+
 export default function MusicCard() {
-  const { isAdmin } = useAdmin();
-
   const [loading, setLoading] = useState(true);
-  const [url, setUrl] = useState<string | null>(null);
 
-  // 편집 다이얼로그
-  const [open, setOpen] = useState(false);
-  const [draft, setDraft] = useState("");
-  const [saving, setSaving] = useState(false);
+  // ▶ 재생목록 + 선택 항목
+  const [playlist, setPlaylist] = useState<PlaylistRow[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // ▶ 추가 모달
+  const [addOpen, setAddOpen] = useState(false);
+  const [addTitle, setAddTitle] = useState("");
+  const [addUrl, setAddUrl] = useState("");
+  const [adding, setAdding] = useState(false);
 
   // 플레이 상태 (썸네일 ↔ 플레이어)
   const [playerOpen, setPlayerOpen] = useState(false);
   const [isAudible, setIsAudible] = useState(false);
 
-  const videoId = useMemo(() => (url ? extractYouTubeId(url) : null), [url]);
-  const draftId = useMemo(
-    () => (draft ? extractYouTubeId(draft) : null),
-    [draft]
+  // 현재 선택된 행/URL/ID/썸네일
+  const selected = useMemo(
+    () => playlist.find((p) => p.id === selectedId) || null,
+    [playlist, selectedId]
   );
+  const url = selected?.url ?? null;
+  const videoId = useMemo(() => (url ? extractYouTubeId(url) : null), [url]);
   const thumb = useMemo(
     () =>
       videoId ? `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` : null,
@@ -89,68 +100,29 @@ export default function MusicCard() {
   const playerRef = useRef<YTPlayer | null>(null);
   const pollRef = useRef<number | null>(null);
 
-  /* ——— 초기 로드: id='music' 한 행 읽기 ——— */
+  const { isAdmin } = useAdmin();
+
+  /* ——— 초기 로드: 재생목록 불러와 첫 곡 선택 ——— */
   useEffect(() => {
     (async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from("music_singleton")
-        .select("url")
-        .eq("id", "music")
-        .maybeSingle();
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("music_playlist")
+          .select("id,title,url,created_at")
+          .order("created_at", { ascending: false });
 
-      if (!error) {
-        setUrl(data?.url ?? null);
+        if (error) throw error;
+
+        setPlaylist(data ?? []);
+        setSelectedId((data ?? [])[0]?.id ?? null);
+      } catch {
+        toast("재생목록을 불러오지 못했어요.");
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     })();
   }, []);
-
-  /* ——— 관리자 전용: 다이얼로그 열기 ——— */
-  const onOpen = () => {
-    if (!isAdmin) {
-      toast("관리자만 수정할 수 있어요.");
-      return;
-    }
-    setDraft(url ?? "");
-    setOpen(true);
-  };
-
-  /* ——— 저장: 단일 행만 update ——— */
-  const onSave = async () => {
-    if (!isAdmin) {
-      toast("관리자만 수정할 수 있어요.");
-      return;
-    }
-    if (draft.trim() && !draftId) {
-      toast("유효한 YouTube 링크(ID)를 입력해 주세요.");
-      return;
-    }
-    // if (rowId == null) {
-    //   toast("초기 레코드가 없습니다. 먼저 DB에 1행을 만들어 주세요.");
-    //   return;
-    // }
-    try {
-      setSaving(true);
-      const next = draft.trim() || null;
-
-      const { error } = await supabase
-        .from("music_singleton")
-        .update({ url: next })
-        .eq("id", "music"); // ← 여기! 단일 행만 갱신
-
-      if (error) throw error;
-
-      setUrl(next);
-      setPlayerOpen(false); // 저장 후 썸네일로
-      setOpen(false);
-      toast(next ? "음악 링크를 저장했어요 🎵" : "음악 링크를 비웠어요.");
-    } catch {
-      toast("저장 중 오류가 발생했어요.");
-    } finally {
-      setSaving(false);
-    }
-  };
 
   /* ——— 재생 상태 감지 & 종료시 썸네일 복귀 ——— */
   useEffect(() => {
@@ -239,23 +211,88 @@ export default function MusicCard() {
     </span>
   );
 
-  /* ——— 렌더 (UI 동일) ——— */
+  /* ——— 곡 추가 핸들러 ——— */
+  const onAddSong = async () => {
+    const t = addTitle.trim();
+    const u = addUrl.trim();
+    if (!t) {
+      toast("제목을 입력해 주세요.");
+      return;
+    }
+    const id = extractYouTubeId(u);
+    if (!id) {
+      toast("유효한 YouTube 링크 또는 영상 ID를 입력해 주세요.");
+      return;
+    }
+
+    try {
+      setAdding(true);
+      // 원본 URL을 그대로 저장(정규화하고 싶으면 https://www.youtube.com/watch?v=${id} 로 저장해도 됨)
+      const { data, error } = await supabase
+        .from("music_playlist")
+        .insert([{ title: t, url: u }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // 리스트에 즉시 반영(최상단에 추가)
+      setPlaylist((prev) => [data as PlaylistRow, ...prev]);
+      setSelectedId((data as PlaylistRow).id);
+      setPlayerOpen(false);
+      setAddOpen(false);
+      setAddTitle("");
+      setAddUrl("");
+      toast("재생목록에 곡을 추가했어요 🎵");
+    } catch {
+      toast("곡을 추가하지 못했어요.");
+    } finally {
+      setAdding(false);
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl border shadow-sm">
       <div className="px-6 pt-5 pb-2">
-        <div className="flex items-center justify-between">
-          <h3 className="flex items-center gap-2 text-[#3d2b1f] font-semibold">
+        <div className="flex flex-col  justify-between gap-3">
+          <h3 className="flex items-center justify-between gap-2 text-[#3d2b1f] font-semibold">
             🎧 뮤직 플레이어
             <StatusBadge active={isAudible} />
           </h3>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={onOpen}
-            className="gap-1 hover:cursor-pointer"
-          >
-            <PencilLine className="h-4 w-4" />
-          </Button>
+
+          {/* ▲ 제목 선택 + 추가 버튼 */}
+          <div className="flex items-center justify-between  gap-2">
+            <select
+              aria-label="곡 선택"
+              className="h-9 rounded-md border px-2 text-sm bg-background"
+              disabled={loading || playlist.length === 0}
+              value={selectedId ?? ""}
+              onChange={(e) => {
+                setPlayerOpen(false); // 곡 바꾸면 썸네일 상태로
+                setSelectedId(e.target.value || null);
+              }}
+            >
+              {playlist.length === 0 ? (
+                <option value="">(재생목록 없음)</option>
+              ) : (
+                playlist.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.title}
+                  </option>
+                ))
+              )}
+            </select>
+
+            <Button
+              size="sm"
+              variant="outline"
+              disabled={!isAdmin}
+              onClick={() => setAddOpen(true)}
+              className="hover:cursor-pointer"
+            >
+              + 곡 추가
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -264,7 +301,7 @@ export default function MusicCard() {
           <div className="flex flex-col items-center">
             <div className="w-full max-w-5xl md:max-w-6xl">
               <div className="relative">
-                <div className="relative aspect-video overflow-hidden rounded-3xl">
+                <div className="relative aspect-video overflow-hidden rounded-lg">
                   <div className="absolute inset-0 rounded-3xl bg-muted animate-pulse" />
                 </div>
               </div>
@@ -293,7 +330,7 @@ export default function MusicCard() {
                       {thumb && (
                         <img
                           src={thumb}
-                          alt="thumbnail"
+                          alt={selected?.title ?? "thumbnail"}
                           className="w-full h-full object-cover"
                           loading="lazy"
                         />
@@ -307,88 +344,55 @@ export default function MusicCard() {
           </div>
         ) : (
           <div className="rounded-xl border p-4 text-sm text-muted-foreground text-center">
-            등록된 YouTube 링크가 없어요.{" "}
-            <span className="font-medium">‘수정’</span> 버튼을 눌러
-            설정해보세요.
+            재생할 곡이 없어요. 우측 상단의{" "}
+            <span className="font-medium">‘+ 추가’</span>로 곡을 넣어보세요.
           </div>
         )}
       </div>
 
+      {/* 곡 추가 모달 */}
       <Dialog
-        open={open}
+        open={addOpen}
         onOpenChange={(v) => {
-          if (v && !isAdmin) {
-            toast("관리자만 수정할 수 있어요.");
-            return;
+          setAddOpen(v);
+          if (!v) {
+            setAddTitle("");
+            setAddUrl("");
           }
-          setOpen(v);
-          if (!v) setDraft("");
         }}
       >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>음악 링크 설정</DialogTitle>
+            <DialogTitle>곡 추가</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-3">
             <Input
+              placeholder="제목"
+              value={addTitle}
+              onChange={(e) => setAddTitle(e.target.value)}
+            />
+            <Input
               placeholder="YouTube 링크 또는 영상 ID(11자)"
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
+              value={addUrl}
+              onChange={(e) => setAddUrl(e.target.value)}
             />
             <div className="text-xs text-muted-foreground">
               예) <code>https://www.youtube.com/watch?v=dQw4w9WgXcQ</code> 또는{" "}
               <code>dQw4w9WgXcQ</code>
             </div>
-
-            {draft ? (
-              draftId ? (
-                <div className="mt-2">
-                  <div className="text-xs mb-1 text-[#3d2b1f] font-medium">
-                    미리보기
-                  </div>
-                  <div className="w-full max-w-md aspect-video overflow-hidden rounded-xl border ring-1 ring-black/5 shadow-lg">
-                    <iframe
-                      key={draftId}
-                      className="w-full h-full"
-                      src={`https://www.youtube.com/embed/${draftId}?rel=0&modestbranding=1&playsinline=1`}
-                      title="Preview"
-                      allow="autoplay; encrypted-media; picture-in-picture"
-                      allowFullScreen
-                      loading="lazy"
-                      referrerPolicy="strict-origin-when-cross-origin"
-                    />
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs text-red-600">
-                  올바른 YouTube 링크(ID)를 입력해 주세요.
-                </p>
-              )
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                비워두면 링크가 제거됩니다.
-              </p>
-            )}
           </div>
 
           <DialogFooter className="gap-2">
             <Button
               variant="outline"
-              onClick={() => setOpen(false)}
-              className="gap-1"
-              disabled={saving}
+              onClick={() => setAddOpen(false)}
+              disabled={adding}
             >
-              <X className="h-4 w-4" />
               취소
             </Button>
-            <Button
-              onClick={onSave}
-              className="gap-1"
-              disabled={saving || !isAdmin}
-            >
-              <Check className="h-4 w-4" />
-              저장
+            <Button onClick={onAddSong} disabled={adding}>
+              {adding ? "추가 중..." : "추가"}
             </Button>
           </DialogFooter>
         </DialogContent>

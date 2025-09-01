@@ -26,10 +26,9 @@ import FloatingTodo from "@/widgets/FloatingTodo";
 function Layout() {
   return (
     <div className=" bg-neutral-100 ">
-      <div className="h-full max-w-screen-2xl mx-auto flex flex-col ">
-        <div className="shrink-0">
-          <Header />
-        </div>
+      <div className="h-full max-w-screen-3xl mx-auto flex flex-col ">
+        <Header />
+
         <FloatingMemo />
         <FloatingTodo />
 
@@ -44,7 +43,7 @@ function Layout() {
 
 function ContainerLayout() {
   return (
-    <div className=" mx-auto  max-w-screen-lg bg-neutral-100 px-6 py-6  ">
+    <div className=" mx-auto  max-w-screen-xl bg-neutral-100 px-6 py-6  ">
       {/* 고정 위젯 (뷰포트 기준 fixed) */}
 
       {/* 페이지 콘텐츠 */}
