@@ -9,6 +9,7 @@ import PostsBoard from "@/features/posts/PostsBoard";
 import { IconCloudCard as IconCloudCardBase } from "@/widgets/IconCloudCard"; // 기존 named export
 import AddCategoryButton from "@/features/Catgegory/AddCategoryButton";
 import MusicCard from "@/features/Music/MusicCard";
+import SchedulePreviewCard from "@/features/Schedule/SchedulePreviewCard";
 
 // 👇 메모된 버전으로 한번 래핑
 const IconCloudCard = memo(IconCloudCardBase);
@@ -100,9 +101,10 @@ export default function MainPage() {
 
         {/* 우: 뮤직/아이콘 (2.5fr) */}
         <aside className="mt-8 p-4">
-          <div className="w-full flex flex-col items-center justify-center">
+          <div className="w-full flex flex-col items-center justify-center gap-4">
             <MusicCard />
-            <IconCloudCard />
+            {/* <IconCloudCard /> */}
+            <SchedulePreviewCard />
           </div>
         </aside>
       </div>

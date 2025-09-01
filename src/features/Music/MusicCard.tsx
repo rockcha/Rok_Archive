@@ -6,6 +6,8 @@ import { supabase } from "@/shared/lib/supabase";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 
+import { Headphones } from "lucide-react";
+
 import {
   Dialog,
   DialogContent,
@@ -257,15 +259,16 @@ export default function MusicCard() {
       <div className="px-4 pt-5">
         <div className="flex flex-col gap-3">
           {/* 헤더: 제목 말줄임 + 상태 배지 */}
-          <div className="flex items-center gap-2">
-            <span className="flex-1 min-w-0 truncate text-[#3d2b1f] font-semibold">
-              🎧 뮤직 플레이어
+          <div className="flex items-center gap-2 px-2">
+            <span className="flex items-center gap-2 flex-1 min-w-0 text-[#3d2b1f] font-semibold">
+              <Headphones className="h-5 w-5 shrink-0" aria-hidden="true" />
+              <span className="truncate">뮤직 플레이어</span>
             </span>
             <StatusBadge active={isAudible} />
           </div>
 
           {/* 제목 선택 + 추가 버튼 */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mb-2">
             <div className="min-w-0 flex-1">
               <select
                 aria-label="곡 선택"
