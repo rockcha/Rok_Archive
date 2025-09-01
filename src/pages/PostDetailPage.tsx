@@ -11,7 +11,7 @@ import FloatingMemo from "@/widgets/FloatingMemo";
 import HomeButton from "@/widgets/Header/HomeButton";
 import type { JSONContent } from "@tiptap/core";
 
-// unknown을 안전한 타입으로 변환
+// unknown → 안전 타입으로 보정
 function normalizeContentJson(v: unknown): JSONContent | string | null {
   if (v == null) return null;
   if (typeof v === "string") return v;
@@ -23,10 +23,10 @@ type Post = {
   id: string;
   slug: string;
   title: string;
-  category_id: string | number | null;
+  category_id: number | string | null;
   categories?: { name: string } | null;
   tags: string[];
-  content_json: unknown | null; // ✅ markdown 제거
+  content_json: unknown | null;
   summary?: string | null;
   created_at: string;
   updated_at: string;
@@ -53,7 +53,6 @@ export default function PostDetailPage() {
         setLoading(true);
         setErr(null);
 
-        // ✅ category_id + categories(name) 조인으로 카테고리명까지 한 번에
         let q = supabase
           .from("posts")
           .select(
@@ -63,11 +62,12 @@ export default function PostDetailPage() {
 
         q = queryBy === "slug" ? q.eq("slug", value) : q.eq("id", value);
 
-        const { data, error } = await q.single<Post>();
+        // ✅ v2 방식: .returns<T>()로 결과 타입 지정
+        const { data, error } = await q.returns<Post>().single();
         if (error) throw error;
         if (!alive) return;
         setPost(data);
-      } catch (e: unknown) {
+      } catch (e) {
         const msg =
           e instanceof Error ? e.message : "게시글을 불러오지 못했습니다.";
         if (alive) setErr(msg);
@@ -105,11 +105,8 @@ export default function PostDetailPage() {
   return (
     <div className="relative w-full">
       <header className="space-y-2">
-        {/* 1행: 제목 가운데 + 홈버튼 우측(오버레이) */}
-
         <h1 className="text-2xl font-bold text-center">{post.title}</h1>
 
-        {/* 2행: 태그/날짜 */}
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm text-zinc-500">
           {post.tags?.length > 0 && (
             <span>· {post.tags.map((t) => `#${t}`).join(" ")}</span>
@@ -119,27 +116,22 @@ export default function PostDetailPage() {
           )}
         </div>
       </header>
+
       <Separator className="my-4" />
+
       <div className="flex justify-between mb-3">
         <div className="flex gap-1">
           <HomeButton />
           <FloatingMemo />
         </div>
-
-        <div>
-          <PostActions postId={post.id} slug={post.slug} />
-        </div>
+        <PostActions postId={post.id} slug={post.slug} />
       </div>
-      {/* ── 본문(내부 스크롤, 보더 고정) ───────────────────── */}
+
       <div className="rounded-lg border border-neutral-300 bg-background">
         <div
           className={[
-            // 안쪽만 스크롤
-            "min-h-screen  ",
-
-            // 스크롤 끝 여유
+            "min-h-screen",
             "after:block after:h-4",
-            // 스크롤바 스타일/안정화
             "[scrollbar-gutter:stable_both-edges]",
             "[scrollbar-width:thin] [-ms-overflow-style:auto]",
             "[&::-webkit-scrollbar]:w-2",
@@ -150,13 +142,8 @@ export default function PostDetailPage() {
           aria-label="게시글 본문 스크롤 영역"
           role="region"
         >
-          <div
-            className="
-      [&_>div]:border-0 [&_>div]:rounded-none [&_>div]:bg-transparent
-      [&_.tiptap]:border-0 [&_.tiptap]:rounded-none [&_.tiptap]:bg-transparent
-      [&_.ProseMirror]:border-0 [&_.ProseMirror]:rounded-none [&_.ProseMirror]:bg-transparent
-    "
-          >
+          <div className="[&_>div]:border-0 [&_>div]:rounded-none [&_>div]:bg-transparent">
+            {/* ✅ unknown → 안전 변환 후 전달 */}
             <PostContentView
               contentJson={normalizeContentJson(post.content_json)}
             />

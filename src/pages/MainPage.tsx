@@ -10,6 +10,7 @@ import PostsBoard from "@/features/posts/PostsBoard";
 import AddCategoryButton from "@/features/Catgegory/AddCategoryButton";
 import MusicCard from "@/features/Music/MusicCard";
 import SchedulePreviewCard from "@/features/Schedule/SchedulePreviewCard";
+import CreateHancomAiPostButton from "@/features/HancomAi/CreateHancomAiPostButton";
 
 // 👇 메모된 버전으로 한번 래핑
 // const IconCloudCard = memo(IconCloudCardBase);
@@ -105,6 +106,7 @@ export default function MainPage() {
             <MusicCard />
             {/* <IconCloudCard /> */}
             <SchedulePreviewCard />
+            <CreateHancomAiPostButton />
           </div>
         </aside>
       </div>
