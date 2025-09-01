@@ -1,18 +1,18 @@
 // src/pages/MainPage.tsx
 "use client";
 
-import { useCallback, useMemo, useState, memo } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import CategoryBar from "@/features/Catgegory/CategoryBar";
 import PostsSearchBar from "@/features/Search/PostsSearchBar";
 import PostsBoard from "@/features/posts/PostsBoard";
-import { IconCloudCard as IconCloudCardBase } from "@/widgets/IconCloudCard"; // 기존 named export
+// import { IconCloudCard as IconCloudCardBase } from "@/widgets/IconCloudCard"; // 기존 named export
 import AddCategoryButton from "@/features/Catgegory/AddCategoryButton";
 import MusicCard from "@/features/Music/MusicCard";
 import SchedulePreviewCard from "@/features/Schedule/SchedulePreviewCard";
 
 // 👇 메모된 버전으로 한번 래핑
-const IconCloudCard = memo(IconCloudCardBase);
+// const IconCloudCard = memo(IconCloudCardBase);
 
 type Mode = "selected" | "searched" | "showall";
 
