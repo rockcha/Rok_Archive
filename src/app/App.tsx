@@ -22,6 +22,7 @@ import { Toaster } from "@/shared/ui/sonner";
 import FloatingMemo from "@/widgets/FloatingMemo";
 import FloatingTodo from "@/widgets/FloatingTodo";
 import ReactStudyTaskPage from "@/features/ReactStudy/ReactStudyTaskPage";
+import Rps14 from "@/features/ReactStudy/rps-1-4/Rps14";
 
 // 레이아웃 (Header + Footer 고정)
 function Layout() {
@@ -73,6 +74,7 @@ export default function App() {
           <Route path="/posts/edit/:id" element={<PostEditPage />} />
 
           <Route path="/study" element={<ReactStudyTaskPage />} />
+          <Route path="/tasks/rps-1-4" element={<Rps14 />} />
         </Route>
       </Routes>
     </Router>
