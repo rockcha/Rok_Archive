@@ -21,6 +21,7 @@ import Header from "@/widgets/Header/Header";
 import { Toaster } from "@/shared/ui/sonner";
 import FloatingMemo from "@/widgets/FloatingMemo";
 import FloatingTodo from "@/widgets/FloatingTodo";
+import ReactStudyTaskPage from "@/features/ReactStudy/ReactStudyTaskPage";
 
 // 레이아웃 (Header + Footer 고정)
 function Layout() {
@@ -70,6 +71,8 @@ export default function App() {
           <Route path="/posts/:slug" element={<PostDetailPage />} />
           <Route path="/posts/id/:id" element={<PostDetailPage />} />
           <Route path="/posts/edit/:id" element={<PostEditPage />} />
+
+          <Route path="/study" element={<ReactStudyTaskPage />} />
         </Route>
       </Routes>
     </Router>

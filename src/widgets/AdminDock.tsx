@@ -12,6 +12,7 @@ import {
   CheckSquare,
   Notebook,
   ListTodo,
+  BookOpenCheck, // ⬅️ React Study 아이콘
 } from "lucide-react";
 import { SiSupabase } from "react-icons/si";
 import {
@@ -51,14 +52,19 @@ export default function AdminDock() {
     navigate("/schedular");
   };
 
+  // 리액트 스터디 (공개)
+  const handleReactStudy = () => navigate("/study");
+
   const handleGitHub = () =>
     window.open(
       "https://github.com/rockcha/Rok_Archive",
       "_blank",
       "noopener,noreferrer"
     );
+
   const handleChatGPT = () =>
     window.open("https://chatgpt.com/", "_blank", "noopener,noreferrer");
+
   const handleSupabase = () =>
     window.open(
       "https://supabase.com/dashboard/project/dckvzxvcsyfhfowaecoh",
@@ -142,6 +148,22 @@ export default function AdminDock() {
               </button>
             </TooltipTrigger>
             <TooltipContent>캘린더</TooltipContent>
+          </Tooltip>
+        </DockIcon>
+
+        {/* 리액트 스터디 (공개) */}
+        <DockIcon className="group">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                aria-label="리액트 스터디"
+                className={iconBtn}
+                onClick={handleReactStudy}
+              >
+                <BookOpenCheck className="size-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>리액트 스터디</TooltipContent>
           </Tooltip>
         </DockIcon>
 
