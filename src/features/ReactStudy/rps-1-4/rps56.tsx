@@ -1,5 +1,5 @@
 // rps56.tsx
-import React, { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Box from "./Box";
 
 type Choice = 1 | 2 | 3; // 1=가위, 2=바위, 3=보
