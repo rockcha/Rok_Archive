@@ -12,7 +12,7 @@ import {
   CheckSquare,
   Notebook,
   ListTodo,
-  BookOpenCheck, // ⬅️ React Study 아이콘
+  BookOpenCheck,
 } from "lucide-react";
 import { SiSupabase } from "react-icons/si";
 import {
@@ -31,26 +31,23 @@ export default function AdminDock() {
   const navigate = useNavigate();
   const { isAdmin } = useAdmin();
 
+  // --- 공통: 관리자 가드
+  const requireAdmin = (fn: () => void) => () => {
+    if (!isAdmin) {
+      toast.error("권한 없음", { description: "관리자만 접근할 수 있습니다." });
+      return;
+    }
+    fn();
+  };
+
   // 핸들러
   const handleNewPost = () => navigate("/posts/new");
 
   // ✅ 관리자 전용
-  const handleTodosPage = () => {
-    if (!isAdmin) {
-      toast.error("권한 없음", { description: "관리자만 접근할 수 있습니다." });
-      return;
-    }
-    navigate("/todos");
-  };
+  const handleTodosPage = requireAdmin(() => navigate("/todos"));
 
   // ✅ 관리자 전용
-  const handleCalendar = () => {
-    if (!isAdmin) {
-      toast.error("권한 없음", { description: "관리자만 접근할 수 있습니다." });
-      return;
-    }
-    navigate("/schedular");
-  };
+  const handleCalendar = requireAdmin(() => navigate("/schedular"));
 
   // 리액트 스터디 (공개)
   const handleReactStudy = () => navigate("/study");
@@ -72,27 +69,21 @@ export default function AdminDock() {
       "noopener,noreferrer"
     );
 
-  // ▶ 메모/투두 모달 열기 (커스텀 이벤트 디스패치)
-  const handleMemoModal = () => {
-    if (!isAdmin) {
-      toast.error("권한 없음", { description: "관리자만 사용할 수 있습니다." });
-      return;
-    }
+  // ▶ 메모 모달 열기 (관리자 전용)
+  const handleMemoModal = requireAdmin(() => {
     window.dispatchEvent(new Event("open-floating-memo"));
-  };
+  });
 
-  const handleTodoModal = () => {
-    if (!isAdmin) {
-      toast.error("권한 없음", { description: "관리자만 사용할 수 있습니다." });
-      return;
-    }
-    window.dispatchEvent(new Event("open-floating-todo"));
-  };
+  // ▶ 할 일: /tasks (이제 관리자 전용으로 변경)
+  const handleTasksPage = requireAdmin(() => navigate("/tasks"));
 
   const iconBtn = cn(
     buttonVariants({ variant: "ghost", size: "icon" }),
     "size-12 rounded-full hover:cursor-pointer"
   );
+
+  // 비관리자에게는 아이콘을 살짝 흐리게 표시(클릭 시 토스트 노출은 유지)
+  const adminOnlyClass = !isAdmin ? "opacity-50" : "";
 
   return (
     <TooltipProvider>
@@ -125,13 +116,14 @@ export default function AdminDock() {
             <TooltipTrigger asChild>
               <button
                 aria-label="오늘의 할일"
-                className={iconBtn}
+                className={cn(iconBtn, adminOnlyClass)}
                 onClick={handleTodosPage}
+                aria-disabled={!isAdmin}
               >
                 <CheckSquare className="size-4" />
               </button>
             </TooltipTrigger>
-            <TooltipContent>오늘의 할일</TooltipContent>
+            <TooltipContent>오늘의 할일 (관리자)</TooltipContent>
           </Tooltip>
         </DockIcon>
 
@@ -141,13 +133,14 @@ export default function AdminDock() {
             <TooltipTrigger asChild>
               <button
                 aria-label="캘린더"
-                className={iconBtn}
+                className={cn(iconBtn, adminOnlyClass)}
                 onClick={handleCalendar}
+                aria-disabled={!isAdmin}
               >
                 <CalendarDays className="size-4" />
               </button>
             </TooltipTrigger>
-            <TooltipContent>캘린더</TooltipContent>
+            <TooltipContent>캘린더 (관리자)</TooltipContent>
           </Tooltip>
         </DockIcon>
 
@@ -217,38 +210,39 @@ export default function AdminDock() {
           </Tooltip>
         </DockIcon>
 
-        {/* ← 여기 추가 구간 */}
         <Separator orientation="vertical" className="h-full bg-neutral-500" />
 
-        {/* 메모 (모달 열기) */}
+        {/* 메모 (관리자 전용) */}
         <DockIcon className="group">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 aria-label="메모"
-                className={iconBtn}
+                className={cn(iconBtn, adminOnlyClass)}
                 onClick={handleMemoModal}
+                aria-disabled={!isAdmin}
               >
                 <Notebook className="size-4" />
               </button>
             </TooltipTrigger>
-            <TooltipContent>메모</TooltipContent>
+            <TooltipContent>메모 (관리자)</TooltipContent>
           </Tooltip>
         </DockIcon>
 
-        {/* 투두 (모달 열기) */}
+        {/* 할 일 (/tasks, 관리자 전용으로 변경) */}
         <DockIcon className="group">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 aria-label="할 일"
-                className={iconBtn}
-                onClick={handleTodoModal}
+                className={cn(iconBtn, adminOnlyClass)}
+                onClick={handleTasksPage}
+                aria-disabled={!isAdmin}
               >
                 <ListTodo className="size-4" />
               </button>
             </TooltipTrigger>
-            <TooltipContent>할 일</TooltipContent>
+            <TooltipContent>할 일 (관리자)</TooltipContent>
           </Tooltip>
         </DockIcon>
       </Dock>

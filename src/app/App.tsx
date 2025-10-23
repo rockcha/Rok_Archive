@@ -24,6 +24,7 @@ import FloatingTodo from "@/widgets/FloatingTodo";
 import ReactStudyTaskPage from "@/features/ReactStudy/ReactStudyTaskPage";
 import Rps14 from "@/features/ReactStudy/rps-1-4/Rps14";
 import Rps56 from "@/features/ReactStudy/rps-1-4/rps56";
+import TaskPage from "@/features/Task/TaskPage";
 
 // 레이아웃 (Header + Footer 고정)
 function Layout() {
@@ -69,6 +70,7 @@ export default function App() {
         <Route element={<ContainerLayout />}>
           <Route path="/schedular" element={<SchedularPage />} />
           <Route path="/todos" element={<TodayTodosPage />} />
+          <Route path="/tasks" element={<TaskPage />} />
           <Route path="/posts/new" element={<PostCreatePage />} />
           <Route path="/posts/:slug" element={<PostDetailPage />} />
           <Route path="/posts/id/:id" element={<PostDetailPage />} />
