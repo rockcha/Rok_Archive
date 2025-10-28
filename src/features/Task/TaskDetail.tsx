@@ -2,13 +2,7 @@
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Textarea } from "@/shared/ui/textarea";
-import {
-  CalendarDays,
-  Link as LinkIcon,
-  Trash2,
-  CheckCircle2,
-  CircleX,
-} from "lucide-react";
+import { Link as LinkIcon, Trash2, CheckCircle2, CircleX } from "lucide-react";
 import type { Task } from "./types";
 import { faviconUrl } from "./utils";
 import { useState } from "react";
