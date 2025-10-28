@@ -26,6 +26,7 @@ import Rps14 from "@/features/ReactStudy/rps-1-4/Rps14";
 import Rps56 from "@/features/ReactStudy/rps-1-4/rps56";
 import TaskPage from "@/features/Task/TaskPage";
 import Weather79 from "@/features/ReactStudy/Weather79";
+import Shop15 from "@/features/ReactStudy/Shop15";
 
 // 레이아웃 (Header + Footer 고정)
 function Layout() {
@@ -81,6 +82,7 @@ export default function App() {
           <Route path="/tasks/rps-1-4" element={<Rps14 />} />
           <Route path="/tasks/rps-5-6" element={<Rps56 />} />
           <Route path="/tasks/weather-7-9" element={<Weather79 />} />
+          <Route path="/tasks/shop-1-5" element={<Shop15 />} />
         </Route>
       </Routes>
     </Router>
