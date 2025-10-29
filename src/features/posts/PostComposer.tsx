@@ -8,6 +8,7 @@ import {
   forwardRef,
   useImperativeHandle,
   useCallback,
+  useRef,
 } from "react";
 import type { Content, JSONContent } from "@tiptap/core";
 import { useNavigate } from "react-router-dom";
@@ -54,6 +55,26 @@ type Props = {
   onDirtyChange?: (dirty: boolean) => void;
 };
 
+/** 간단한 deepEqual (객체/배열/원시만, 함수/순환참조 없음 가정) */
+function deepEqual(a: any, b: any): boolean {
+  if (Object.is(a, b)) return true;
+  if (typeof a !== typeof b) return false;
+  if (a && b && typeof a === "object") {
+    if (Array.isArray(a)) {
+      if (!Array.isArray(b) || a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++)
+        if (!deepEqual(a[i], b[i])) return false;
+      return true;
+    }
+    const ak = Object.keys(a);
+    const bk = Object.keys(b);
+    if (ak.length !== bk.length) return false;
+    for (const k of ak) if (!deepEqual(a[k], b[k])) return false;
+    return true;
+  }
+  return false;
+}
+
 const PostComposer = forwardRef<PostComposerHandle, Props>(
   function PostComposer(
     { mode = "create", initial, onSaved, onDirtyChange },
@@ -73,20 +94,44 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
     const navigate = useNavigate();
     const editor = useRichEditor();
 
-    // ---- 유틸: dirty 계산 공통함수
-    const computeDirty = useCallback(() => {
-      const t = title.trim();
-      const g = tagsRaw.trim();
-      const c = selectedCategoryId;
-      const eText = editor?.getText().trim() ?? "";
-      return Boolean(t || g || c || eText);
-    }, [title, tagsRaw, selectedCategoryId, editor]);
+    /** 🔹 baseline: 처음 로드/저장 직후의 스냅샷을 보관 */
+    const baselineRef = useRef<{
+      title: string;
+      categoryId: string; // string으로 통일
+      tagsCsv: string; // 정규화된 csv
+      contentJson: JSONContent | null; // 에디터 JSON
+    } | null>(null);
 
-    const notifyDirty = useCallback(() => {
-      onDirtyChange?.(computeDirty());
-    }, [computeDirty, onDirtyChange]);
+    /** 현재 스냅샷 */
+    const getCurrentSnapshot = useCallback(() => {
+      const tagsCsv = parseTags(tagsRaw).join(",");
+      const contentJson: JSONContent | null = editor
+        ? (editor.getJSON() as JSONContent)
+        : null;
+      return {
+        title: title.trim(),
+        categoryId: selectedCategoryId || "",
+        tagsCsv,
+        contentJson,
+      };
+    }, [title, selectedCategoryId, tagsRaw, editor]);
 
-    // 카테고리 로드
+    /** 현재와 baseline 비교 → dirty 판단 */
+    const recomputeDirty = useCallback(() => {
+      const base = baselineRef.current;
+      const curr = getCurrentSnapshot();
+      const dirty = base
+        ? !deepEqual(base, curr)
+        : Boolean(
+            curr.title ||
+              curr.categoryId ||
+              curr.tagsCsv ||
+              (curr.contentJson && (curr.contentJson as any).content?.length)
+          );
+      onDirtyChange?.(dirty);
+    }, [getCurrentSnapshot, onDirtyChange]);
+
+    /** 카테고리 로드 */
     useEffect(() => {
       let mounted = true;
       (async () => {
@@ -111,9 +156,11 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
       };
     }, []);
 
-    // 에디터 초기 내용
+    /** 에디터 초기 내용 설정 + baseline 초기화 */
     useEffect(() => {
       if (!editor) return;
+
+      // 에디터 세팅
       const content = initial?.content as Content | null | undefined;
       if (content != null) {
         editor.commands.setContent(content, {
@@ -123,36 +170,52 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
       } else {
         editor.commands.clearContent(true);
       }
-      // 초기 내용 반영 후 dirty 알려주기
-      notifyDirty();
-    }, [editor, initial?.content, notifyDirty]);
 
-    // ✅ 입력값 변경 시 dirty 갱신
+      // baseline 세팅 (초기 로드/수정 페이지에서도 "수정 전 상태"가 baseline)
+      const initTagsCsv = parseTags(
+        Array.isArray(initial?.tags) ? initial!.tags!.join(", ") : ""
+      ).join(",");
+      const b: typeof baselineRef.current = {
+        title: (initial?.title ?? "").trim(),
+        categoryId:
+          initial?.categoryId != null ? String(initial.categoryId) : "",
+        tagsCsv: initTagsCsv,
+        contentJson: editor.getJSON() as JSONContent,
+      };
+      baselineRef.current = b;
+
+      recomputeDirty();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+      editor,
+      initial?.content,
+      initial?.title,
+      initial?.categoryId,
+      initial?.tags,
+    ]);
+
+    /** form 값 변경 → dirty 재계산 */
     useEffect(() => {
-      notifyDirty();
-    }, [title, tagsRaw, selectedCategoryId, notifyDirty]);
+      recomputeDirty();
+    }, [title, tagsRaw, selectedCategoryId, recomputeDirty]);
 
-    // ✅ tiptap 에디터 타이핑/변경 시 dirty 갱신 (핵심 수정 포인트)
+    /** tiptap 변경 이벤트 → dirty 재계산 */
     useEffect(() => {
       if (!editor) return;
-
-      const handler = () => notifyDirty();
+      const handler = () => recomputeDirty();
       editor.on("update", handler);
-      editor.on("selectionUpdate", handler); // 붙여도 무방(선택 변경 시 등)
-
       return () => {
         editor.off("update", handler);
-        editor.off("selectionUpdate", handler);
       };
-    }, [editor, notifyDirty]);
+    }, [editor, recomputeDirty]);
 
-    // 제출 가능 여부
+    /** 제출 가능 여부 */
     const isReadyToSubmit = useMemo(() => {
       const tags = parseTags(tagsRaw);
       return title.trim().length > 0 && !!selectedCategoryId && tags.length > 0;
     }, [title, selectedCategoryId, tagsRaw]);
 
-    // 실제 저장 로직
+    /** 저장 */
     const doSave = useCallback(async () => {
       if (!editor) return;
       if (!isReadyToSubmit) {
@@ -176,6 +239,9 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
 
           toast.success("수정 완료");
           onSaved?.(initial.id);
+
+          // 🔹 저장 직후 baseline 갱신 → dirty 해제
+          baselineRef.current = getCurrentSnapshot();
           onDirtyChange?.(false);
         } else {
           const slug = slugify(title);
@@ -196,11 +262,18 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
           toast.success("작성 완료", { description: "홈으로 이동합니다." });
           onSaved?.(data!.id);
 
-          // reset (→ dirty 해제)
+          // reset (→ baseline 초기화 & dirty 해제)
           setTitle("");
           setSelectedCategoryId("");
           setTagsRaw("");
           editor.commands.clearContent(true);
+
+          baselineRef.current = {
+            title: "",
+            categoryId: "",
+            tagsCsv: "",
+            contentJson: editor.getJSON() as JSONContent,
+          };
           onDirtyChange?.(false);
 
           navigate("/main");
@@ -221,10 +294,10 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
       initial?.id,
       onSaved,
       navigate,
+      getCurrentSnapshot,
       onDirtyChange,
     ]);
 
-    // 부모에 공개할 메서드
     useImperativeHandle(ref, () => ({ requestSave: doSave }), [doSave]);
 
     return (
