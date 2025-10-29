@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Textarea } from "@/shared/ui/textarea";
@@ -26,10 +27,6 @@ import { faviconUrl } from "./utils";
 
 /**
  * TaskDetail – 헤더 바에 [유형 뱃지 + 제목] 배치, 아래로 메모/링크
- * - 이모지/세퍼레이터 제거, 섹션 카드는 유지(깔끔한 덩어리감)
- * - 수정 모드 상단 굵은 선(편집 인디케이터) 제거
- * - 훅 널-세이프 처리
- * - 삭제 destructive, 완료 FAB/좌하단 액션바 유지
  */
 export default function TaskDetail({
   task,
@@ -47,11 +44,11 @@ export default function TaskDetail({
   const dueInputRef = useRef<HTMLInputElement | null>(null);
   const memoRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // 🔒 파생값(널-세이프)
+  // 파생값(널-세이프)
   const isCompleted = !!task?.is_completed;
   const taskType: Task["type"] = (task?.type as Task["type"]) ?? "DAY";
 
-  /* 자동 높이 메모 */
+  // 메모 자동높이
   useEffect(() => {
     if (!isEditing || !memoRef.current) return;
     const ta = memoRef.current;
@@ -64,7 +61,11 @@ export default function TaskDetail({
     return () => ta.removeEventListener("input", handler);
   }, [isEditing]);
 
-  const setCompleted = (flag: boolean) => onPatch({ is_completed: flag });
+  // 완료 토글 (useCallback로 경고 제거)
+  const setCompleted = useCallback(
+    (flag: boolean) => onPatch({ is_completed: flag }),
+    [onPatch]
+  );
 
   const handleAddLink = () => {
     const url = (newUrl || "").trim();
@@ -128,15 +129,16 @@ export default function TaskDetail({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isCompleted, task]);
+  }, [isCompleted, task, setCompleted]);
 
+  // DUE 저장: Task 타입은 date: string | undefined
   const saveDue = () => {
     const v = dueInputRef.current?.value?.trim() || "";
-    onPatch({ due_date: v || null });
+    onPatch({ date: v || undefined });
     setShowDueEdit(false);
   };
 
-  // ── hooks 이후 안전 분기 ──
+  // 안전 분기
   if (!task)
     return (
       <div className="text-sm text-muted-foreground">
@@ -146,7 +148,7 @@ export default function TaskDetail({
 
   return (
     <div className="relative pb-20 sm:pb-16">
-      {/* ░ 헤더 바: [유형 뱃지] [제목] [옵션들] + 하단 가는 선 */}
+      {/* 헤더 바 */}
       <div className="mb-3">
         <div className="flex items-center gap-2">
           <span
@@ -177,7 +179,7 @@ export default function TaskDetail({
             </h2>
           )}
 
-          {/* DUE일 때만 간단 버튼 */}
+          {/* DUE 전용 버튼 */}
           {taskType === "DUE" && (
             <button
               type="button"
@@ -186,14 +188,14 @@ export default function TaskDetail({
               title="마감일 편집"
             >
               <CalendarDays className="w-3.5 h-3.5 opacity-80" />
-              {task.due_date ? `마감: ${task.due_date}` : "마감 설정"}
+              {task.date ? `마감: ${task.date}` : "마감 설정"}
             </button>
           )}
         </div>
         <div className="mt-2 h-px bg-border/60" />
       </div>
 
-      {/* ░ 메모 섹션 */}
+      {/* 메모 */}
       <SectionCard title="메모">
         {isEditing ? (
           <Textarea
@@ -216,7 +218,7 @@ export default function TaskDetail({
         )}
       </SectionCard>
 
-      {/* ░ 링크 섹션 */}
+      {/* 링크 */}
       <SectionCard title="링크">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {(task.links || []).map((link, idx) => (
@@ -248,7 +250,6 @@ export default function TaskDetail({
                 </p>
               </div>
 
-              {/* 편집 모드에서만 삭제 */}
               {isEditing && (
                 <Button
                   size="icon"
@@ -288,7 +289,7 @@ export default function TaskDetail({
         )}
       </SectionCard>
 
-      {/* ▶ 우하단: 완료 토글 FAB */}
+      {/* 완료 토글 FAB */}
       <button
         type="button"
         aria-label={
@@ -312,7 +313,7 @@ export default function TaskDetail({
         </div>
       </button>
 
-      {/* ◀ 좌하단: 액션바(삭제 destructive) */}
+      {/* 좌하단 액션바 */}
       <div className="fixed sm:absolute bottom-3 left-3 sm:bottom-2 sm:left-2 z-20 flex items-center gap-2">
         {!isEditing ? (
           <>
@@ -397,7 +398,7 @@ export default function TaskDetail({
           <div className="flex items-center gap-2">
             <Input
               ref={dueInputRef}
-              defaultValue={task.due_date || ""}
+              defaultValue={task.date ?? ""}
               placeholder="예: 2025-11-05"
             />
             <Button variant="outline" onClick={() => setShowDueEdit(false)}>
