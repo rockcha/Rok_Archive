@@ -29,7 +29,6 @@ import { useRichEditor } from "@/features/posts/editor/useRichEditor";
 import EditorToolbar from "@/features/posts/editor/EditorToolbar";
 import { slugify } from "@/shared/utils/slugify";
 import { parseTags } from "@/shared/utils/parseTags";
-import { useWarnOnUnload } from "./UseWarnOnUnload";
 
 type Category = { id: string | number; name: string };
 type ComposerMode = "create" | "edit";
@@ -51,10 +50,15 @@ type Props = {
   mode?: ComposerMode;
   initial?: InitialData;
   onSaved?: (postId: string) => void;
+  /** 상위로 dirty 상태 알림 */
+  onDirtyChange?: (dirty: boolean) => void;
 };
 
 const PostComposer = forwardRef<PostComposerHandle, Props>(
-  function PostComposer({ mode = "create", initial, onSaved }, ref) {
+  function PostComposer(
+    { mode = "create", initial, onSaved, onDirtyChange },
+    ref
+  ) {
     const [title, setTitle] = useState(initial?.title ?? "");
     const [selectedCategoryId, setSelectedCategoryId] = useState<string>(
       initial?.categoryId != null ? String(initial.categoryId) : ""
@@ -68,6 +72,19 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
 
     const navigate = useNavigate();
     const editor = useRichEditor();
+
+    // ---- 유틸: dirty 계산 공통함수
+    const computeDirty = useCallback(() => {
+      const t = title.trim();
+      const g = tagsRaw.trim();
+      const c = selectedCategoryId;
+      const eText = editor?.getText().trim() ?? "";
+      return Boolean(t || g || c || eText);
+    }, [title, tagsRaw, selectedCategoryId, editor]);
+
+    const notifyDirty = useCallback(() => {
+      onDirtyChange?.(computeDirty());
+    }, [computeDirty, onDirtyChange]);
 
     // 카테고리 로드
     useEffect(() => {
@@ -106,7 +123,28 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
       } else {
         editor.commands.clearContent(true);
       }
-    }, [editor, initial?.content]);
+      // 초기 내용 반영 후 dirty 알려주기
+      notifyDirty();
+    }, [editor, initial?.content, notifyDirty]);
+
+    // ✅ 입력값 변경 시 dirty 갱신
+    useEffect(() => {
+      notifyDirty();
+    }, [title, tagsRaw, selectedCategoryId, notifyDirty]);
+
+    // ✅ tiptap 에디터 타이핑/변경 시 dirty 갱신 (핵심 수정 포인트)
+    useEffect(() => {
+      if (!editor) return;
+
+      const handler = () => notifyDirty();
+      editor.on("update", handler);
+      editor.on("selectionUpdate", handler); // 붙여도 무방(선택 변경 시 등)
+
+      return () => {
+        editor.off("update", handler);
+        editor.off("selectionUpdate", handler);
+      };
+    }, [editor, notifyDirty]);
 
     // 제출 가능 여부
     const isReadyToSubmit = useMemo(() => {
@@ -138,6 +176,7 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
 
           toast.success("수정 완료");
           onSaved?.(initial.id);
+          onDirtyChange?.(false);
         } else {
           const slug = slugify(title);
           const { data, error } = await supabase
@@ -157,11 +196,13 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
           toast.success("작성 완료", { description: "홈으로 이동합니다." });
           onSaved?.(data!.id);
 
-          // reset
+          // reset (→ dirty 해제)
           setTitle("");
           setSelectedCategoryId("");
           setTagsRaw("");
           editor.commands.clearContent(true);
+          onDirtyChange?.(false);
+
           navigate("/main");
         }
       } catch (e: unknown) {
@@ -180,33 +221,11 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
       initial?.id,
       onSaved,
       navigate,
+      onDirtyChange,
     ]);
 
     // 부모에 공개할 메서드
     useImperativeHandle(ref, () => ({ requestSave: doSave }), [doSave]);
-
-    // 떠날 때 안내
-    useEffect(() => {
-      const handler = () => {
-        const dirty =
-          title.trim() ||
-          tagsRaw.trim() ||
-          selectedCategoryId ||
-          (editor?.getText().trim() ?? "");
-        if (dirty) {
-          toast("페이지를 떠나는 중입니다.", {
-            description: "작성 중인 내용이 저장되지 않을 수 있어요.",
-          });
-        }
-      };
-      window.addEventListener("beforeunload", handler);
-      return () => window.removeEventListener("beforeunload", handler);
-    }, [title, tagsRaw, selectedCategoryId, editor]);
-
-    const dirty = editor && editor.getHTML() !== "<p></p>";
-
-    // 창 닫을 때만 경고
-    useWarnOnUnload(dirty);
 
     return (
       <div className="space-y-4">
