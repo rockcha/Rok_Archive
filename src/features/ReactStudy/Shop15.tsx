@@ -60,20 +60,23 @@ const mockProducts = [
     image:
       "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=80",
   },
+
+  // ✅ 교체: 캐시미어 머플러
   {
     id: 6,
     name: "캐시미어 머플러",
     price: 19900,
-    image:
-      "https://images.unsplash.com/photo-1544441893-675973e31958?auto=format&fit=crop&w=800&q=80",
+    image: "https://picsum.photos/seed/cashmere-scarf/800",
   },
+
+  // ✅ 교체 + 이름 변경: 가죽 자켓
   {
     id: 7,
-    name: "체크 자켓",
+    name: "가죽 자켓",
     price: 89900,
-    image:
-      "https://images.unsplash.com/photo-1542060748-10c28b62716b?auto=format&fit=crop&w=800&q=80",
+    image: "https://picsum.photos/seed/leather-jacket/800",
   },
+
   {
     id: 8,
     name: "플리츠 스커트",
