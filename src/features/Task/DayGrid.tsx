@@ -1,13 +1,12 @@
 "use client";
 import type { Task } from "./types";
 import { cn } from "./utils";
+import { Check } from "lucide-react";
 
 /**
- * 오늘의 Task 그리드
- * - DAILY는 항상 맨 앞(고정)
- * - DAY도 여기서는 체크/토글 불가 (상세보기에서만 가능)
- * - 카드 색상: 유형별 고정 톤 + 동일 톤의 호버
- * - 우상단 상태 아이콘: ✅ / ❌
+ * 오늘의 Task 그리드 (체크 아이콘 유지 + 텍스트 빨간 line-through)
+ * - 왼쪽 진행 보더 제거
+ * - 완료 시 제목에 빨간 취소선
  */
 export default function DayGrid({
   dailyItems,
@@ -41,8 +40,21 @@ export default function DayGrid({
     }
   };
 
+  const StatusDot = ({ completed }: { completed: boolean }) => (
+    <div
+      className={cn(
+        "absolute top-2 right-2 h-5 w-5 rounded-full grid place-items-center",
+        completed
+          ? "bg-emerald-500/90 ring-2 ring-white/70"
+          : "bg-neutral-300/80 ring-2 ring-white/70"
+      )}
+      aria-label={completed ? "완료" : "미완료"}
+    >
+      {completed ? <Check className="h-3.5 w-3.5 text-white" /> : null}
+    </div>
+  );
+
   const renderCard = (t: Task) => {
-    const statusEmoji = t.is_completed ? "✅" : "❌";
     const tone = toneByType(t);
     return (
       <button
@@ -57,11 +69,18 @@ export default function DayGrid({
         )}
         title={t.title || "(제목 없음)"}
       >
-        {/* 상태 아이콘 (우상단) */}
-        <div className="absolute top-2 right-2 text-base opacity-80">
-          {statusEmoji}
-        </div>
-        <div className="font-medium text-center line-clamp-3 px-2">
+        {/* 상태 아이콘 (우상단 체크 유지) */}
+        <StatusDot completed={!!t.is_completed} />
+
+        {/* 제목: 완료 시 빨간 취소선 */}
+        <div
+          className={cn(
+            "font-medium text-center line-clamp-3 px-2",
+            t.is_completed
+              ? "line-through decoration-rose-500 decoration-2 decoration-offset-2"
+              : ""
+          )}
+        >
           {t.title || "(제목 없음)"}
         </div>
       </button>

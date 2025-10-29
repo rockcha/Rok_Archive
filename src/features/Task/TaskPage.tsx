@@ -52,7 +52,7 @@ export default function TaskPage() {
   const [dueTasks, setDueTasks] = useState<Task[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
 
-  // 진행률 (DAY만)
+  // 진행률 (DAY + DAILY)
   const [allCount, setAllCount] = useState(0);
   const [doneCount, setDoneCount] = useState(0);
 
@@ -88,6 +88,16 @@ export default function TaskPage() {
     [daily, dayTasks, selectedTaskId]
   );
 
+  // ✅ DAILY 포함 진행률
+  useEffect(() => {
+    const dayAll = dayTasks.length;
+    const dayDone = dayTasks.filter((t) => t.is_completed).length;
+    const dailyAll = daily.length;
+    const dailyDone = daily.filter((t) => t.is_completed).length;
+    setAllCount(dayAll + dailyAll);
+    setDoneCount(dayDone + dailyDone);
+  }, [dayTasks, daily]);
+
   const progressPct = useMemo(() => {
     if (allCount === 0) return 0;
     return Math.round((doneCount / allCount) * 100);
@@ -101,8 +111,6 @@ export default function TaskPage() {
 
   const reloadDay = async (ymd: string) => {
     const list = await fetchDayTasksByDate(ymd);
-    setAllCount(list.length);
-    setDoneCount(list.filter((t) => t.is_completed).length);
     setDayTasks(list);
     // 날짜 바뀔 때 이전 선택이 남는 이슈 방지
     if (!list.find((t) => t.id === selectedTaskId)) {
@@ -177,9 +185,6 @@ export default function TaskPage() {
     setDayTasks((prev) => updateLocal(prev));
     setDaily((prev) => updateLocal(prev));
 
-    if (typeof patch.is_completed === "boolean" && task.type === "DAY") {
-      setDoneCount((prev) => prev + (patch.is_completed ? 1 : -1));
-    }
     if (autosaveTimer.current[task.id])
       clearTimeout(autosaveTimer.current[task.id]);
     autosaveTimer.current[task.id] = setTimeout(async () => {
@@ -190,9 +195,6 @@ export default function TaskPage() {
   const deleteTask = async (task: Task) => {
     await deleteTaskRow(task.id);
     setSelectedTaskId(null);
-    if (task.is_completed && task.type === "DAY")
-      setDoneCount((c) => Math.max(0, c - 1));
-    if (task.type === "DAY") setAllCount((c) => Math.max(0, c - 1));
     await Promise.all([reloadDay(selectedYMD), reloadDue(), reloadDaily()]);
   };
 
@@ -342,7 +344,7 @@ export default function TaskPage() {
               <Card className="mb-4 rounded-2xl">
                 <CardHeader className="flex items-center justify-between">
                   <CardTitle className="text-lg">
-                    📅 {selectedDateStr} ({weekdayKR(selectedDate)})
+                    📌 {selectedDateStr} ({weekdayKR(selectedDate)})
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <Button
@@ -364,15 +366,18 @@ export default function TaskPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-2 rounded-full bg-muted overflow-hidden">
-                    <div
-                      className="h-full bg-primary transition-all"
-                      style={{ width: `${progressPct}%` }}
-                      aria-label={`완료율 ${progressPct}%`}
-                    />
-                  </div>
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    {doneCount} / {allCount} 완료
+                  {/* 🎨 업그레이드 Progress Bar */}
+                  <div className="space-y-1.5">
+                    <div className="relative h-3.5 rounded-full border bg-gradient-to-b from-white to-muted/60 shadow-inner overflow-hidden">
+                      <div
+                        className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-primary/90 via-primary to-primary/90 shadow-sm transition-all"
+                        style={{ width: `${progressPct}%` }}
+                        aria-label={`완료율 ${progressPct}%`}
+                      />
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {doneCount} / {allCount} 완료
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -380,7 +385,7 @@ export default function TaskPage() {
               {/* 오늘의 Task (타입별 색상/호버, 클릭 선택) */}
               <Card className="rounded-2xl">
                 <CardHeader>
-                  <CardTitle className="text-xl">오늘의 Task</CardTitle>
+                  <CardTitle className="text-xl">📌 목록</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <DayGrid
@@ -392,10 +397,10 @@ export default function TaskPage() {
                 </CardContent>
               </Card>
 
-              {/* 상세 (유형 변경 제거, 완료 토글/삭제만) */}
+              {/* 상세 (완료 토글/삭제만) */}
               <Card className="mt-6 rounded-2xl overflow-hidden">
                 <CardHeader className="bg-white">
-                  <CardTitle className="text-xl">Task 상세보기</CardTitle>
+                  <CardTitle className="text-xl">📌 상세보기</CardTitle>
                 </CardHeader>
                 <CardContent className="pt-5">
                   <TaskDetail
