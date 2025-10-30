@@ -30,6 +30,7 @@ import Shop15 from "@/features/ReactStudy/Shop15";
 import Login69 from "@/features/ReactStudy/Login69";
 import Shop69 from "@/features/ReactStudy/Shop69";
 import Products69 from "@/features/ReactStudy/Products69";
+import Shop1013 from "@/features/ReactStudy/Shop1013";
 
 // 레이아웃 (Header + Footer 고정)
 function Layout() {
@@ -89,6 +90,7 @@ export default function App() {
           <Route path="/tasks/shop-1-5" element={<Shop15 />} />
 
           <Route path="/tasks/shop-6-9" element={<Shop69 />} />
+          <Route path="/tasks/shop-10-13" element={<Shop1013 />} />
           <Route path="/login" element={<Login69 />} />
           <Route path="/products" element={<Products69 />} />
         </Route>
