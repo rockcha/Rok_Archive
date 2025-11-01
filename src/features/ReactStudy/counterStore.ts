@@ -23,7 +23,7 @@ const clamp = (v: number, min: number, max: number) =>
 export const useCounter = create<CounterState>()(
   devtools(
     persist(
-      subscribeWithSelector((set, get) => ({
+      subscribeWithSelector((set) => ({
         count: 0,
         step: 1,
         min: -100,
