@@ -31,6 +31,7 @@ import Login69 from "@/features/ReactStudy/Login69";
 import Shop69 from "@/features/ReactStudy/Shop69";
 import Products69 from "@/features/ReactStudy/Products69";
 import Shop1013 from "@/features/ReactStudy/Shop1013";
+import ZustandDay14Counter from "@/features/ReactStudy/zustand12";
 
 // 레이아웃 (Header + Footer 고정)
 function Layout() {
@@ -93,6 +94,7 @@ export default function App() {
           <Route path="/tasks/shop-10-13" element={<Shop1013 />} />
           <Route path="/login" element={<Login69 />} />
           <Route path="/products" element={<Products69 />} />
+          <Route path="/tasks/zustand-1-2" element={<ZustandDay14Counter />} />
         </Route>
       </Routes>
     </Router>
