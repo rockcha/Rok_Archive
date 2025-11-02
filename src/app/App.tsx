@@ -23,9 +23,9 @@ import FloatingMemo from "@/widgets/FloatingMemo";
 import FloatingTodo from "@/widgets/FloatingTodo";
 import ReactStudyTaskPage from "@/features/ReactStudy/ReactStudyTaskPage";
 import Rps14 from "@/features/ReactStudy/rps-1-4/Rps14";
-<<<<<<< HEAD
-import Contacts18 from "@/features/ReactStudy/contacts18";
-=======
+
+import Contacts18 from "@/features/ReactStudy/Contacts18";
+
 import Rps56 from "@/features/ReactStudy/rps-1-4/rps56";
 import TaskPage from "@/features/Task/TaskPage";
 import Weather79 from "@/features/ReactStudy/Weather79";
@@ -35,7 +35,6 @@ import Shop69 from "@/features/ReactStudy/Shop69";
 import Products69 from "@/features/ReactStudy/Products69";
 import Shop1013 from "@/features/ReactStudy/Shop1013";
 import ZustandDay14Counter from "@/features/ReactStudy/zustand12";
->>>>>>> 2ad74deef2035437aa540ba8fe82e68793ed6f6a
 
 // 레이아웃 (Header + Footer 고정)
 function Layout() {
@@ -90,9 +89,9 @@ export default function App() {
           <Route path="/study" element={<ReactStudyTaskPage />} />
 
           <Route path="/tasks/rps-1-4" element={<Rps14 />} />
-<<<<<<< HEAD
+
           <Route path="/tasks/contacts-1-8" element={<Contacts18 />} />
-=======
+
           <Route path="/tasks/rps-5-6" element={<Rps56 />} />
           <Route path="/tasks/weather-7-9" element={<Weather79 />} />
           <Route path="/tasks/shop-1-5" element={<Shop15 />} />
@@ -102,7 +101,6 @@ export default function App() {
           <Route path="/login" element={<Login69 />} />
           <Route path="/products" element={<Products69 />} />
           <Route path="/tasks/zustand-1-2" element={<ZustandDay14Counter />} />
->>>>>>> 2ad74deef2035437aa540ba8fe82e68793ed6f6a
         </Route>
       </Routes>
     </Router>
