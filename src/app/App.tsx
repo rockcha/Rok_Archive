@@ -23,6 +23,7 @@ import FloatingMemo from "@/widgets/FloatingMemo";
 import FloatingTodo from "@/widgets/FloatingTodo";
 import ReactStudyTaskPage from "@/features/ReactStudy/ReactStudyTaskPage";
 import Rps14 from "@/features/ReactStudy/rps-1-4/Rps14";
+import Contacts18 from "@/features/ReactStudy/contacts18";
 
 // 레이아웃 (Header + Footer 고정)
 function Layout() {
@@ -75,6 +76,7 @@ export default function App() {
 
           <Route path="/study" element={<ReactStudyTaskPage />} />
           <Route path="/tasks/rps-1-4" element={<Rps14 />} />
+          <Route path="/tasks/contacts-1-8" element={<Contacts18 />} />
         </Route>
       </Routes>
     </Router>
