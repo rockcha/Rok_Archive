@@ -1,7 +1,7 @@
 // src/pages/Contacts18.tsx
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useMemo, useRef, useState, useEffect } from "react";
 import { cn } from "@/shared/lib/utils";
 
 /* shadcn/ui (모두 '@/shared/ui/*' 경로) */
@@ -57,8 +57,6 @@ type Contact = {
   createdAt: number;
 };
 
-const STORAGE_KEY = "contacts18:list";
-
 /** 010-1234-5678 간단 포맷터 */
 function formatPhone(raw: string) {
   const digits = raw.replace(/\D/g, "");
@@ -84,18 +82,10 @@ export default function Contacts18() {
   const [editing, setEditing] = useState<Contact | null>(null);
   const nameRef = useRef<HTMLInputElement>(null);
 
-  /* ---- Load / Save localStorage ---- */
+  /* 첫 마운트 시 포커스 정도만 유지 */
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setContacts(JSON.parse(raw) as Contact[]);
-    } catch {
-      /* ignore */
-    }
+    nameRef.current?.focus();
   }, []);
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts));
-  }, [contacts]);
 
   /* ---- Derived list (search + sort) ---- */
   const filtered = useMemo(() => {
@@ -254,14 +244,6 @@ export default function Contacts18() {
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <span>• 이름 2자 이상</span>
                   <span>• 번호 9~11자리</span>
-                </div>
-                <div className="flex items-center justify-end gap-2">
-                  <Badge variant="outline" className="rounded-full">
-                    즉시 업데이트
-                  </Badge>
-                  <Badge variant="outline" className="rounded-full">
-                    로컬 저장
-                  </Badge>
                 </div>
               </div>
             </div>
