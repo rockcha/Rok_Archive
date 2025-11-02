@@ -89,9 +89,7 @@ export default function App() {
           <Route path="/study" element={<ReactStudyTaskPage />} />
 
           <Route path="/tasks/rps-1-4" element={<Rps14 />} />
-
           <Route path="/tasks/contacts-1-8" element={<Contacts18 />} />
-
           <Route path="/tasks/rps-5-6" element={<Rps56 />} />
           <Route path="/tasks/weather-7-9" element={<Weather79 />} />
           <Route path="/tasks/shop-1-5" element={<Shop15 />} />
