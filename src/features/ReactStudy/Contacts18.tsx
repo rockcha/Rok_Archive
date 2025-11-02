@@ -5,13 +5,7 @@ import React, { useMemo, useRef, useState, useEffect } from "react";
 import { cn } from "@/shared/lib/utils";
 
 /* shadcn/ui (모두 '@/shared/ui/*' 경로) */
-import {
-  Card,
-  CardHeader,
-  CardContent,
-  CardTitle,
-  CardDescription,
-} from "@/shared/ui/card";
+import { Card, CardHeader, CardContent, CardTitle } from "@/shared/ui/card";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Button } from "@/shared/ui/button";
