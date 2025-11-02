@@ -8,6 +8,7 @@ import {
   forwardRef,
   useImperativeHandle,
   useCallback,
+  useRef,
 } from "react";
 import type { Content, JSONContent } from "@tiptap/core";
 import { useNavigate } from "react-router-dom";
@@ -29,7 +30,6 @@ import { useRichEditor } from "@/features/posts/editor/useRichEditor";
 import EditorToolbar from "@/features/posts/editor/EditorToolbar";
 import { slugify } from "@/shared/utils/slugify";
 import { parseTags } from "@/shared/utils/parseTags";
-import { useWarnOnUnload } from "./UseWarnOnUnload";
 
 type Category = { id: string | number; name: string };
 type ComposerMode = "create" | "edit";
@@ -51,10 +51,35 @@ type Props = {
   mode?: ComposerMode;
   initial?: InitialData;
   onSaved?: (postId: string) => void;
+  /** 상위로 dirty 상태 알림 */
+  onDirtyChange?: (dirty: boolean) => void;
 };
 
+/** 간단한 deepEqual (객체/배열/원시만, 함수/순환참조 없음 가정) */
+function deepEqual(a: any, b: any): boolean {
+  if (Object.is(a, b)) return true;
+  if (typeof a !== typeof b) return false;
+  if (a && b && typeof a === "object") {
+    if (Array.isArray(a)) {
+      if (!Array.isArray(b) || a.length !== b.length) return false;
+      for (let i = 0; i < a.length; i++)
+        if (!deepEqual(a[i], b[i])) return false;
+      return true;
+    }
+    const ak = Object.keys(a);
+    const bk = Object.keys(b);
+    if (ak.length !== bk.length) return false;
+    for (const k of ak) if (!deepEqual(a[k], b[k])) return false;
+    return true;
+  }
+  return false;
+}
+
 const PostComposer = forwardRef<PostComposerHandle, Props>(
-  function PostComposer({ mode = "create", initial, onSaved }, ref) {
+  function PostComposer(
+    { mode = "create", initial, onSaved, onDirtyChange },
+    ref
+  ) {
     const [title, setTitle] = useState(initial?.title ?? "");
     const [selectedCategoryId, setSelectedCategoryId] = useState<string>(
       initial?.categoryId != null ? String(initial.categoryId) : ""
@@ -69,7 +94,44 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
     const navigate = useNavigate();
     const editor = useRichEditor();
 
-    // 카테고리 로드
+    /** 🔹 baseline: 처음 로드/저장 직후의 스냅샷을 보관 */
+    const baselineRef = useRef<{
+      title: string;
+      categoryId: string; // string으로 통일
+      tagsCsv: string; // 정규화된 csv
+      contentJson: JSONContent | null; // 에디터 JSON
+    } | null>(null);
+
+    /** 현재 스냅샷 */
+    const getCurrentSnapshot = useCallback(() => {
+      const tagsCsv = parseTags(tagsRaw).join(",");
+      const contentJson: JSONContent | null = editor
+        ? (editor.getJSON() as JSONContent)
+        : null;
+      return {
+        title: title.trim(),
+        categoryId: selectedCategoryId || "",
+        tagsCsv,
+        contentJson,
+      };
+    }, [title, selectedCategoryId, tagsRaw, editor]);
+
+    /** 현재와 baseline 비교 → dirty 판단 */
+    const recomputeDirty = useCallback(() => {
+      const base = baselineRef.current;
+      const curr = getCurrentSnapshot();
+      const dirty = base
+        ? !deepEqual(base, curr)
+        : Boolean(
+            curr.title ||
+              curr.categoryId ||
+              curr.tagsCsv ||
+              (curr.contentJson && (curr.contentJson as any).content?.length)
+          );
+      onDirtyChange?.(dirty);
+    }, [getCurrentSnapshot, onDirtyChange]);
+
+    /** 카테고리 로드 */
     useEffect(() => {
       let mounted = true;
       (async () => {
@@ -94,9 +156,11 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
       };
     }, []);
 
-    // 에디터 초기 내용
+    /** 에디터 초기 내용 설정 + baseline 초기화 */
     useEffect(() => {
       if (!editor) return;
+
+      // 에디터 세팅
       const content = initial?.content as Content | null | undefined;
       if (content != null) {
         editor.commands.setContent(content, {
@@ -106,15 +170,52 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
       } else {
         editor.commands.clearContent(true);
       }
-    }, [editor, initial?.content]);
 
-    // 제출 가능 여부
+      // baseline 세팅 (초기 로드/수정 페이지에서도 "수정 전 상태"가 baseline)
+      const initTagsCsv = parseTags(
+        Array.isArray(initial?.tags) ? initial!.tags!.join(", ") : ""
+      ).join(",");
+      const b: typeof baselineRef.current = {
+        title: (initial?.title ?? "").trim(),
+        categoryId:
+          initial?.categoryId != null ? String(initial.categoryId) : "",
+        tagsCsv: initTagsCsv,
+        contentJson: editor.getJSON() as JSONContent,
+      };
+      baselineRef.current = b;
+
+      recomputeDirty();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+      editor,
+      initial?.content,
+      initial?.title,
+      initial?.categoryId,
+      initial?.tags,
+    ]);
+
+    /** form 값 변경 → dirty 재계산 */
+    useEffect(() => {
+      recomputeDirty();
+    }, [title, tagsRaw, selectedCategoryId, recomputeDirty]);
+
+    /** tiptap 변경 이벤트 → dirty 재계산 */
+    useEffect(() => {
+      if (!editor) return;
+      const handler = () => recomputeDirty();
+      editor.on("update", handler);
+      return () => {
+        editor.off("update", handler);
+      };
+    }, [editor, recomputeDirty]);
+
+    /** 제출 가능 여부 */
     const isReadyToSubmit = useMemo(() => {
       const tags = parseTags(tagsRaw);
       return title.trim().length > 0 && !!selectedCategoryId && tags.length > 0;
     }, [title, selectedCategoryId, tagsRaw]);
 
-    // 실제 저장 로직
+    /** 저장 */
     const doSave = useCallback(async () => {
       if (!editor) return;
       if (!isReadyToSubmit) {
@@ -138,6 +239,10 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
 
           toast.success("수정 완료");
           onSaved?.(initial.id);
+
+          // 🔹 저장 직후 baseline 갱신 → dirty 해제
+          baselineRef.current = getCurrentSnapshot();
+          onDirtyChange?.(false);
         } else {
           const slug = slugify(title);
           const { data, error } = await supabase
@@ -157,11 +262,20 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
           toast.success("작성 완료", { description: "홈으로 이동합니다." });
           onSaved?.(data!.id);
 
-          // reset
+          // reset (→ baseline 초기화 & dirty 해제)
           setTitle("");
           setSelectedCategoryId("");
           setTagsRaw("");
           editor.commands.clearContent(true);
+
+          baselineRef.current = {
+            title: "",
+            categoryId: "",
+            tagsCsv: "",
+            contentJson: editor.getJSON() as JSONContent,
+          };
+          onDirtyChange?.(false);
+
           navigate("/main");
         }
       } catch (e: unknown) {
@@ -180,33 +294,11 @@ const PostComposer = forwardRef<PostComposerHandle, Props>(
       initial?.id,
       onSaved,
       navigate,
+      getCurrentSnapshot,
+      onDirtyChange,
     ]);
 
-    // 부모에 공개할 메서드
     useImperativeHandle(ref, () => ({ requestSave: doSave }), [doSave]);
-
-    // 떠날 때 안내
-    useEffect(() => {
-      const handler = () => {
-        const dirty =
-          title.trim() ||
-          tagsRaw.trim() ||
-          selectedCategoryId ||
-          (editor?.getText().trim() ?? "");
-        if (dirty) {
-          toast("페이지를 떠나는 중입니다.", {
-            description: "작성 중인 내용이 저장되지 않을 수 있어요.",
-          });
-        }
-      };
-      window.addEventListener("beforeunload", handler);
-      return () => window.removeEventListener("beforeunload", handler);
-    }, [title, tagsRaw, selectedCategoryId, editor]);
-
-    const dirty = editor && editor.getHTML() !== "<p></p>";
-
-    // 창 닫을 때만 경고
-    useWarnOnUnload(dirty);
 
     return (
       <div className="space-y-4">

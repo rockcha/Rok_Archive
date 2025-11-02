@@ -1,7 +1,7 @@
 // src/pages/posts/PostCreatePage.tsx
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import PostComposer, {
   type PostComposerHandle,
 } from "@/features/posts/PostComposer";
@@ -9,9 +9,14 @@ import { Separator } from "@/shared/ui/separator";
 import HomeButton from "@/widgets/Header/HomeButton";
 import FloatingMemo from "@/widgets/FloatingMemo";
 import SavePostButton from "@/features/posts/editor/SavePostButton";
+import { useWarnOnClose } from "@/features/posts/UseWarnOnUnload";
 
 export default function PostCreatePage() {
   const composerRef = useRef<PostComposerHandle | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+
+  // ✅ 창 닫기/새로고침만 경고
+  useWarnOnClose(isDirty);
 
   return (
     <div className="relative w-full">
@@ -30,7 +35,8 @@ export default function PostCreatePage() {
       </div>
 
       <Separator className="my-4" />
-      <PostComposer ref={composerRef} />
+      {/* ✅ 작성 중 여부를 상위로 올려서 창닫기 훅에 연결 */}
+      <PostComposer ref={composerRef} onDirtyChange={setIsDirty} />
     </div>
   );
 }

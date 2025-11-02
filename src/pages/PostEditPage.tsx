@@ -15,6 +15,7 @@ import HomeButton from "@/widgets/Header/HomeButton";
 import FloatingMemo from "@/widgets/FloatingMemo";
 
 import type { JSONContent } from "@tiptap/core";
+import { useWarnOnClose } from "@/features/posts/UseWarnOnUnload"; // ✅ 추가
 
 function normalizeContentJson(v: unknown): JSONContent | string | null {
   if (v == null) return null;
@@ -41,6 +42,10 @@ export default function PostEditPage() {
   const [loading, setLoading] = useState(true);
   const [post, setPost] = useState<PostRow | null>(null);
   const [err, setErr] = useState<string | null>(null);
+
+  // ✅ 수정 중 창닫기/새로고침 경고용 상태 + 훅
+  const [isDirty, setIsDirty] = useState(false);
+  useWarnOnClose(isDirty); // ✅ 등록
 
   useEffect(() => {
     let alive = true;
@@ -114,6 +119,7 @@ export default function PostEditPage() {
         />
       </div>
       <Separator className="my-2" />
+
       <PostComposer
         ref={composerRef}
         mode="edit"
@@ -125,6 +131,7 @@ export default function PostEditPage() {
           content: normalizeContentJson(post.content_json),
         }}
         onSaved={(pid) => navigate(`/posts/id/${pid}`)}
+        onDirtyChange={setIsDirty} // ✅ 추가: 수정 여부 반영
       />
     </div>
   );
