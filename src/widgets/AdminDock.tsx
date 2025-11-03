@@ -9,7 +9,6 @@ import {
   Github,
   Bot,
   CalendarDays,
-  CheckSquare,
   Notebook,
   ListTodo,
   BookOpenCheck,
