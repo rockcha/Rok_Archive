@@ -13,7 +13,7 @@ import PostCreatePage from "@/pages/PostCreatePage";
 import PostDetailPage from "@/pages/PostDetailPage";
 import PostEditPage from "@/pages/PostEditPage";
 import SchedularPage from "@/pages/SchedularPage";
-import TodayTodosPage from "@/pages/TodayTodosPage";
+
 // import IntroPage from "@/pages/IntroPage";  //포폴용
 
 //위젯 목록
@@ -35,6 +35,7 @@ import Shop69 from "@/features/ReactStudy/Shop69";
 import Products69 from "@/features/ReactStudy/Products69";
 import Shop1013 from "@/features/ReactStudy/Shop1013";
 import ZustandDay14Counter from "@/features/ReactStudy/zustand12";
+import MainButton from "@/pages/MainButton";
 
 // 레이아웃 (Header + Footer 고정)
 function Layout() {
@@ -61,6 +62,7 @@ function ContainerLayout() {
       {/* 고정 위젯 (뷰포트 기준 fixed) */}
 
       {/* 페이지 콘텐츠 */}
+      <MainButton />
       <Outlet />
     </div>
   );
@@ -79,7 +81,7 @@ export default function App() {
         </Route>
         <Route element={<ContainerLayout />}>
           <Route path="/schedular" element={<SchedularPage />} />
-          <Route path="/todos" element={<TodayTodosPage />} />
+
           <Route path="/tasks" element={<TaskPage />} />
           <Route path="/posts/new" element={<PostCreatePage />} />
           <Route path="/posts/:slug" element={<PostDetailPage />} />

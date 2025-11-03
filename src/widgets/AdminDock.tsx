@@ -44,9 +44,6 @@ export default function AdminDock() {
   const handleNewPost = () => navigate("/posts/new");
 
   // ✅ 관리자 전용
-  const handleTodosPage = requireAdmin(() => navigate("/todos"));
-
-  // ✅ 관리자 전용
   const handleCalendar = requireAdmin(() => navigate("/schedular"));
 
   // 리액트 스터디 (공개)
@@ -110,23 +107,6 @@ export default function AdminDock() {
           </Tooltip>
         </DockIcon>
 
-        {/* 오늘의 할일 (관리자 전용) */}
-        <DockIcon className="group">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                aria-label="오늘의 할일"
-                className={cn(iconBtn, adminOnlyClass)}
-                onClick={handleTodosPage}
-                aria-disabled={!isAdmin}
-              >
-                <CheckSquare className="size-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>오늘의 할일 (관리자)</TooltipContent>
-          </Tooltip>
-        </DockIcon>
-
         {/* 캘린더 (관리자 전용) */}
         <DockIcon className="group">
           <Tooltip>
@@ -144,6 +124,22 @@ export default function AdminDock() {
           </Tooltip>
         </DockIcon>
 
+        {/* 할 일 (/tasks, 관리자 전용으로 변경) */}
+        <DockIcon className="group">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                aria-label="할 일"
+                className={cn(iconBtn, adminOnlyClass)}
+                onClick={handleTasksPage}
+                aria-disabled={!isAdmin}
+              >
+                <ListTodo className="size-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>할 일 (관리자)</TooltipContent>
+          </Tooltip>
+        </DockIcon>
         {/* 리액트 스터디 (공개) */}
         <DockIcon className="group">
           <Tooltip>
@@ -226,23 +222,6 @@ export default function AdminDock() {
               </button>
             </TooltipTrigger>
             <TooltipContent>메모 (관리자)</TooltipContent>
-          </Tooltip>
-        </DockIcon>
-
-        {/* 할 일 (/tasks, 관리자 전용으로 변경) */}
-        <DockIcon className="group">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <button
-                aria-label="할 일"
-                className={cn(iconBtn, adminOnlyClass)}
-                onClick={handleTasksPage}
-                aria-disabled={!isAdmin}
-              >
-                <ListTodo className="size-4" />
-              </button>
-            </TooltipTrigger>
-            <TooltipContent>할 일 (관리자)</TooltipContent>
           </Tooltip>
         </DockIcon>
       </Dock>
