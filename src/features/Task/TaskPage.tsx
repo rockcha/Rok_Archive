@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/shared/ui/card";
 import { Button } from "@/shared/ui/button";
-import { ScrollArea } from "@/shared/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -30,20 +29,17 @@ import {
 } from "./api";
 
 import NewTaskDialog from "./NewTaskDialog";
-import DayGrid from "./DayGrid";
-import DueList from "./DueList";
 import TaskDetail from "./TaskDetail";
 import CalendarPanel from "./CalendarPanel";
-import ScheduleList from "./ScheduleList";
 import { Calendar } from "@/shared/ui/calendar";
 import { Input } from "@/shared/ui/input";
+import TodayListAside from "./TodayListAside";
 
 type Tab = "LIST" | "CAL";
-type RightTab = "TASK" | "SCHEDULE";
+type TimeoutId = ReturnType<typeof setTimeout>;
 
 export default function TaskPage() {
   const [tab, setTab] = useState<Tab>("LIST");
-  const [rightTab, setRightTab] = useState<RightTab>("TASK");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   // 데이터
@@ -65,10 +61,8 @@ export default function TaskPage() {
 
   // 캘린더 모드 오른쪽: 선택 날짜 스케쥴
   const [selectedSchedules, setSelectedSchedules] = useState<Schedule[]>([]);
-  // 목록 모드 오른쪽: 다가오는 스케쥴
-  const [upcomingSchedules, setUpcomingSchedules] = useState<Schedule[]>([]);
 
-  // 월 범위 맵 (캘린더 카운트 일관성)
+  // 월 범위 맵
   const [monthMap, setMonthMap] = useState<
     Record<
       string,
@@ -76,19 +70,25 @@ export default function TaskPage() {
     >
   >({});
 
-  // 날짜 선택 다이얼로그 (목록 모드)
+  // 날짜 선택 다이얼로그 (LIST 모드)
   const [openDatePick, setOpenDatePick] = useState(false);
   const [datePickValue, setDatePickValue] = useState<Date>(new Date());
   const [dateInput, setDateInput] = useState<string>(toYMD(new Date()));
 
-  const autosaveTimer = useRef<Record<number, any>>({});
+  // LIST 우측 탭용: 다가오는 스케줄
+  const [upcomingSchedules, setUpcomingSchedules] = useState<Schedule[]>([]);
+
+  const autosaveTimer = useRef<Record<number, TimeoutId | null>>({});
+
+  const selectedDateStr = format(selectedDate, "yyyy.MM.dd");
+  const selectedYMD = toYMD(selectedDate);
 
   const selectedTask = useMemo(
     () => [...daily, ...dayTasks].find((t) => t.id === selectedTaskId) || null,
     [daily, dayTasks, selectedTaskId]
   );
 
-  // ✅ DAILY 포함 진행률
+  // ✅ 진행률 계산
   useEffect(() => {
     const dayAll = dayTasks.length;
     const dayDone = dayTasks.filter((t) => t.is_completed).length;
@@ -98,13 +98,10 @@ export default function TaskPage() {
     setDoneCount(dayDone + dailyDone);
   }, [dayTasks, daily]);
 
-  const progressPct = useMemo(() => {
-    if (allCount === 0) return 0;
-    return Math.round((doneCount / allCount) * 100);
-  }, [allCount, doneCount]);
-
-  const selectedDateStr = format(selectedDate, "yyyy.MM.dd");
-  const selectedYMD = toYMD(selectedDate);
+  const progressPct = useMemo(
+    () => (allCount === 0 ? 0 : Math.round((doneCount / allCount) * 100)),
+    [allCount, doneCount]
+  );
 
   /* Fetchers */
   const reloadDaily = async () => setDaily(await fetchDailyTasks());
@@ -112,23 +109,20 @@ export default function TaskPage() {
   const reloadDay = async (ymd: string) => {
     const list = await fetchDayTasksByDate(ymd);
     setDayTasks(list);
-    // 날짜 바뀔 때 이전 선택이 남는 이슈 방지
-    if (!list.find((t) => t.id === selectedTaskId)) {
-      setSelectedTaskId(null);
-    }
+    // 날짜 바뀔 때 이전 선택 클리어
+    if (!list.find((t) => t.id === selectedTaskId)) setSelectedTaskId(null);
   };
 
-  const reloadDue = async () => {
+  const reloadDue = async () =>
     setDueTasks(await fetchDueTasksFrom(toYMD(new Date())));
-  };
 
+  // 초기 로딩
   useEffect(() => {
     const ymd = selectedYMD;
     Promise.all([reloadDaily(), reloadDay(ymd), reloadDue()]);
     (async () => {
-      const ups = await fetchUpcomingSchedules(30);
-      setUpcomingSchedules(ups);
-      // 초기 월맵도 로드(현재 달)
+      setUpcomingSchedules(await fetchUpcomingSchedules(30));
+      // 월맵 로드(현재 달)
       const start = toYMD(
         new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
       );
@@ -136,19 +130,18 @@ export default function TaskPage() {
         new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0)
       );
       await loadMonthMap(start, end);
-      // 초기 우측 패널 스케쥴
-      const ss = await fetchSchedulesInRange(ymd, ymd);
-      setSelectedSchedules(ss);
+      // 우측 패널 스케쥴
+      setSelectedSchedules(await fetchSchedulesInRange(ymd, ymd));
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // 날짜 변경 시 오늘(DAY) + 스케줄 갱신
   useEffect(() => {
     const ymd = selectedYMD;
     (async () => {
       await reloadDay(ymd);
-      const ss = await fetchSchedulesInRange(ymd, ymd);
-      setSelectedSchedules(ss);
+      setSelectedSchedules(await fetchSchedulesInRange(ymd, ymd));
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
@@ -168,7 +161,7 @@ export default function TaskPage() {
       if (!m[t.date]) m[t.date] = { day: [], due: [], daily: dailyList };
       m[t.date].due.push(t);
     });
-    // 범위 내 모든 날짜에 daily 채우기
+    // 범위 내 모든 날짜에 daily 채워넣기
     const s = new Date(startYMD + "T00:00:00");
     const e = new Date(endYMD + "T00:00:00");
     for (let cur = new Date(s); cur <= e; cur.setDate(cur.getDate() + 1)) {
@@ -178,44 +171,53 @@ export default function TaskPage() {
     setMonthMap(m);
   };
 
-  /* Actions */
+  /* Autosave */
   const scheduleAutosave = (task: Task, patch: Partial<Task>) => {
     const updateLocal = (arr: Task[]) =>
       arr.map((t) => (t.id === task.id ? { ...t, ...patch } : t));
     setDayTasks((prev) => updateLocal(prev));
     setDaily((prev) => updateLocal(prev));
+    setDueTasks((prev) => updateLocal(prev));
 
-    if (autosaveTimer.current[task.id])
-      clearTimeout(autosaveTimer.current[task.id]);
+    const prevTimer = autosaveTimer.current[task.id];
+    if (prevTimer) clearTimeout(prevTimer);
     autosaveTimer.current[task.id] = setTimeout(async () => {
       await updateTask(task.id, patch);
-    }, 500);
+      autosaveTimer.current[task.id] = null;
+    }, 400);
   };
 
   const deleteTask = async (task: Task) => {
     await deleteTaskRow(task.id);
     setSelectedTaskId(null);
-    await Promise.all([reloadDay(selectedYMD), reloadDue(), reloadDaily()]);
+    await Promise.all([
+      reloadDay(toYMD(selectedDate)),
+      reloadDue(),
+      reloadDaily(),
+    ]);
   };
 
-  // 날짜 선택 다이얼로그 열기
+  // 날짜 선택 다이얼로그
   const openDateDialog = () => {
     setDatePickValue(selectedDate);
     setDateInput(toYMD(selectedDate));
     setOpenDatePick(true);
   };
-
-  // 날짜 입력 핸들러(YYYY-MM-DD)
   const handleDateInput = (v: string) => {
     setDateInput(v);
     const [y, m, d] = v.split("-").map(Number);
     if (y && m && d) setDatePickValue(new Date(y, m - 1, d));
   };
-
   const applyPickedDate = () => {
     setSelectedDate(new Date(datePickValue));
     setOpenDatePick(false);
   };
+
+  // ✅ 선택된 날짜의 DUE (CAL 모드 오른쪽 요약에서 사용)
+  const dueToday = useMemo(
+    () => dueTasks.filter((t) => t.date === toYMD(selectedDate)),
+    [dueTasks, selectedDate]
+  );
 
   return (
     <div className="p-6 max-w-[1400px] mx-auto bg-muted/20 relative">
@@ -258,6 +260,7 @@ export default function TaskPage() {
 
       <AnimatePresence mode="wait">
         {tab === "CAL" ? (
+          /* === CAL MODE === */
           <motion.div
             key="CAL"
             initial={{ x: 30, opacity: 0 }}
@@ -270,7 +273,7 @@ export default function TaskPage() {
             <section className="col-span-12 lg:col-span-8">
               <CalendarPanel
                 monthMap={monthMap}
-                selectedYMD={selectedYMD}
+                selectedYMD={toYMD(selectedDate)}
                 onPickDate={(ymd) =>
                   setSelectedDate(new Date(ymd + "T00:00:00"))
                 }
@@ -278,14 +281,14 @@ export default function TaskPage() {
               />
             </section>
 
-            {/* 우: 디테일 패널 */}
+            {/* 우: 요약 패널 (복원) */}
             <aside className="col-span-12 lg:col-span-4 space-y-6">
               <Card className="rounded-2xl">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg">
-                    {selectedDateStr} ({weekdayKR(selectedDate)})
+                    {format(selectedDate, "yyyy.MM.dd")} (
+                    {weekdayKR(selectedDate)})
                   </CardTitle>
-                  {/* 색상 팁 */}
                   <div className="mt-3 grid grid-cols-2 gap-2 text-[12px]">
                     <Legend label="DAILY" tone="emerald" />
                     <Legend label="DAY" tone="rose" />
@@ -301,35 +304,34 @@ export default function TaskPage() {
                     emptyText="등록된 DAILY가 없습니다."
                   />
 
-                  <SectionTitle label="DAY" desc="오늘 해야하는 일" />
+                  <SectionTitle label="DAY" desc="선택 날짜의 해야할 일" />
                   <TitleOnlyList
                     items={dayTasks.map((t) => t.title || "(제목 없음)")}
                     tone="rose"
-                    emptyText="오늘의 DAY가 없습니다."
+                    emptyText="해당 날짜의 DAY가 없습니다."
                   />
 
-                  <SectionTitle label="DUE" desc="특정 날까지 해야하는 일" />
+                  <SectionTitle label="DUE" desc="해당 날짜에 마감하는 일" />
                   <TitleOnlyList
-                    items={dueTasks
-                      .filter((t) => t.date === selectedYMD)
-                      .map((t) => t.title || "(제목 없음)")}
+                    items={dueToday.map((t) => t.title || "(제목 없음)")}
                     tone="amber"
                     emptyText="해당 날짜의 DUE가 없습니다."
                   />
 
-                  <SectionTitle label="SCHEDULE" desc="일정" />
+                  <SectionTitle label="SCHEDULE" desc="선택 날짜 일정" />
                   <TitleOnlyList
                     items={selectedSchedules.map(
                       (s) => s.title || "(제목 없음)"
                     )}
                     tone="indigo"
-                    emptyText="해당 날짜의 스케쥴이 없습니다."
+                    emptyText="해당 날짜의 일정이 없습니다."
                   />
                 </CardContent>
               </Card>
             </aside>
           </motion.div>
         ) : (
+          /* === LIST MODE === */
           <motion.div
             key="LIST"
             initial={{ x: -30, opacity: 0 }}
@@ -338,9 +340,9 @@ export default function TaskPage() {
             transition={{ duration: 0.2 }}
             className="grid grid-cols-12 gap-6"
           >
-            {/* LEFT */}
+            {/* LEFT: main */}
             <section className="col-span-12 lg:col-span-8">
-              {/* 오늘의 요약 (Progress Bar + 날짜 버튼 2개: 오늘, 날짜 변경) */}
+              {/* 1) 진행률 */}
               <Card className="mb-4 rounded-2xl">
                 <CardHeader className="flex items-center justify-between">
                   <CardTitle className="text-lg">
@@ -366,7 +368,6 @@ export default function TaskPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {/* 🎨 업그레이드 Progress Bar */}
                   <div className="space-y-1.5">
                     <div className="relative h-3.5 rounded-full border bg-gradient-to-b from-white to-muted/60 shadow-inner overflow-hidden">
                       <div
@@ -382,23 +383,8 @@ export default function TaskPage() {
                 </CardContent>
               </Card>
 
-              {/* 오늘의 Task (타입별 색상/호버, 클릭 선택) */}
-              <Card className="rounded-2xl">
-                <CardHeader>
-                  <CardTitle className="text-xl">📌 목록</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <DayGrid
-                    dailyItems={daily} // DAILY 맨 앞, 고정
-                    items={dayTasks}
-                    selectedId={selectedTaskId}
-                    onSelect={setSelectedTaskId}
-                  />
-                </CardContent>
-              </Card>
-
-              {/* 상세 (완료 토글/삭제만) */}
-              <Card className="mt-6 rounded-2xl overflow-hidden">
+              {/* 2) 상세보기 */}
+              <Card className="rounded-2xl overflow-hidden">
                 <CardHeader className="bg-white">
                   <CardTitle className="text-xl">📌 상세보기</CardTitle>
                 </CardHeader>
@@ -419,67 +405,49 @@ export default function TaskPage() {
               </Card>
             </section>
 
-            {/* RIGHT: 탭(다가오는 Task / 스케쥴) */}
+            {/* RIGHT: 오늘 목록(탭 포함) */}
             <aside className="col-span-12 lg:col-span-4">
-              <Card className="rounded-2xl h-[720px] flex flex-col">
-                <CardHeader className="pb-2">
-                  <div className="relative bg-white border rounded-full p-1 flex items-center gap-1">
-                    <div className="relative w-[260px] grid grid-cols-2">
-                      <motion.div
-                        layout
-                        className="absolute top-0 bottom-0 w-1/2 rounded-full bg-primary/10"
-                        animate={{ x: rightTab === "TASK" ? 0 : "100%" }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 300,
-                          damping: 30,
-                        }}
-                      />
-                      <button
-                        className={`z-10 py-1.5 text-sm rounded-full cursor-pointer ${
-                          rightTab === "TASK"
-                            ? "text-primary font-medium"
-                            : "text-neutral-600"
-                        }`}
-                        onClick={() => setRightTab("TASK")}
-                      >
-                        다가오는 Task
-                      </button>
-                      <button
-                        className={`z-10 py-1.5 text-sm rounded-full cursor-pointer ${
-                          rightTab === "SCHEDULE"
-                            ? "text-primary font-medium"
-                            : "text-neutral-600"
-                        }`}
-                        onClick={() => setRightTab("SCHEDULE")}
-                      >
-                        다가오는 스케쥴
-                      </button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="flex-1">
-                  <ScrollArea className="h-[640px] pr-2 bg-muted/10 rounded-xl">
-                    {rightTab === "TASK" ? (
-                      <DueList
-                        items={dueTasks}
-                        onClick={(t) => {
-                          setDueDetail(t);
-                          setOpenDueDetail(true);
-                        }}
-                      />
-                    ) : (
-                      <ScheduleList items={upcomingSchedules} />
-                    )}
-                  </ScrollArea>
-                </CardContent>
-              </Card>
+              <TodayListAside
+                daily={daily}
+                dayTasks={dayTasks}
+                dueToday={dueTasks.filter(
+                  (t) => t.date === toYMD(selectedDate)
+                )}
+                upcomingDue={dueTasks.filter(
+                  (t) => t.date !== toYMD(selectedDate)
+                )}
+                upcomingSchedules={upcomingSchedules}
+                selectedId={selectedTaskId}
+                onSelect={(id: number) => {
+                  // 오늘 목록이면 상세로, 아니면 DUE 다이얼로그
+                  const t = [...daily, ...dayTasks].find((x) => x.id === id);
+                  if (t) setSelectedTaskId(t.id);
+                  else {
+                    const due = dueTasks.find((x) => x.id === id);
+                    if (due) {
+                      setDueDetail(due);
+                      setOpenDueDetail(true);
+                    }
+                  }
+                }}
+                onToggle={async (id: number, next: boolean) => {
+                  await updateTask(id, { is_completed: next });
+                  await Promise.all([
+                    reloadDay(toYMD(selectedDate)),
+                    reloadDue(),
+                    reloadDaily(),
+                  ]); // DAILY 반영 포함
+                }}
+                onOpenSchedule={() => {
+                  /* 필요 시 일정 상세 연결 */
+                }}
+              />
             </aside>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 우하단 고정 새 Task 버튼 */}
+      {/* 우하단 새 Task 버튼 */}
       <Button
         size="lg"
         onClick={() => setOpenNew(true)}
@@ -497,12 +465,10 @@ export default function TaskPage() {
           await apiCreate(payload);
           await Promise.all([
             reloadDaily(),
-            reloadDay(selectedYMD),
+            reloadDay(toYMD(selectedDate)),
             reloadDue(),
           ]);
-          const ups = await fetchUpcomingSchedules(30);
-          setUpcomingSchedules(ups);
-          // 월맵 갱신(새로 추가된 항목 반영)
+          setUpcomingSchedules(await fetchUpcomingSchedules(30));
           const start = toYMD(
             new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
           );
@@ -510,9 +476,12 @@ export default function TaskPage() {
             new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0)
           );
           await loadMonthMap(start, end);
-          // 같은 날이면 우측 스케쥴도 갱신
-          const ss = await fetchSchedulesInRange(selectedYMD, selectedYMD);
-          setSelectedSchedules(ss);
+          setSelectedSchedules(
+            await fetchSchedulesInRange(
+              toYMD(selectedDate),
+              toYMD(selectedDate)
+            )
+          );
         }}
       />
 
@@ -529,7 +498,11 @@ export default function TaskPage() {
               task={dueDetail}
               onPatch={async (p) => {
                 await updateTask(dueDetail.id, p);
-                await Promise.all([reloadDue(), reloadDay(selectedYMD)]);
+                await Promise.all([
+                  reloadDue(),
+                  reloadDay(toYMD(selectedDate)),
+                  reloadDaily(),
+                ]);
                 setDueDetail({ ...dueDetail, ...p } as Task);
               }}
               onDelete={async () => {
@@ -538,14 +511,18 @@ export default function TaskPage() {
                 await deleteTaskRow(dueDetail.id);
                 setOpenDueDetail(false);
                 setDueDetail(null);
-                await Promise.all([reloadDue(), reloadDay(selectedYMD)]);
+                await Promise.all([
+                  reloadDue(),
+                  reloadDay(toYMD(selectedDate)),
+                  reloadDaily(),
+                ]);
               }}
             />
           )}
         </DialogContent>
       </Dialog>
 
-      {/* 날짜 선택 다이얼로그 (목록 모드 전용) */}
+      {/* 날짜 선택 다이얼로그 */}
       <Dialog open={openDatePick} onOpenChange={setOpenDatePick}>
         <DialogContent className="sm:max-w-[520px] bg-background/95 backdrop-blur-md">
           <DialogHeader>
@@ -564,8 +541,9 @@ export default function TaskPage() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setDatePickValue(new Date());
-                  setDateInput(toYMD(new Date()));
+                  const now = new Date();
+                  setDatePickValue(now);
+                  setDateInput(toYMD(now));
                 }}
                 className="cursor-pointer"
               >
@@ -603,7 +581,7 @@ export default function TaskPage() {
   );
 }
 
-/* ───────────── UI helpers ───────────── */
+/* ───────────── UI helpers (CAL 우측 요약용) ───────────── */
 
 function Legend({
   label,
@@ -636,7 +614,6 @@ function SectionTitle({ label, desc }: { label: string; desc: string }) {
   );
 }
 
-/** 제목만 세로 나열, 톤 컬러 박스 */
 function TitleOnlyList({
   items,
   tone,

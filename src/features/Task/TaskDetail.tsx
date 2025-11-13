@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Textarea } from "@/shared/ui/textarea";
 import {
   Link as LinkIcon,
   Trash2,
-  CheckCircle2,
-  CircleX,
   PencilLine,
   Save,
   X,
@@ -25,9 +23,6 @@ import {
 import type { Task } from "./types";
 import { faviconUrl } from "./utils";
 
-/**
- * TaskDetail – 헤더 바에 [유형 뱃지 + 제목] 배치, 아래로 메모/링크
- */
 export default function TaskDetail({
   task,
   onPatch,
@@ -44,11 +39,9 @@ export default function TaskDetail({
   const dueInputRef = useRef<HTMLInputElement | null>(null);
   const memoRef = useRef<HTMLTextAreaElement | null>(null);
 
-  // 파생값(널-세이프)
-  const isCompleted = !!task?.is_completed;
   const taskType: Task["type"] = (task?.type as Task["type"]) ?? "DAY";
 
-  // 메모 자동높이
+  // 메모 자동 높이
   useEffect(() => {
     if (!isEditing || !memoRef.current) return;
     const ta = memoRef.current;
@@ -60,12 +53,6 @@ export default function TaskDetail({
     ta.addEventListener("input", handler);
     return () => ta.removeEventListener("input", handler);
   }, [isEditing]);
-
-  // 완료 토글 (useCallback로 경고 제거)
-  const setCompleted = useCallback(
-    (flag: boolean) => onPatch({ is_completed: flag }),
-    [onPatch]
-  );
 
   const handleAddLink = () => {
     const url = (newUrl || "").trim();
@@ -88,22 +75,6 @@ export default function TaskDetail({
     }
   };
 
-  // 상태/톤
-  const status = isCompleted
-    ? {
-        bg: "bg-emerald-600",
-        border: "border-emerald-700/30",
-        label: "완료됨",
-        icon: CheckCircle2,
-      }
-    : {
-        bg: "bg-rose-600",
-        border: "border-rose-700/30",
-        label: "미완료",
-        icon: CircleX,
-      };
-  const StatusIcon = status.icon;
-
   const toneByType = useMemo(() => {
     switch (taskType) {
       case "DAILY":
@@ -116,39 +87,23 @@ export default function TaskDetail({
     }
   }, [taskType]);
 
-  // 단축키
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "t" && task) setCompleted(!isCompleted);
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
-        e.preventDefault();
-        setIsEditing(false);
-      }
-      if (e.key === "e") setIsEditing(true);
-      if (e.key === "Escape") setIsEditing(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [isCompleted, task, setCompleted]);
-
-  // DUE 저장: Task 타입은 date: string | undefined
   const saveDue = () => {
     const v = dueInputRef.current?.value?.trim() || "";
     onPatch({ date: v || undefined });
     setShowDueEdit(false);
   };
 
-  // 안전 분기
-  if (!task)
+  if (!task) {
     return (
       <div className="text-sm text-muted-foreground">
-        왼쪽 목록에서 Task를 선택하세요.
+        오른쪽 목록에서 Task를 선택하세요.
       </div>
     );
+  }
 
   return (
-    <div className="relative pb-20 sm:pb-16">
-      {/* 헤더 바 */}
+    <div className="relative">
+      {/* 헤더 바: 유형 칩 + 제목 */}
       <div className="mb-3">
         <div className="flex items-center gap-2">
           <span
@@ -179,7 +134,7 @@ export default function TaskDetail({
             </h2>
           )}
 
-          {/* DUE 전용 버튼 */}
+          {/* DUE 전용 날짜 편집 버튼 */}
           {taskType === "DUE" && (
             <button
               type="button"
@@ -196,7 +151,7 @@ export default function TaskDetail({
       </div>
 
       {/* 메모 */}
-      <SectionCard title="메모">
+      <Section title="메모">
         {isEditing ? (
           <Textarea
             ref={memoRef}
@@ -216,10 +171,10 @@ export default function TaskDetail({
             )}
           </div>
         )}
-      </SectionCard>
+      </Section>
 
       {/* 링크 */}
-      <SectionCard title="링크">
+      <Section title="링크">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {(task.links || []).map((link, idx) => (
             <div
@@ -246,7 +201,7 @@ export default function TaskDetail({
                   {link}
                 </a>
                 <p className="text-[11px] text-muted-foreground truncate">
-                  {safeHostname(link)}
+                  {safeHost(link)}
                 </p>
               </div>
 
@@ -281,40 +236,15 @@ export default function TaskDetail({
               variant="outline"
               className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition"
               onClick={handleAddLink}
-              title="링크 추가"
             >
               추가
             </Button>
           </div>
         )}
-      </SectionCard>
+      </Section>
 
-      {/* 완료 토글 FAB */}
-      <button
-        type="button"
-        aria-label={
-          isCompleted
-            ? "완료 상태, 클릭하여 미완료로"
-            : "미완료 상태, 클릭하여 완료로"
-        }
-        onClick={() => setCompleted(!isCompleted)}
-        className={[
-          "fixed sm:absolute bottom-3 right-3 sm:bottom-2 sm:right-2 z-20",
-          "rounded-full shadow-lg border px-4 py-3 text-white",
-          "transition-all duration-200 cursor-pointer active:scale-95",
-          status.border,
-          "hover:opacity-90",
-          status.bg,
-        ].join(" ")}
-      >
-        <div className="flex items-center gap-2">
-          <StatusIcon className="w-5 h-5" />
-          <span className="text-sm font-semibold">{status.label}</span>
-        </div>
-      </button>
-
-      {/* 좌하단 액션바 */}
-      <div className="fixed sm:absolute bottom-3 left-3 sm:bottom-2 sm:left-2 z-20 flex items-center gap-2">
+      {/* 좌하단 액션바: 삭제/수정/저장 */}
+      <div className="mt-4 flex items-center gap-2">
         {!isEditing ? (
           <>
             <Button
@@ -360,16 +290,14 @@ export default function TaskDetail({
         )}
       </div>
 
-      {/* 삭제 확인 다이얼로그 */}
+      {/* 삭제 확인 */}
       <Dialog open={showDelete} onOpenChange={setShowDelete}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>이 작업을 삭제할까요?</DialogTitle>
-            <DialogDescription>
-              삭제하면 복구할 수 없어요. 정말로 삭제하시겠어요?
-            </DialogDescription>
+            <DialogDescription>삭제하면 복구할 수 없어요.</DialogDescription>
           </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-2">
+          <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setShowDelete(false)}>
               취소
             </Button>
@@ -386,7 +314,7 @@ export default function TaskDetail({
         </DialogContent>
       </Dialog>
 
-      {/* DUE 마감일 편집 다이얼로그 */}
+      {/* DUE 마감일 편집 */}
       <Dialog open={showDueEdit} onOpenChange={setShowDueEdit}>
         <DialogContent>
           <DialogHeader>
@@ -412,8 +340,7 @@ export default function TaskDetail({
   );
 }
 
-/* ======================= 섹션 카드 ======================= */
-function SectionCard({
+function Section({
   title,
   children,
 }: {
@@ -430,8 +357,7 @@ function SectionCard({
   );
 }
 
-/* 안전한 hostname 추출 */
-function safeHostname(url: string): string {
+function safeHost(url: string): string {
   try {
     return new URL(url).hostname;
   } catch {
