@@ -75,15 +75,25 @@ export default function TaskDetail({
     }
   };
 
+  // 유형별 톤 & 텍스트 색
   const toneByType = useMemo(() => {
     switch (taskType) {
       case "DAILY":
-        return "bg-emerald-50 border-emerald-200 text-emerald-700";
+        return {
+          chip: "bg-emerald-50 border-emerald-200 text-emerald-700",
+          dot: "bg-emerald-400",
+        };
       case "DUE":
-        return "bg-amber-50 border-amber-200 text-amber-700";
+        return {
+          chip: "bg-amber-50 border-amber-200 text-amber-700",
+          dot: "bg-amber-400",
+        };
       case "DAY":
       default:
-        return "bg-sky-50 border-sky-200 text-sky-700";
+        return {
+          chip: "bg-rose-50 border-rose-200 text-rose-700",
+          dot: "bg-rose-400",
+        };
     }
   }, [taskType]);
 
@@ -95,60 +105,107 @@ export default function TaskDetail({
 
   if (!task) {
     return (
-      <div className="text-sm text-muted-foreground">
+      <div className="flex h-full items-center justify-center rounded-xl border bg-muted/40 text-sm text-muted-foreground">
         오른쪽 목록에서 Task를 선택하세요.
       </div>
     );
   }
 
   return (
-    <div className="relative">
-      {/* 헤더 바: 유형 칩 + 제목 */}
-      <div className="mb-3">
-        <div className="flex items-center gap-2">
-          <span
-            className={[
-              "shrink-0 text-[11px] px-2 py-0.5 rounded-full border",
-              toneByType,
-            ].join(" ")}
-            title="유형"
-          >
-            {taskType}
-          </span>
+    <div className="relative space-y-4 rounded-2xl  bg-card/60 ">
+      {/* 상단 헤더: 유형 + 제목 + 액션 */}
+      <header className="flex flex-wrap items-center gap-3">
+        {/* 유형 칩 */}
+        <span
+          className={[
+            "inline-flex items-center gap-2 shrink-0 rounded-full border px-3 py-1 text-[11px] font-medium",
+            toneByType.chip,
+          ].join(" ")}
+          title="유형"
+        >
+          <span className={"h-2.5 w-2.5 rounded-full " + toneByType.dot} />
+          {taskType}
+        </span>
 
-          {isEditing ? (
-            <Input
-              value={task.title || ""}
-              onChange={(e) => onPatch({ title: e.target.value })}
-              placeholder="제목을 입력하세요"
-              autoFocus
-              className="flex-1 text-[20px] sm:text-[22px] font-semibold"
-            />
-          ) : (
-            <h2 className="flex-1 text-[20px] sm:text-[22px] font-semibold truncate">
-              {task.title?.trim() ? (
-                task.title
-              ) : (
-                <span className="text-muted-foreground">(제목 없음)</span>
-              )}
-            </h2>
-          )}
+        {/* 제목 */}
+        {isEditing ? (
+          <Input
+            value={task.title || ""}
+            onChange={(e) => onPatch({ title: e.target.value })}
+            placeholder="제목을 입력하세요"
+            autoFocus
+            className="flex-1 min-w-[160px] border-none bg-transparent px-0 text-[20px] sm:text-[22px] font-semibold focus-visible:ring-0"
+          />
+        ) : (
+          <h2 className="flex-1 min-w-[160px] text-[20px] sm:text-[22px] font-semibold leading-tight">
+            {task.title?.trim() ? (
+              <span className="line-clamp-2 break-words">{task.title}</span>
+            ) : (
+              <span className="text-muted-foreground">(제목 없음)</span>
+            )}
+          </h2>
+        )}
 
-          {/* DUE 전용 날짜 편집 버튼 */}
+        {/* 오른쪽 상단 액션 버튼들 */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* DUE 전용 날짜 표시 / 편집 */}
           {taskType === "DUE" && (
             <button
               type="button"
               onClick={() => setShowDueEdit(true)}
-              className="shrink-0 inline-flex items-center gap-1.5 text-xs rounded-md border px-2 py-1 hover:bg-muted/60 transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 rounded-full border bg-background px-3 py-1 text-xs text-muted-foreground hover:bg-muted/60 transition cursor-pointer"
               title="마감일 편집"
             >
               <CalendarDays className="w-3.5 h-3.5 opacity-80" />
               {task.date ? `마감: ${task.date}` : "마감 설정"}
             </button>
           )}
+
+          {/* 수정 / 삭제 / 저장 / 취소 */}
+          {!isEditing ? (
+            <>
+              <Button
+                variant="outline"
+                className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs sm:text-sm cursor-pointer"
+                onClick={() => setIsEditing(true)}
+              >
+                <PencilLine className="w-4 h-4" />
+                <span>수정</span>
+              </Button>
+              <Button
+                variant="destructive"
+                className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs sm:text-sm cursor-pointer"
+                onClick={() => setShowDelete(true)}
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>삭제</span>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="default"
+                className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs sm:text-sm cursor-pointer"
+                onClick={() => setIsEditing(false)}
+              >
+                <Save className="w-4 h-4" />
+                <span>변경 저장</span>
+              </Button>
+              <Button
+                variant="outline"
+                className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs sm:text-sm cursor-pointer"
+                onClick={() => setIsEditing(false)}
+              >
+                <X className="w-4 h-4" />
+                <span>취소</span>
+              </Button>
+            </>
+          )}
         </div>
-        <div className="mt-2 h-px bg-border/60" />
-      </div>
+      </header>
+
+      {/* 구분선 */}
+      <div className="h-px w-full bg-border/70" />
 
       {/* 메모 */}
       <Section title="메모">
@@ -163,7 +220,7 @@ export default function TaskDetail({
             spellCheck={false}
           />
         ) : (
-          <div className="whitespace-pre-wrap text-sm">
+          <div className="whitespace-pre-wrap text-sm leading-relaxed">
             {task.memo?.trim() ? (
               task.memo
             ) : (
@@ -179,7 +236,7 @@ export default function TaskDetail({
           {(task.links || []).map((link, idx) => (
             <div
               key={`${link}-${idx}`}
-              className="group flex items-center gap-3 rounded-lg border p-2 hover:bg-muted/40 transition cursor-pointer"
+              className="group flex items-center gap-3 rounded-lg border bg-background/40 p-2 hover:bg-muted/40 transition cursor-pointer"
               title={link}
             >
               <img
@@ -225,7 +282,7 @@ export default function TaskDetail({
         </div>
 
         {isEditing && (
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
             <Input
               value={newUrl}
               onChange={(e) => setNewUrl(e.target.value)}
@@ -234,61 +291,15 @@ export default function TaskDetail({
             />
             <Button
               variant="outline"
-              className="cursor-pointer hover:opacity-90 active:scale-[0.98] transition"
+              className="w-full sm:w-auto gap-2 rounded-full cursor-pointer hover:opacity-90 active:scale-[0.98] transition"
               onClick={handleAddLink}
             >
-              추가
+              <LinkIcon className="w-4 h-4" />
+              <span>링크 추가</span>
             </Button>
           </div>
         )}
       </Section>
-
-      {/* 좌하단 액션바: 삭제/수정/저장 */}
-      <div className="mt-4 flex items-center gap-2">
-        {!isEditing ? (
-          <>
-            <Button
-              size="icon"
-              variant="destructive"
-              className="cursor-pointer hover:opacity-90 active:scale-95 transition"
-              onClick={() => setShowDelete(true)}
-              title="삭제"
-            >
-              <Trash2 className="w-5 h-5" />
-            </Button>
-            <Button
-              size="icon"
-              variant="secondary"
-              className="cursor-pointer hover:opacity-90 active:scale-95 transition"
-              onClick={() => setIsEditing(true)}
-              title="수정"
-            >
-              <PencilLine className="w-5 h-5" />
-            </Button>
-          </>
-        ) : (
-          <>
-            <Button
-              size="icon"
-              variant="default"
-              className="cursor-pointer hover:opacity-90 active:scale-95 transition"
-              onClick={() => setIsEditing(false)}
-              title="저장"
-            >
-              <Save className="w-5 h-5" />
-            </Button>
-            <Button
-              size="icon"
-              variant="outline"
-              className="cursor-pointer hover:opacity-90 active:scale-95 transition"
-              onClick={() => setIsEditing(false)}
-              title="취소"
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </>
-        )}
-      </div>
 
       {/* 삭제 확인 */}
       <Dialog open={showDelete} onOpenChange={setShowDelete}>
@@ -323,16 +334,18 @@ export default function TaskDetail({
               YYYY-MM-DD 형식으로 입력하거나 비워두면 해제됩니다.
             </DialogDescription>
           </DialogHeader>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Input
               ref={dueInputRef}
               defaultValue={task.date ?? ""}
               placeholder="예: 2025-11-05"
             />
-            <Button variant="outline" onClick={() => setShowDueEdit(false)}>
-              취소
-            </Button>
-            <Button onClick={saveDue}>저장</Button>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowDueEdit(false)}>
+                취소
+              </Button>
+              <Button onClick={saveDue}>저장</Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -348,7 +361,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-xl border bg-card p-4 mb-3 last:mb-0">
+    <section className="mb-3 last:mb-0 rounded-xl border bg-card/70 p-4">
       <header className="mb-2 text-[12px] font-medium text-muted-foreground">
         {title}
       </header>

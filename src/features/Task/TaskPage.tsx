@@ -55,9 +55,9 @@ export default function TaskPage() {
   // 새 Task
   const [openNew, setOpenNew] = useState(false);
 
-  // DUE 상세
-  const [openDueDetail, setOpenDueDetail] = useState(false);
-  const [dueDetail, setDueDetail] = useState<Task | null>(null);
+  // ❌ DUE 상세 다이얼로그는 제거
+  // const [openDueDetail, setOpenDueDetail] = useState(false);
+  // const [dueDetail, setDueDetail] = useState<Task | null>(null);
 
   // 캘린더 모드 오른쪽: 선택 날짜 스케쥴
   const [selectedSchedules, setSelectedSchedules] = useState<Schedule[]>([]);
@@ -83,9 +83,13 @@ export default function TaskPage() {
   const selectedDateStr = format(selectedDate, "yyyy.MM.dd");
   const selectedYMD = toYMD(selectedDate);
 
+  // ⭐ selectedTask 만들 때 DAILY + DAY + DUE 모두 포함
   const selectedTask = useMemo(
-    () => [...daily, ...dayTasks].find((t) => t.id === selectedTaskId) || null,
-    [daily, dayTasks, selectedTaskId]
+    () =>
+      [...daily, ...dayTasks, ...dueTasks].find(
+        (t) => t.id === selectedTaskId
+      ) || null,
+    [daily, dayTasks, dueTasks, selectedTaskId]
   );
 
   // ✅ 진행률 계산
@@ -388,7 +392,7 @@ export default function TaskPage() {
                 <CardHeader className="bg-white">
                   <CardTitle className="text-xl">📌 상세보기</CardTitle>
                 </CardHeader>
-                <CardContent className="pt-5">
+                <CardContent>
                   <TaskDetail
                     task={selectedTask}
                     onPatch={(p) =>
@@ -419,16 +423,8 @@ export default function TaskPage() {
                 upcomingSchedules={upcomingSchedules}
                 selectedId={selectedTaskId}
                 onSelect={(id: number) => {
-                  // 오늘 목록이면 상세로, 아니면 DUE 다이얼로그
-                  const t = [...daily, ...dayTasks].find((x) => x.id === id);
-                  if (t) setSelectedTaskId(t.id);
-                  else {
-                    const due = dueTasks.find((x) => x.id === id);
-                    if (due) {
-                      setDueDetail(due);
-                      setOpenDueDetail(true);
-                    }
-                  }
+                  // ⭐ 어떤 타입이든 그냥 선택된 id만 저장
+                  setSelectedTaskId(id);
                 }}
                 onToggle={async (id: number, next: boolean) => {
                   await updateTask(id, { is_completed: next });
@@ -485,42 +481,11 @@ export default function TaskPage() {
         }}
       />
 
-      {/* DUE 상세 다이얼로그 */}
+      {/* ❌ DUE 상세 다이얼로그는 제거됨
       <Dialog open={openDueDetail} onOpenChange={setOpenDueDetail}>
-        <DialogContent className="sm:max-w-[620px] bg-background/95 backdrop-blur-md">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-semibold">
-              DUE Task 상세
-            </DialogTitle>
-          </DialogHeader>
-          {dueDetail && (
-            <TaskDetail
-              task={dueDetail}
-              onPatch={async (p) => {
-                await updateTask(dueDetail.id, p);
-                await Promise.all([
-                  reloadDue(),
-                  reloadDay(toYMD(selectedDate)),
-                  reloadDaily(),
-                ]);
-                setDueDetail({ ...dueDetail, ...p } as Task);
-              }}
-              onDelete={async () => {
-                const ok = window.confirm("정말 삭제하시겠습니까?");
-                if (!ok) return;
-                await deleteTaskRow(dueDetail.id);
-                setOpenDueDetail(false);
-                setDueDetail(null);
-                await Promise.all([
-                  reloadDue(),
-                  reloadDay(toYMD(selectedDate)),
-                  reloadDaily(),
-                ]);
-              }}
-            />
-          )}
-        </DialogContent>
+        ...
       </Dialog>
+      */}
 
       {/* 날짜 선택 다이얼로그 */}
       <Dialog open={openDatePick} onOpenChange={setOpenDatePick}>

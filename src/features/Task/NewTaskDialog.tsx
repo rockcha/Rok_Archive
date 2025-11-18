@@ -30,6 +30,45 @@ type Props = {
   }) => Promise<void>;
 };
 
+const TASK_TYPE_META: Record<
+  TaskType,
+  {
+    label: string;
+    desc: string;
+    dotClass: string;
+    activeClass: string;
+    inactiveClass: string;
+  }
+> = {
+  DAILY: {
+    label: "DAILY",
+    desc: "매일 반복",
+    // 초록 점 + 연한 초록 배경
+    dotClass: "bg-emerald-400",
+    activeClass: "bg-emerald-50 text-emerald-700 border-emerald-300 shadow-sm",
+    inactiveClass:
+      "bg-muted/40 text-muted-foreground border-muted hover:bg-muted/70",
+  },
+  DAY: {
+    label: "DAY",
+    desc: "하루 일정",
+    // 핑크/레드 점 + 연한 핑크 배경
+    dotClass: "bg-rose-500",
+    activeClass: "bg-rose-50 text-rose-700 border-rose-300 shadow-sm",
+    inactiveClass:
+      "bg-muted/40 text-muted-foreground border-muted hover:bg-muted/70",
+  },
+  DUE: {
+    label: "DUE",
+    desc: "마감/기한",
+    // 주황 점 + 연한 주황 배경
+    dotClass: "bg-amber-400",
+    activeClass: "bg-amber-50 text-amber-700 border-amber-300 shadow-sm",
+    inactiveClass:
+      "bg-muted/40 text-muted-foreground border-muted hover:bg-muted/70",
+  },
+};
+
 export default function NewTaskDialog({
   open,
   onOpenChange,
@@ -76,25 +115,39 @@ export default function NewTaskDialog({
           {/* 유형 */}
           <div className="pt-1">
             <Label className="text-xs text-muted-foreground">유형</Label>
-            <div className="mt-2 flex items-center gap-2">
-              {(["DAY", "DUE", "DAILY"] as TaskType[]).map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  className={cn(
-                    "px-3 py-1.5 rounded-full text-sm border transition hover:cursor-pointer",
-                    type === t
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-background border-muted"
-                  )}
-                  onClick={() => {
-                    setType(t);
-                    setTouchedType(true);
-                  }}
-                >
-                  {t}
-                </button>
-              ))}
+            <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
+              {(["DAY", "DUE", "DAILY"] as TaskType[]).map((t) => {
+                const meta = TASK_TYPE_META[t];
+                const isActive = type === t;
+                return (
+                  <button
+                    key={t}
+                    type="button"
+                    aria-pressed={isActive}
+                    className={cn(
+                      "flex items-center justify-between gap-3 rounded-2xl border px-4 py-2.5 text-left text-sm transition-all hover:cursor-pointer",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+                      isActive ? meta.activeClass : meta.inactiveClass
+                    )}
+                    onClick={() => {
+                      setType(t);
+                      setTouchedType(true);
+                    }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={cn("h-3 w-3 rounded-full", meta.dotClass)}
+                      />
+                      <span className="font-semibold tracking-wide">
+                        {meta.label}
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground sm:block">
+                      {meta.desc}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -103,19 +156,8 @@ export default function NewTaskDialog({
             <Label className="text-xs text-muted-foreground">
               {type === "DUE" ? "마감일" : "날짜"}
             </Label>
-            <div className="mt-2 flex items-center gap-3">
+            <div className="mt-2 flex flex-wrap items-center gap-3">
               <Popover open={openCal} onOpenChange={setOpenCal}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-full gap-2"
-                    disabled={type === "DAILY"}
-                  >
-                    <CalendarDays className="w-4 h-4" />
-                    달력 선택
-                  </Button>
-                </PopoverTrigger>
                 <PopoverContent className="p-0" align="start">
                   <Calendar
                     mode="single"
@@ -143,7 +185,7 @@ export default function NewTaskDialog({
               />
               {type === "DAILY" && (
                 <span className="text-xs text-muted-foreground">
-                  매일 반복(날짜 선택 불가)
+                  매일 반복 Task는 날짜를 따로 선택하지 않아요.
                 </span>
               )}
             </div>
@@ -254,7 +296,7 @@ export default function NewTaskDialog({
 
         <DialogFooter>
           <Button
-            className="hover:cursor-pointer rounded-full"
+            className="hover:cursor-pointer rounded-full px-6"
             onClick={async () => {
               await onCreate({
                 title: title || "(제목 없음)",
