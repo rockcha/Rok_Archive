@@ -11,9 +11,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/shared/ui/popover";
+import { Popover, PopoverContent } from "@/shared/ui/popover";
 import { Label } from "@/shared/ui/label";
-import { CalendarDays, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import type { TaskType } from "./types";
 import { toYMD, cn, faviconUrl } from "./utils";
 
