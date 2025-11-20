@@ -1,3 +1,4 @@
+// src/features/tasks/TaskPage.tsx
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -10,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/shared/ui/dialog";
-import { CalendarDays } from "lucide-react";
+import { CalendarDays, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import type { Task, Schedule } from "./types";
@@ -26,6 +27,8 @@ import {
   fetchUpcomingSchedules,
   fetchDayTasksInRange,
   fetchDueTasksInRange,
+  fetchDailyMemo,
+  upsertDailyMemo,
 } from "./api";
 
 import NewTaskDialog from "./NewTaskDialog";
@@ -33,6 +36,7 @@ import TaskDetail from "./TaskDetail";
 import CalendarPanel from "./CalendarPanel";
 import { Calendar } from "@/shared/ui/calendar";
 import { Input } from "@/shared/ui/input";
+import { Textarea } from "@/shared/ui/textarea";
 import TodayListAside from "./TodayListAside";
 
 type Tab = "LIST" | "CAL";
@@ -48,16 +52,8 @@ export default function TaskPage() {
   const [dueTasks, setDueTasks] = useState<Task[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
 
-  // 진행률 (DAY + DAILY)
-  const [allCount, setAllCount] = useState(0);
-  const [doneCount, setDoneCount] = useState(0);
-
   // 새 Task
   const [openNew, setOpenNew] = useState(false);
-
-  // ❌ DUE 상세 다이얼로그는 제거
-  // const [openDueDetail, setOpenDueDetail] = useState(false);
-  // const [dueDetail, setDueDetail] = useState<Task | null>(null);
 
   // 캘린더 모드 오른쪽: 선택 날짜 스케쥴
   const [selectedSchedules, setSelectedSchedules] = useState<Schedule[]>([]);
@@ -80,6 +76,12 @@ export default function TaskPage() {
 
   const autosaveTimer = useRef<Record<number, TimeoutId | null>>({});
 
+  // Daily Memo
+  const [dailyMemo, setDailyMemo] = useState("");
+  const [isSavingMemo, setIsSavingMemo] = useState(false);
+  const [memoJustSaved, setMemoJustSaved] = useState(false);
+  const [memoSavedAt, setMemoSavedAt] = useState<string | null>(null);
+
   const selectedDateStr = format(selectedDate, "yyyy.MM.dd");
   const selectedYMD = toYMD(selectedDate);
 
@@ -90,21 +92,6 @@ export default function TaskPage() {
         (t) => t.id === selectedTaskId
       ) || null,
     [daily, dayTasks, dueTasks, selectedTaskId]
-  );
-
-  // ✅ 진행률 계산
-  useEffect(() => {
-    const dayAll = dayTasks.length;
-    const dayDone = dayTasks.filter((t) => t.is_completed).length;
-    const dailyAll = daily.length;
-    const dailyDone = daily.filter((t) => t.is_completed).length;
-    setAllCount(dayAll + dailyAll);
-    setDoneCount(dayDone + dailyDone);
-  }, [dayTasks, daily]);
-
-  const progressPct = useMemo(
-    () => (allCount === 0 ? 0 : Math.round((doneCount / allCount) * 100)),
-    [allCount, doneCount]
   );
 
   /* Fetchers */
@@ -136,16 +123,24 @@ export default function TaskPage() {
       await loadMonthMap(start, end);
       // 우측 패널 스케쥴
       setSelectedSchedules(await fetchSchedulesInRange(ymd, ymd));
+
+      // 오늘 Daily Memo 로드
+      const memo = await fetchDailyMemo(ymd);
+      setDailyMemo(memo?.content ?? "");
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 날짜 변경 시 오늘(DAY) + 스케줄 갱신
+  // 날짜 변경 시 DAY + 스케줄 + Daily Memo 갱신
   useEffect(() => {
     const ymd = selectedYMD;
     (async () => {
       await reloadDay(ymd);
       setSelectedSchedules(await fetchSchedulesInRange(ymd, ymd));
+      const memo = await fetchDailyMemo(ymd);
+      setDailyMemo(memo?.content ?? "");
+      setMemoJustSaved(false);
+      setMemoSavedAt(null);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
@@ -175,7 +170,7 @@ export default function TaskPage() {
     setMonthMap(m);
   };
 
-  /* Autosave */
+  /* Autosave for Task */
   const scheduleAutosave = (task: Task, patch: Partial<Task>) => {
     const updateLocal = (arr: Task[]) =>
       arr.map((t) => (t.id === task.id ? { ...t, ...patch } : t));
@@ -199,6 +194,32 @@ export default function TaskPage() {
       reloadDue(),
       reloadDaily(),
     ]);
+  };
+
+  // Daily Memo 저장
+  const handleSaveMemo = async () => {
+    try {
+      setIsSavingMemo(true);
+      setMemoJustSaved(false);
+
+      await upsertDailyMemo({
+        date: selectedYMD,
+        content: dailyMemo,
+      });
+
+      const now = new Date();
+      setMemoSavedAt(format(now, "HH:mm:ss"));
+      setMemoJustSaved(true);
+
+      setTimeout(() => {
+        setMemoJustSaved(false);
+      }, 1500);
+    } catch (e) {
+      console.error(e);
+      window.alert("메모 저장 중 오류가 발생했습니다.");
+    } finally {
+      setIsSavingMemo(false);
+    }
   };
 
   // 날짜 선택 다이얼로그
@@ -285,7 +306,7 @@ export default function TaskPage() {
               />
             </section>
 
-            {/* 우: 요약 패널 (복원) */}
+            {/* 우: 요약 패널 */}
             <aside className="col-span-12 lg:col-span-4 space-y-6">
               <Card className="rounded-2xl">
                 <CardHeader className="pb-2">
@@ -346,11 +367,11 @@ export default function TaskPage() {
           >
             {/* LEFT: main */}
             <section className="col-span-12 lg:col-span-8">
-              {/* 1) 진행률 */}
+              {/* 1) Daily Memo */}
               <Card className="mb-4 rounded-2xl">
                 <CardHeader className="flex items-center justify-between">
                   <CardTitle className="text-lg">
-                    📌 {selectedDateStr} ({weekdayKR(selectedDate)})
+                    📝 {selectedDateStr} ({weekdayKR(selectedDate)})
                   </CardTitle>
                   <div className="flex items-center gap-2">
                     <Button
@@ -372,16 +393,41 @@ export default function TaskPage() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-1.5">
-                    <div className="relative h-3.5 rounded-full border bg-gradient-to-b from-white to-muted/60 shadow-inner overflow-hidden">
-                      <div
-                        className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-primary/90 via-primary to-primary/90 shadow-sm transition-all"
-                        style={{ width: `${progressPct}%` }}
-                        aria-label={`완료율 ${progressPct}%`}
-                      />
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-neutral-700">
+                        오늘의 메모
+                      </span>
+                      <Button
+                        size="sm"
+                        onClick={handleSaveMemo}
+                        disabled={isSavingMemo}
+                        className="rounded-full cursor-pointer flex items-center gap-1"
+                      >
+                        {isSavingMemo ? (
+                          "저장 중..."
+                        ) : memoJustSaved ? (
+                          <>
+                            <Check className="w-4 h-4" />
+                            저장됨
+                          </>
+                        ) : (
+                          "메모 저장"
+                        )}
+                      </Button>
                     </div>
-                    <div className="text-xs text-muted-foreground">
-                      {doneCount} / {allCount} 완료
+                    <div className="space-y-1">
+                      <Textarea
+                        value={dailyMemo}
+                        onChange={(e) => setDailyMemo(e.target.value)}
+                        placeholder="오늘의 메모를 자유롭게 적어보세요."
+                        className="min-h-[140px] resize-none"
+                      />
+                      {memoSavedAt && (
+                        <p className="text-xs text-muted-foreground text-right">
+                          최근 저장: {memoSavedAt}
+                        </p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -480,12 +526,6 @@ export default function TaskPage() {
           );
         }}
       />
-
-      {/* ❌ DUE 상세 다이얼로그는 제거됨
-      <Dialog open={openDueDetail} onOpenChange={setOpenDueDetail}>
-        ...
-      </Dialog>
-      */}
 
       {/* 날짜 선택 다이얼로그 */}
       <Dialog open={openDatePick} onOpenChange={setOpenDatePick}>

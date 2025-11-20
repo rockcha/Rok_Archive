@@ -3,6 +3,7 @@ import { supabase } from "@/shared/lib/supabase";
 
 import type { Task, TaskType, Schedule } from "./types";
 
+/** DAY: 특정 날짜의 할 일 */
 export async function fetchDayTasksByDate(ymd: string) {
   const { data, error } = await supabase
     .from("tasks")
@@ -14,6 +15,7 @@ export async function fetchDayTasksByDate(ymd: string) {
   return data as Task[];
 }
 
+/** DUE: 오늘 이후 마감 할 일들 */
 export async function fetchDueTasksFrom(todayYMD: string) {
   const { data, error } = await supabase
     .from("tasks")
@@ -25,6 +27,7 @@ export async function fetchDueTasksFrom(todayYMD: string) {
   return data as Task[];
 }
 
+/** DAILY: 매일 하는 일들 */
 export async function fetchDailyTasks() {
   const { data, error } = await supabase
     .from("tasks")
@@ -36,6 +39,7 @@ export async function fetchDailyTasks() {
   return data as Task[];
 }
 
+/** Task 생성 */
 export async function createTask(payload: {
   title: string;
   type: TaskType;
@@ -51,17 +55,19 @@ export async function createTask(payload: {
   if (error) throw error;
 }
 
+/** Task 수정 */
 export async function updateTask(id: number, patch: Partial<Task>) {
   const { error } = await supabase.from("tasks").update(patch).eq("id", id);
   if (error) throw error;
 }
 
+/** Task 삭제 */
 export async function deleteTaskRow(id: number) {
   const { error } = await supabase.from("tasks").delete().eq("id", id);
   if (error) throw error;
 }
 
-/** 일정(Schedule) */
+/** 일정(Schedule) - 범위 조회 */
 export async function fetchSchedulesInRange(startStr: string, endStr: string) {
   const { data, error } = await supabase
     .from("schedule")
@@ -73,6 +79,7 @@ export async function fetchSchedulesInRange(startStr: string, endStr: string) {
   return data as Schedule[];
 }
 
+/** 일정(Schedule) - 앞으로 N일 */
 export async function fetchUpcomingSchedules(limitDays = 30) {
   const today = new Date();
   const startStr = today.toLocaleDateString("sv-SE");
@@ -84,6 +91,7 @@ export async function fetchUpcomingSchedules(limitDays = 30) {
   const endStr = end.toLocaleDateString("sv-SE");
   return fetchSchedulesInRange(startStr, endStr);
 }
+
 /** 월 범위 DAY 조회 */
 export async function fetchDayTasksInRange(
   startYMD: string,
@@ -114,4 +122,47 @@ export async function fetchDueTasksInRange(
     .order("date", { ascending: true });
   if (error || !data) return [];
   return data as Task[];
+}
+
+/** ───────────── Daily Memo ───────────── */
+
+type DailyMemoRow = {
+  id: number;
+  date: string; // "YYYY-MM-DD"
+  content: string;
+};
+
+/** 특정 날짜 Daily Memo 조회 */
+export async function fetchDailyMemo(
+  dateYMD: string
+): Promise<DailyMemoRow | null> {
+  const { data, error } = await supabase
+    .from("daily_memo")
+    .select("id,date,content")
+    .eq("date", dateYMD)
+    .maybeSingle();
+
+  if (error) throw error;
+  return (data as DailyMemoRow | null) ?? null;
+}
+
+/** Daily Memo upsert (date 기준으로 insert/update) */
+export async function upsertDailyMemo(payload: {
+  date: string;
+  content: string;
+}): Promise<DailyMemoRow> {
+  const { data, error } = await supabase
+    .from("daily_memo")
+    .upsert(
+      {
+        date: payload.date,
+        content: payload.content,
+      },
+      { onConflict: "date" } // 🔹 date를 unique로 만들어두면 이 옵션이 동작
+    )
+    .select("id,date,content")
+    .single();
+
+  if (error) throw error;
+  return data as DailyMemoRow;
 }
